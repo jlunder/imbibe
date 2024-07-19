@@ -2,17 +2,19 @@
 
 #include "bitmap.hh"
 
-#include <string.h>
+#include "color.hh"
+#include "pixel.hh"
 
-#include "bitmap_graphics.hh"
+#include <string.h>
 
 #include "bitmap.ii"
 
-#include "bitmap_graphics.ii"
+#include "color.ii"
+#include "pixel.ii"
 
 
 bitmap::bitmap(bitmap const & n_bitmap):
-  m_width(n_bitmap.m_width), m_height(n_bitmap.m_height), m_g(new bitmap_graphics(*this))
+  m_width(n_bitmap.m_width), m_height(n_bitmap.m_height)
 {
   m_data = new unsigned short[m_width * m_height];
   memcpy(m_data, n_bitmap.m_data, m_width * m_height * sizeof(unsigned short));
@@ -20,7 +22,7 @@ bitmap::bitmap(bitmap const & n_bitmap):
 
 
 bitmap::bitmap(int n_width, int n_height):
-  m_width(n_width), m_height(n_height), m_g(new bitmap_graphics(*this))
+  m_width(n_width), m_height(n_height)
 {
   m_data = new unsigned short[n_width * n_height];
 }

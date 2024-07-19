@@ -3,7 +3,6 @@
 
 
 #include "color.ii"
-#include "graphics.ii"
 #include "pixel.ii"
 
 
@@ -16,12 +15,6 @@ inline int bitmap::width() const
 inline int bitmap::height() const
 {
   return m_height;
-}
-
-
-inline graphics & bitmap::g()
-{
-  return *m_g;
 }
 
 

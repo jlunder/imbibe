@@ -6,7 +6,6 @@ class bitmap;
 
 
 #include "color.hh"
-#include "graphics.hh"
 #include "pixel.hh"
 
 
@@ -18,7 +17,6 @@ public:
   ~bitmap();
   int width() const;
   int height() const;
-  graphics & g();
   unsigned short & at(int x, int y);
   unsigned short const & at(int x, int y) const;
   unsigned short * data();
@@ -32,7 +30,6 @@ protected:
 private:
   int m_width;
   int m_height;
-  graphics * m_g;
   unsigned short * m_data;
 
   friend class bitmap_graphics;

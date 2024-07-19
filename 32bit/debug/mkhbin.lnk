@@ -1,3 +1,0 @@
-name 32bit\debug\mkhbin 
-op elim d all op st=64K sys pmodew 
-file 32bit\debug\mkhbin.obj 

@@ -1,5 +1,7 @@
 to do:
 
+convert tasks to idle_handlers
+
 overhaul vector to use move templates
 code a task which unlocks and locks a window every cycle to accumulate
  updates
