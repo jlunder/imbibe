@@ -1,0 +1,13 @@
+#ifndef __RECTANGLE_ELEMENT_II_INCLUDED
+#define __RECTANGLE_ELEMENT_II_INCLUDED
+
+
+#include "element.ii"
+#include "graphics.ii"
+#include "window.ii"
+#include "pixel.ii"
+
+
+#endif //__RECTANGLE_ELEMENT_II_INCLUDED
+
+

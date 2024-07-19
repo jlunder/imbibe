@@ -1,0 +1,32 @@
+#ifndef __BITMAP_ELEMENT_II_INCLUDED
+#define __BITMAP_ELEMENT_II_INCLUDED
+
+
+#include "bitmap.ii"
+#include "element.ii"
+#include "graphics.ii"
+#include "window.ii"
+
+
+inline void bitmap_element::b(bitmap * n_b)
+{
+  m_b = n_b;
+  repaint();
+}
+
+
+inline bitmap & bitmap_element::b()
+{
+  return *m_b;
+}
+
+
+inline bitmap const & bitmap_element::b() const
+{
+  return *m_b;
+}
+
+
+#endif //__BITMAP_ELEMENT_II_INCLUDED
+
+

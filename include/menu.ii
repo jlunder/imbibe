@@ -1,0 +1,78 @@
+#ifndef __MENU_II_INCLUDED
+#define __MENU_II_INCLUDED
+
+
+#include "bitmap.ii"
+#include "string.ii"
+#include "vector.ii"
+
+
+inline int menu::width() const
+{
+  return m_width;
+}
+
+
+inline int menu::height() const
+{
+  return m_height;
+}
+
+
+inline int menu::num_links() const
+{
+  return m_num_links;
+}
+
+
+inline string menu::link_action(int which) const
+{
+  return *m_links[which].action;
+}
+
+
+inline string menu::link_target(int which) const
+{
+  return *m_links[which].target;
+}
+
+
+inline int menu::link_x(int which) const
+{
+  return m_links[which].x;
+}
+
+
+inline int menu::link_y(int which) const
+{
+  return m_links[which].y;
+}
+
+
+inline int menu::link_width(int which) const
+{
+  return m_links[which].width;
+}
+
+
+inline int menu::link_height(int which) const
+{
+  return m_links[which].height;
+}
+
+
+inline bitmap const & menu::link_normal_picture(int which) const
+{
+  return *m_links[which].normal_picture;
+}
+
+
+inline bitmap const & menu::link_selected_picture(int which) const
+{
+  return *m_links[which].selected_picture;
+}
+
+
+#endif //__MENU_II_INCLUDED
+
+

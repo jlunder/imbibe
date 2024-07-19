@@ -1,0 +1,12 @@
+#ifndef __BITMAP_GRAPHICS_II_INCLUDED
+#define __BITMAP_GRAPHICS_II_INCLUDED
+
+
+#include "bitmap.ii"
+#include "color.ii"
+#include "graphics.ii"
+
+
+#endif //__BITMAP_GRAPHICS_II_INCLUDED
+
+

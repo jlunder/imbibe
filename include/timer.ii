@@ -1,0 +1,23 @@
+#ifndef __TIMER_II_INCLUDED
+#define __TIMER_II_INCLUDED
+
+
+inline unsigned long timer::delta_time()
+{
+  unsigned long new_time = hw_t.time();
+  unsigned long result = new_time - m_current_time;
+
+  m_current_time = new_time;
+  return result;
+}
+
+
+inline unsigned long timer::hw_timer::time()
+{
+  return timer_count;
+}
+
+
+#endif //__TIMER_II_INCLUDED
+
+

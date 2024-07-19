@@ -1,0 +1,54 @@
+#ifndef __BITMAP_II_INCLUDED
+#define __BITMAP_II_INCLUDED
+
+
+#include "color.ii"
+#include "graphics.ii"
+#include "pixel.ii"
+
+
+inline int bitmap::width() const
+{
+  return m_width;
+}
+
+
+inline int bitmap::height() const
+{
+  return m_height;
+}
+
+
+inline graphics & bitmap::g()
+{
+  return *m_g;
+}
+
+
+inline unsigned short & bitmap::at(int x, int y)
+{
+  return m_data[y * m_width + x];
+}
+
+
+inline unsigned short const & bitmap::at(int x, int y) const
+{
+  return m_data[y * m_width + x];
+}
+
+
+inline unsigned short * bitmap::data()
+{
+  return m_data;
+}
+
+
+inline unsigned short const * bitmap::data() const
+{
+  return m_data;
+}
+
+
+#endif //__BITMAP_II_INCLUDED
+
+

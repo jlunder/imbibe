@@ -1,0 +1,12 @@
+#ifndef __CSTREAM_II_INCLUDED
+#define __CSTREAM_II_INCLUDED
+
+
+#include "functional.ii"
+#include "map.ii"
+#include "string.ii"
+
+
+#endif //__CSTREAM_II_INCLUDED
+
+

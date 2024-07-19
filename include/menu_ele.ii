@@ -1,0 +1,33 @@
+#ifndef __MENU_ELEMENT_II_INCLUDED
+#define __MENU_ELEMENT_II_INCLUDED
+
+
+#include "bitmap.ii"
+#include "element.ii"
+#include "graphics.ii"
+#include "menu.ii"
+#include "window.ii"
+#include "pixel.ii"
+
+
+inline int menu_element::scroll_x() const
+{
+  return m_scroll_x;
+}
+
+
+inline int menu_element::scroll_y() const
+{
+  return m_scroll_y;
+}
+
+
+inline int menu_element::selection() const
+{
+  return m_selection;
+}
+
+
+#endif //__MENU_ELEMENT_II_INCLUDED
+
+

@@ -1,0 +1,11 @@
+#ifndef __STOP_HANDLER_II_INCLUDED
+#define __STOP_HANDLER_II_INCLUDED
+
+
+#include "key_handler.ii"
+#include "task.ii"
+
+
+#endif //__STOP_HANDLER_II_INCLUDED
+
+

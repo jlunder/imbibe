@@ -1,0 +1,28 @@
+#ifndef __STOP_TASK_II_INCLUDED
+#define __STOP_TASK_II_INCLUDED
+
+
+#include "task.ii"
+#include "task_manager.ii"
+#include "vector.ii"
+
+
+inline void stop_task::add_task(task & t)
+{
+  m_tasks.push_back(&t);
+}
+
+
+inline void stop_task::remove_task(task & t)
+{
+  task_p_list::iterator i;
+
+  for(i = m_tasks.begin(); (i != m_tasks.end()) && (*i != &t); ++i);
+  assert(i != m_tasks.end());
+  m_tasks.erase(i);
+}
+
+
+#endif //__STOP_TASK_II_INCLUDED
+
+

@@ -1,0 +1,53 @@
+{article
+ {title BLACK-EYED BEAN CUTLETS  (A LA KING)}
+ {author Zinnia Kray}
+ {p
+  Wow, this recipe turned out even better than I expected. It's really, really
+  good (really).
+ }
+ {recipe
+  {title BLACK-EYED BEAN CUTLETS  (A LA KING)}
+  {ingredients {label get:}
+   {p a can of black eyed beans (1.29 at Joe's Market)}
+   {p 1 carrot (washed, not peeled)}
+   {p 1/5th of an onion}
+   {p 1 garlic clove}
+   {p soy sauce}
+   {p salt and pepper}
+   {p some bread}
+   {p curry powder}
+   {p a blender}
+  }
+  {procedure
+   {p
+    BLENDERIZE peas, carrot, onion, garlic, salt, pepper, and a splash of soy 
+    sauce until it resembles mush but some resemblence of their former textures 
+    still remains. Remove from blender. Wash blender. 
+   }
+   {p
+    BLENDERIZE BREAD WITH CURRY POWDER until you have about a cup or more of fine 
+    bread crumbs all turmericky.
+   }
+   {p
+    By hand, mix all the stuff together. You want it to be soft but firm enough to
+    stick together reasonably well.
+   }
+   {p
+    By hand, make into hamburger-sized patties. Fry in hot oil until kinda browny 
+    and crispy on each side. Don't worry if they fall apart; they still taste 
+    good. 
+   }
+   {p
+    Eat those motherfuckers! They're really tasty (not spicy) and filling and 
+    nutritious and all that.
+   }
+  }
+  {yield
+   {p
+    This recipe makes way too much black-eyed mush for one meal, so refridgerate 
+    the uncooked portions in a bowl with saran wrap.
+   }
+  }
+ }
+ {p I'm eating some right now. With water, even.}
+}

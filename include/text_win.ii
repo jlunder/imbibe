@@ -1,0 +1,14 @@
+#ifndef __TEXT_WINDOW_II_INCLUDED
+#define __TEXT_WINDOW_II_INCLUDED
+
+
+#include "element.ii"
+#include "functional.ii"
+#include "graphics.ii"
+#include "map.ii"
+#include "window.ii"
+
+
+#endif //__TEXT_WINDOW_II_INCLUDED
+
+

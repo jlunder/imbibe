@@ -1,0 +1,11 @@
+#ifndef __WINDOW_II_INCLUDED
+#define __WINDOW_II_INCLUDED
+
+
+#include "element.ii"
+#include "graphics.ii"
+
+
+#endif //__WINDOW_II_INCLUDED
+
+

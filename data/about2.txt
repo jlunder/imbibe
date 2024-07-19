@@ -1,0 +1,70 @@
+1998 June:
+
+The Mighty Cthulu: "hey joe, can I take advantage of your hax0rly skillz to
+                    produce an 3l33te e-mag called imbibe, all about food?"
+The 313370 hAx0R j03: "w0w! that sounds liK3 a r3et el33t ide4! g3t Me soME
+                       aRticlez aNd I'll get hax0ring!"
+
+1998 August:
+
+The 31ee70 haXoR J03: "h3y r0wan, wHEre arE th3 artic1es j00 prOMiseD me?"
+
+1998 October:
+
+The 3lit3 hAx0R j03: "ROWAN, th33 ARTICLEZ?"
+
+1998 December:
+
+The 313370 HAx0r Joe: "ROWAN YOU HOOR! I'VE BEEN ON YOUR ASS ABOUT THOSE
+                       ARTICLES FOR MONTHS NOW! GET ME THOSE ARTICLES!"
+
+1999 March:
+
+The Mighty Cthulu: "Here are the articles 8)"
+The 313370 hAx0R j03: "s0rRy. I w4it3d 8 m0nths, and now I've ins7a113d
+                       leenooks like a g00d little hax0r. um, TS 4 n0w, er..
+                       <sh33pi5H lo0k>"
+
+1999 September:
+
+The 31337 hAX0R j00: "y33h4w I bought a 1337 l4PT0P for sch00L! it onLy runz
+                      LOSED0ZE, which I have to run anyh0w 4 skewl."
+
+1999 December 19 (sunday) ~10h:
+
+The 37331 hAck3R j03: "I'm bored. I think I'll code imbibe."
+
+
+fortunately, the articles were written (thanks forever to my pack-rat nature)
+onto a CD-R backup of one of my hard drives before The Mighty Cthulu's hard
+drive got exploded by The Evil Laughing Linux Hax0r. I was able to get to work
+straight away.
+
+anyway, you can see that this project has been underway for over a year now.
+that means it must be really good, right?
+
+
+right?
+
+imbibe e-mag viewer:
+
+the source code for imbibe weighs ~100k, which is ~5000 lines of C++ for me
+(85 or so typewritten pages), making it the largest single project I've ever
+completed. for better or worse, that's not that big on the scale of things.
+still. I'm a little proud.
+
+my development tools (for DOS) are: Watcom C++ 10.6, Tran's PMODE/W, and edit.
+the Watcom remote debugger for Windows is the bomb. edit is the tool of satan.
+
+therefore I am satan. worship me.
+
+imbibe is absurdly overdesigned. I hope to exploit that later by writing lots
+of e-mag viewers with really weird features and graphical easter-eggs: so if
+you have an idea for an e-mag and want a viewer coded, I would be happy to
+oblige. send mail to hackerjoe0@hotmail.com. it might take me a week or two to
+respond, but I will respond, so be patient.
+
+
+greets and dedications are for losers who know other people.
+
+ -hacker joe

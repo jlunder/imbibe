@@ -1,0 +1,13 @@
+#ifndef __FADEIN_TASK_II_INCLUDED
+#define __FADEIN_TASK_II_INCLUDED
+
+
+#include "bitmap.ii"
+#include "bitmap_element.ii"
+#include "timed_task.ii"
+#include "task_manager.ii"
+
+
+#endif //__FADEIN_TASK_II_INCLUDED
+
+
