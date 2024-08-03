@@ -2,6 +2,8 @@
 #define __BITMAP_ELEMENT_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
 #include "bitmap.hh"
 #include "element.hh"
 #include "graphics.hh"

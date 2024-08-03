@@ -2,6 +2,9 @@
 #define __BITMAP_GRAPHICS_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
+
 class bitmap_graphics;
 
 

@@ -2,6 +2,9 @@
 #define __TEXT_WINDOW_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
+
 class text_window;
 
 

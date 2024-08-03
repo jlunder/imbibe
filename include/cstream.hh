@@ -4,6 +4,8 @@
 
 #include <strstream.h>
 
+#include "imbibe.hh"
+
 #include "functional.hh"
 #include "map.hh"
 #include "string.hh"

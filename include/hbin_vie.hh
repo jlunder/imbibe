@@ -2,6 +2,8 @@
 #define __HBIN_VIEW_HANDLER_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
 #include "key_handler.hh"
 #include "hbin.hh"
 #include "hbin_element.hh"

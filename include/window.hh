@@ -2,10 +2,9 @@
 #define __WINDOW_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
 class window;
-
-
-#include <stddef.h>
 
 #include "element.hh"
 #include "graphics.hh"

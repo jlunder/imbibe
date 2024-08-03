@@ -1,58 +1,55 @@
-version = debug
-extender = pmodew
-platform = 16bit
+VERSION = debug
+PLATFORM = 16bit
 
-include_dirs = include\
-src_dirs = src\;support\;test\;imbibe\
-obj_dir = $(platform)\$(version)\
-include_dir = include\
-src_dir = src\
+INCLUDE_DIRS = include/
+SRC_DIRS = src/;support/;test/;imbibe/
+OBJ_DIR = $(PLATFORM)/$(VERSION)/
+INCLUDE_DIR = include/
+SRC_DIR = src/
 
-link_opt_prod = 
-link_opt_debug = d all
-link_opt_profile = d all
-link_opt_16bit = sys dos
-link_opt_32bit = op st=64K sys $(extender)
-link_opt = op elim $(link_opt_$(version)) $(link_opt_$(platform))
+LINK_OPT_RELEASE = 
+LINK_OPT_DEBUG = d all
+LINK_OPT_PROFILE = d all
+LINK_OPT_16BIT = sys dos
+LINK_OPT_32BIT = op st=64K sys dos4gw
+LINK_OPT = op elim $(LINK_OPT_$(VERSION)) $(LINK_OPT_$(PLATFORM))
 
-link_16bit = wlink
-link_32bit = wlink
-link = $(link_$(platform))
+LINK_16BIT = wlink
+LINK_32BIT = wlink
+LINK = $(LINK_$(PLATFORM))
 
-cc_opt_prod = -dNDEBUG -otexan
-cc_opt_debug = -d3
-cc_opt_profile = -dNDEBUG -d1 -otexan
-cc_opt_16bit = -2 -ml -bt=dos -fpc
-cc_opt_32bit = -3r -mf -bt=dos -fpc
-cc_opt = -fo=$(obj_dir) -i=$(include_dirs) $(cc_opt_$(version)) $(cc_opt_$(platform))
+CC_OPT_RELEASE = -dNDEBUG -otexan
+CC_OPT_DEBUG = -d3
+CC_OPT_PROFILE = -dNDEBUG -d1 -otexan
+CC_OPT = -fo=$(OBJ_DIR) -i=$(INCLUDE_DIRS) $(CC_OPT_$(VERSION)) -2 -ml -bt=dos -fpc
 
-cc_16bit = wpp
-cc_32bit = wpp386
-cc = $(cc_$(platform))
+CC_16BIT = wpp
+CC_32BIT = wpp386
+CC = $(CC_$(PLATFORM))
 
-.cc: $(src_dirs)
-.obj: $(obj_dir)
-.exe: $(obj_dir)
+.cc: $(SRC_DIRS)
+.obj: $(OBJ_DIR)
+.exe: $(OBJ_DIR)
 
 .obj.exe:
-        echo name $(obj_dir)$^& > $(obj_dir)$^&.lnk
-        echo $(link_opt) >> $(obj_dir)$^&.lnk
-        for %i in ($($^&_objs)) do echo file $(obj_dir)%i >> $(obj_dir)$^&.lnk
-        $(link) @$(obj_dir)$^&.lnk
+        echo name $(OBJ_DIR)$^& > $(OBJ_DIR)$^&.lnk
+        echo $(LINK_OPT) >> $(OBJ_DIR)$^&.lnk
+        for %i in ($($^&_objs)) do echo file $(OBJ_DIR)%i >> $(OBJ_DIR)$^&.lnk
+        $(LINK) @$(OBJ_DIR)$^&.lnk
 
 .cc.obj: .AUTODEPEND
-        $(cc) $(cc_opt) $<
+        $(CC) $(CC_OPT) $<
 
 clean: .SYMBOLIC
-        echo y | del $(obj_dir)*.*
+        echo y | del $(OBJ_DIR)*.*
 
 clean_all: .SYMBOLIC
-        echo y | del 16bit\prod\*.*
-        echo y | del 16bit\debug\*.*
-        echo y | del 16bit\profile\*.*
-        echo y | del 32bit\prod\*.*
-        echo y | del 32bit\debug\*.*
-        echo y | del 32bit\profile\*.*
+        echo y | del 16bit/release/*.*
+        echo y | del 16bit/debug/*.*
+        echo y | del 16bit/profile/*.*
+        echo y | del 32bit/release/*.*
+        echo y | del 32bit/debug/*.*
+        echo y | del 32bit/profile/*.*
 
 #
 # source dependencies
@@ -90,15 +87,15 @@ hbin_view_handler_objs = hbin_view_handler.obj $(key_handler_objs) &
 
 data.obj: $(src_dir)data.cc $(include_dir)data.hh
 
-$(src_dir)data.cc $(include_dir)data.hh: mkconst.exe pack.exe testdata\test.dsc
+$(src_dir)data.cc $(include_dir)data.hh: mkconst.exe pack.exe testdata/test.dsc
         cd testdata
-#        ..\$(obj_dir)txt2bin ..\data\about.txt about.bin
-        ..\$(obj_dir)pack test.dsc test.pkg
-        ..\$(obj_dir)mkconst test.pkg data.hh data.cc
-        del ..\$(include_dir)data.hh
-        del ..\$(src_dir)data.cc
-        move data.hh ..\$(include_dir)data.hh
-        move data.cc ..\$(src_dir)data.cc
+#        ../$(obj_dir)txt2bin ../data/about.txt about.bin
+        ../$(obj_dir)pack test.dsc test.pkg
+        ../$(obj_dir)mkconst test.pkg data.hh data.cc
+        del ../$(include_dir)data.hh
+        del ../$(src_dir)data.cc
+        move data.hh ../$(include_dir)data.hh
+        move data.cc ../$(src_dir)data.cc
         cd ..
 
 #

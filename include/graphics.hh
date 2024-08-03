@@ -2,6 +2,9 @@
 #define __GRAPHICS_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
+
 class graphics;
 
 

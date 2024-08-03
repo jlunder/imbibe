@@ -2,6 +2,9 @@
 #define __IDLE_DISPATCHER_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
+
 class idle_dispatcher;
 
 

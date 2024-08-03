@@ -4,6 +4,8 @@
 
 #include <iostream.h>
 
+#include "imbibe.hh"
+
 #include "bitmap.hh"
 
 

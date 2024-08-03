@@ -2,6 +2,9 @@
 #define __PIXEL_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
+
 class pixel;
 
 

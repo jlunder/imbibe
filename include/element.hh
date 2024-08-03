@@ -2,6 +2,9 @@
 #define __ELEMENT_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
+
 class element;
 
 

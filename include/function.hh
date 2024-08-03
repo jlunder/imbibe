@@ -2,6 +2,9 @@
 #define __FUNCTIONAL_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
+
 template < class T >
 class less
 {

@@ -2,7 +2,7 @@
 #define __STRING_HH_INCLUDED
 
 
-#include <stddef.h>
+#include "imbibe.hh"
 
 #include "vector.hh"
 

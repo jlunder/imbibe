@@ -2,6 +2,9 @@
 #define __TIMER_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
+
 class timer
 {
 public:

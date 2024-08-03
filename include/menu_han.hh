@@ -2,6 +2,8 @@
 #define __MENU_HANDLER_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
 #include "key_handler.hh"
 #include "menu.hh"
 #include "menu_element.hh"

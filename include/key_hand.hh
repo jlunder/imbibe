@@ -2,6 +2,9 @@
 #define __KEY_HANDLER_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
+
 class key_handler
 {
 public:

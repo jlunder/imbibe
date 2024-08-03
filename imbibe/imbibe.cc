@@ -1,4 +1,4 @@
-#include "cplusplus.hh"
+#include "imbibe.hh"
 
 #include <iostream.h>
 #include <stdlib.h>
@@ -7,6 +7,14 @@
 #include "task.hh"
 #include "task_manager.hh"
 #include "text_window.hh"
+
+
+class menu_task: public task
+{
+public:
+  menu_task(task_manager & n_owner, char const * mnu_path): task(n_owner) {}
+  bool done() {return true;}
+};
 
 
 class main_task: public task
@@ -77,6 +85,8 @@ bool main_task::run()
     abort();
     break;
   }
+
+  return true;
 }
 
 

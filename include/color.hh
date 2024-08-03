@@ -2,6 +2,9 @@
 #define __COLOR_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
+
 class color;
 
 

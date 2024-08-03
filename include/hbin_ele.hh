@@ -2,6 +2,8 @@
 #define __HBIN_ELEMENT_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
 #include "element.hh"
 #include "graphics.hh"
 #include "hbin.hh"

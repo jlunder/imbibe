@@ -2,7 +2,7 @@
 #define __VECTOR_HH_INCLUDED
 
 
-#include <stddef.h>
+#include "imbibe.hh"
 
 
 template < class T >

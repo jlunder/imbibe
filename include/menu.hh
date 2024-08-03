@@ -4,6 +4,8 @@
 
 #include <iostream.h>
 
+#include "imbibe.hh"
+
 #include "bitmap.hh"
 #include "string.hh"
 #include "vector.hh"
@@ -12,7 +14,7 @@
 class menu
 {
 public:
-  menu(istream & i);
+  menu(std::istream & i);
   ~menu();
   int width() const;
   int height() const;

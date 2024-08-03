@@ -2,6 +2,8 @@
 #define __MAP_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
 #include "functional.hh"
 #include "vector.hh"
 

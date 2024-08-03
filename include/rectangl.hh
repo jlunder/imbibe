@@ -2,6 +2,8 @@
 #define __RECTANGLE_ELEMENT_HH_INCLUDED
 
 
+#include "imbibe.hh"
+
 #include "graphics.hh"
 #include "element.hh"
 #include "window.hh"
