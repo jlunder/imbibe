@@ -66,6 +66,8 @@ clean_all: .SYMBOLIC
 # imbibe
 #
 
+imbibe_hhs = 
+
 imbibe_objs = &
   $(OBJ_DIR)bin_bitm.obj &
   $(OBJ_DIR)bitmap.obj   &

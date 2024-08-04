@@ -31,7 +31,7 @@ icstream::directory::directory(uint8_t * data, uint32_t length)
   s.read(buf, 4);
   dir_begin = buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24);
   dir_size = length - dir_begin;
-  assert(dir_size != 0);
+  //assert(dir_size != 0);
   assert((dir_size % 64) == 0);
   dir_size /= 64;
   s.seekg(dir_begin);

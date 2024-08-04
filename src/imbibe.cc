@@ -1,7 +1,8 @@
 #include "imbibe.hh"
 
-#include <iostream.h>
+#include <conio.h>
 #include <stdlib.h>
+
 #include "intro.hh"
 #include "outro.hh"
 #include "task.hh"
@@ -77,7 +78,7 @@ void main_task::run()
     }
     break;
   default:
-    cout << "BIG FAT ERROR #2493!" << endl;
+    cprintf("BIG FAT ERROR #2493!\n");
     abort();
     break;
   }
@@ -98,10 +99,9 @@ void run()
 
 int main(int argc, char * argv[])
 {
-  cout << "imbibe 1.0 loaded" << endl;
-  run();
-  cout << "imbibe 1.0 done" << endl;
-  cout << "  code courtesy of hacker joe" << endl;
+  cprintf("imbibe 1.0 loaded\n");
+  //run();
+  cprintf("imbibe 1.0 done\n");
   return 0;
 }
 
