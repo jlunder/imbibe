@@ -6,12 +6,6 @@
 #include "menu.hh"
 #include "menu_element.hh"
 
-#include "menu_handler.ii"
-
-#include "key_handler.ii"
-#include "menu.ii"
-#include "menu_element.ii"
-
 
 menu_handler::menu_handler(menu & n_m, menu_element & n_me):
   m_m(n_m), m_me(n_me)
@@ -39,17 +33,17 @@ bool menu_handler::handle(int c)
   }
   x = m_me.scroll_x();
   y = m_me.scroll_y();
-  if(x + m_me.frame_width() < m_m.link_x(selection) + m_m.link_picture(selection).width())
+  if(x + m_me.frame_width() < m_m.link_x(selection) + m_m.link_normal_picture(selection).width())
   {
-    x = m_m.link_x(selection) + m_m.link_picture(selection).width() - m_me.frame_width();
+    x = m_m.link_x(selection) + m_m.link_normal_picture(selection).width() - m_me.frame_width();
   }
   if(x > m_m.link_x(selection))
   {
     x = m_m.link_x(selection);
   }
-  if(y + m_me.frame_height() < m_m.link_y(selection) + m_m.link_picture(selection).height())
+  if(y + m_me.frame_height() < m_m.link_y(selection) + m_m.link_normal_picture(selection).height())
   {
-    y = m_m.link_y(selection) + m_m.link_picture(selection).height() - m_me.frame_height();
+    y = m_m.link_y(selection) + m_m.link_normal_picture(selection).height() - m_me.frame_height();
   }
   if(y > m_m.link_y(selection))
   {

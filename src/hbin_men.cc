@@ -6,12 +6,6 @@
 #include "hbin.hh"
 #include "hbin_element.hh"
 
-#include "hbin_menu_handler.ii"
-
-#include "key_handler.ii"
-#include "hbin.ii"
-#include "hbin_element.ii"
-
 
 hbin_menu_handler::hbin_menu_handler(hbin & n_hb, hbin_element & n_hbe):
   m_hb(n_hb), m_hbe(n_hbe)

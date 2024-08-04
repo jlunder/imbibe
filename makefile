@@ -2,7 +2,7 @@ VERSION = debug
 PLATFORM = 16bit
 
 INCLUDE_DIRS = include/
-SRC_DIRS = src/;support/;test/;imbibe/
+SRC_DIRS = src/;support/;test/
 OBJ_DIR = $(PLATFORM)/$(VERSION)/
 INCLUDE_DIR = include/
 SRC_DIR = src/
@@ -31,12 +31,6 @@ CC = $(CC_$(PLATFORM))
 .obj: $(OBJ_DIR)
 .exe: $(OBJ_DIR)
 
-.obj.exe:
-        echo name $(OBJ_DIR)$^& > $(OBJ_DIR)$^&.lnk
-        echo $(LINK_OPT) >> $(OBJ_DIR)$^&.lnk
-        for %i in ($($^&_objs)) do echo file $(OBJ_DIR)%i >> $(OBJ_DIR)$^&.lnk
-        $(LINK) @$(OBJ_DIR)$^&.lnk
-
 .cc.obj: .AUTODEPEND
         $(CC) $(CC_OPT) $<
 
@@ -52,150 +46,56 @@ clean_all: .SYMBOLIC
         echo y | del 32bit/profile/*.*
 
 #
-# source dependencies
-#
-
-bitmap_objs = bitmap.obj
-bitmap_graphics_objs = bitmap_graphics.obj $(bitmap_objs)
-bin_bitmap_objs = bin_bitmap.obj $(bitmap_objs)
-element_objs = element.obj
-bitmap_element_objs = bitmap_element.obj $(bitmap_objs) $(element_objs)
-cstream_objs = cstream.obj data.obj
-timer_objs = timer.obj
-idle_handler_objs = idle_handler.obj
-idle_dispatcher_objs = idle_dispatcher.obj $(timer_objs) $(idle_handler_objs)
-text_window_objs = text_window.obj $(bitmap_objs)
-key_dispatcher_objs = key_dispatcher.obj $(idle_handler_objs) &
-                           $(idle_dispatcher_objs)
-menu_objs = menu.obj $(bin_bitmap_objs)
-key_handler_objs =
-rectangle_element_objs = rectangle_element.obj $(element_objs)
-stop_handler_objs = stop_handler.obj $(key_handler_objs) $(idle_handler_objs)
-menu_element_objs = menu_element.obj $(element_objs) $(menu_objs)
-menu_handler_objs = menu_handler.obj $(key_handler_objs) $(menu_objs)
-hbin_objs = hbin.obj $(bin_bitmap_objs) $(bitmap_objs)
-hbin_element_objs = hbin_element.obj $(element_objs) $(bitmap_graphics_objs) &
-                    $(hbin_objs) $(window_objs)
-hbin_menu_handler_objs = hbin_menu_handler.obj $(key_handler_objs) &
-                         $(hbin_objs) $(hbin_element_objs)
-hbin_view_handler_objs = hbin_view_handler.obj $(key_handler_objs) &
-                         $(hbin_objs) $(hbin_element_objs)
-
-#
 # data
 #
 
-data.obj: $(src_dir)data.cc $(include_dir)data.hh
+# data.obj: $(SRC_DIR)data.cc $(INCLUDE_DIR)data.hh
 
-$(src_dir)data.cc $(include_dir)data.hh: mkconst.exe pack.exe testdata/test.dsc
-        cd testdata
-#        ../$(obj_dir)txt2bin ../data/about.txt about.bin
-        ../$(obj_dir)pack test.dsc test.pkg
-        ../$(obj_dir)mkconst test.pkg data.hh data.cc
-        del ../$(include_dir)data.hh
-        del ../$(src_dir)data.cc
-        move data.hh ../$(include_dir)data.hh
-        move data.cc ../$(src_dir)data.cc
-        cd ..
+#$(SRC_DIR)data.cc $(INCLUDE_DIR)data.hh: mkconst.exe pack.exe testdata/test.dsc
+#        cd testdata
+##        ../$(OBJ_DIR)txt2bin ../data/about.txt about.bin
+#        ../$(OBJ_DIR)pack test.dsc test.pkg
+#        ../$(OBJ_DIR)mkconst test.pkg data.hh data.cc
+#        del ../$(INCLUDE_DIR)data.hh
+#        del ../$(SRC_DIR)data.cc
+#        move data.hh ../$(INCLUDE_DIR)data.hh
+#        move data.cc ../$(SRC_DIR)data.cc
+#        cd ..
 
 #
 # imbibe
 #
 
-imbibe_objs = imbibe.obj $(bin_bitmap_objs) $(bitmap_objs) &
-              $(bitmap_element_objs) $(bitmap_graphics_objs) &
-              $(cstream_objs) $(data_objs) $(element_objs) &
-              $(menu_element_objs) &
-              $(idle_handler_objs) $(idle_dispatcher_objs) $(text_window_objs) &
-              $(timer_objs)
-imbibe.exe: $(imbibe_objs)
+imbibe_objs = &
+  $(OBJ_DIR)bin_bitm.obj &
+  $(OBJ_DIR)bitmap.obj   &
+  $(OBJ_DIR)bitmap_e.obj &
+  $(OBJ_DIR)bitmap_g.obj &
+  $(OBJ_DIR)cstream.obj  &
+  $(OBJ_DIR)element.obj  &
+  $(OBJ_DIR)hbin.obj     &
+  $(OBJ_DIR)hbin_ele.obj &
+  $(OBJ_DIR)hbin_men.obj &
+  $(OBJ_DIR)hbin_vie.obj &
+  $(OBJ_DIR)imbibe.obj   &
+  $(OBJ_DIR)key_disp.obj &
+  $(OBJ_DIR)menu.obj     &
+  $(OBJ_DIR)menu_ele.obj &
+  $(OBJ_DIR)menu_han.obj &
+  $(OBJ_DIR)rectangl.obj &
+  $(OBJ_DIR)task.obj     &
+  $(OBJ_DIR)task_man.obj &
+  $(OBJ_DIR)text_win.obj &
+  $(OBJ_DIR)timed_ta.obj &
+  $(OBJ_DIR)timer.obj    &
+  &
+  $(OBJ_DIR)data.obj
 
-#
-# support
-#
+$(OBJ_DIR)imbibe.exe: $(imbibe_objs)
+        echo name $(OBJ_DIR)$^& > $(OBJ_DIR)$^&.lnk
+        echo $(LINK_OPT) >> $(OBJ_DIR)$^&.lnk
+        for %i in ($(imbibe_objs)) do echo file %i >> $(OBJ_DIR)$^&.lnk
+        $(LINK) @$(OBJ_DIR)$^&.lnk
 
-mkconst_objs = mkconst.obj
-mkconst.exe: $(mkconst_objs)
-
-mkmenu_objs = mkmenu.obj
-mkmenu.exe: $(mkmenu_objs)
-
-mkms_objs = mkms.obj $(bitmap_objs) $(bitmap_graphics_objs)
-mkms.exe: $(mkms_objs)
-
-pack_objs = pack.obj
-pack.exe: $(pack_objs)
-
-qview_objs = qview.obj
-qview.exe: $(qview_objs)
-
-twm2bin_objs = twm2bin.obj $(bitmap_objs) $(bitmap_graphics_objs)
-twm2bin.exe: $(twm2bin_objs)
-
-txt2bin_objs = txt2bin.obj
-txt2bin.exe: $(txt2bin_objs)
-
-tmt2bin_objs = tmt2bin.obj
-tmt2bin.exe: $(tmt2bin_objs)
-
-mkhbin_objs = mkhbin.obj
-mkhbin.exe: $(mkhbin_objs)
-
-#
-# test
-#
-
-maptest.exe:
-
-test1_objs = test1.obj $(bin_bitmap_objs) $(bitmap_objs) &
-             $(bitmap_element_objs) $(cstream_objs) $(element_objs) &
-             $(text_window_objs)
-test1.exe: $(test1_objs)
-
-test2_objs = test2.obj $(bin_bitmap_objs) $(bitmap_objs) &
-             $(bitmap_element_objs) $(cstream_objs) &
-             $(idle_dispatcher_objs) $(text_window_objs)
-test2.exe: $(test2_objs)
-
-test3_objs = test3.obj $(bin_bitmap_objs) $(cstream_objs) &
-             $(key_dispatcher_objs) $(menu_objs) $(menu_element_objs) &
-             $(menu_handler_objs) $(rectangle_element_objs) &
-             $(stop_handler_objs) $(idle_dispatcher_objs) $(text_window_objs)
-test3.exe: $(test3_objs)
-
-test4_objs = test4.obj $(bin_bitmap_objs) $(cstream_objs) $(hbin_objs) &
-             $(hbin_element_objs) $(hbin_menu_handler_objs) &
-             $(key_dispatcher_objs) $(rectangle_element_objs) &
-             $(stop_handler_objs) $(idle_dispatcher_objs) $(text_window_objs)
-test4.exe: $(test4_objs)
-
-test4p_objs = test4p.obj no_timer.obj $(bin_bitmap_objs) $(cstream_objs) &
-              $(hbin_objs) $(hbin_element_objs) $(hbin_menu_handler_objs) &
-              $(key_dispatcher_objs) $(rectangle_element_objs) &
-              $(stop_handler_objs) $(idle_dispatcher_objs) $(text_window_objs)
-test4p.exe: $(test4p_objs)
-
-test5_objs = test5.obj $(cstream_objs) $(hbin_objs) &
-             $(hbin_element_objs) $(hbin_view_handler_objs) &
-             $(key_handler_objs) $(key_dispatcher_objs) &
-             $(rectangle_element_objs) $(stop_handler_objs) &
-             $(idle_dispatcher_objs) $(text_window_objs)
-test5.exe: $(test5_objs)
-
-test6_objs = test6.obj $(cstream_objs) $(hbin_objs) &
-             $(hbin_element_objs) $(hbin_view_handler_objs) &
-             $(key_handler_objs) $(key_dispatcher_objs) &
-             $(rectangle_element_objs) $(stop_handler_objs) &
-             $(idle_dispatcher_objs) $(text_window_objs)
-test6.exe: $(test6_objs)
-
-keytest_objs = keytest.obj $(key_dispatcher_objs) $(key_handler_objs) &
-               $(idle_handler_objs) $(idle_dispatcher_objs)
-keytest.exe: $(keytest_objs)
-
-timetest_objs = timetest.obj $(timer_objs)
-timetest.exe: $(timetest_objs)
-
-vectest_objs = vectest.obj
-vectest.exe: $(vectest_objs)
+imbibe: $(OBJ_DIR)imbibe.exe .SYMBOLIC
 

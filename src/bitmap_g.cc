@@ -11,13 +11,6 @@
 #include "graphics.hh"
 #include "pixel.hh"
 
-#include "bitmap_graphics.ii"
-
-#include "bitmap.ii"
-#include "color.ii"
-#include "graphics.ii"
-#include "pixel.ii"
-
 
 bitmap_graphics::bitmap_graphics(bitmap & n_b):
   m_b(n_b), m_clip_x1(0), m_clip_y1(0), m_clip_x2(n_b.width()), m_clip_y2(n_b.height()), m_bounds_x1(0), m_bounds_y1(0), m_bounds_x2(n_b.width()), m_bounds_y2(n_b.height())

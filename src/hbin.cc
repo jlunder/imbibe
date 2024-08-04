@@ -8,16 +8,10 @@
 #include "string.hh"
 #include "vector.hh"
 
-#include "hbin.ii"
-
-#include "bin_bitmap.ii"
-#include "string.ii"
-#include "vector.ii"
-
 
 hbin::hbin(istream & i)
 {
-  unsigned char buf[256];
+  uint8_t buf[256];
   int n;
   int x;
   int width;

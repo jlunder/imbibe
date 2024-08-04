@@ -7,9 +7,6 @@
 #include "string.hh"
 #include "vector.hh"
 
-#include "string.ii"
-#include "vector.ii"
-
 
 int hex_value(char c)
 {
@@ -111,8 +108,8 @@ void skip_comma(istream & i)
 }
 
 
-typedef vector < unsigned short > line;
-typedef vector < line > line_list;
+typedef vector<uint16_t> line;
+typedef vector<line> line_list;
 
 
 struct link
@@ -124,24 +121,24 @@ struct link
 };
 
 
-typedef vector < link > link_list;
+typedef vector<link> link_list;
 
 
-unsigned short const head = 0x0B00;
-unsigned short const body = 0x0900;
-unsigned short const bold = 0x0F00;
-unsigned short const parens = 0x0500;
-unsigned short const brackets = 0x0600;
-unsigned short const braces = 0x0800;
-unsigned short const link_selected = 0x0B00;
-unsigned short const link_normal = 0x0300;
+uint16_t const head = 0x0B00;
+uint16_t const body = 0x0900;
+uint16_t const bold = 0x0F00;
+uint16_t const parens = 0x0500;
+uint16_t const brackets = 0x0600;
+uint16_t const braces = 0x0800;
+uint16_t const link_selected = 0x0B00;
+uint16_t const link_normal = 0x0300;
 
 
-void read_link_data(istream & textf, line & l, unsigned short const link_color)
+void read_link_data(istream & textf, line & l, uint16_t const link_color)
 {
   int c;
-  vector < unsigned short > attr;
-  unsigned short cur_attr;
+  vector<uint16_t> attr;
+  uint16_t cur_attr;
 
   attr.push_back(link_color);
   cur_attr = attr.back();
@@ -267,11 +264,11 @@ void process(istream & textf, ostream & hbinf)
   line_list::iterator i;
   link_list links;
   link_list::iterator link_i;
-  unsigned long count;
-  vector < unsigned short > attr;
-  unsigned short cur_attr;
-  unsigned short * temp;
-  unsigned char buf[256];
+  uint32_t count;
+  vector<uint16_t> attr;
+  uint16_t cur_attr;
+  uint16_t * temp;
+  uint8_t buf[256];
 
   attr.push_back(body);
   cur_attr = attr.back();
@@ -406,7 +403,7 @@ void process(istream & textf, ostream & hbinf)
   buf[1] = (l.size() >> 8) & 0xFF;
   hbinf.write(buf, 2);
 
-  temp = new unsigned short[l.size() * 80];
+  temp = new uint16_t[l.size() * 80];
   for(count = 0; count < l.size() * 80; ++count)
   {
     temp[count] = 0x0700 | ' ';
@@ -414,10 +411,10 @@ void process(istream & textf, ostream & hbinf)
   count = 0;
   for(i = l.begin(); i != l.end(); ++i)
   {
-    memcpy(temp + count, i->begin(), (i->size() > 80 ? 80 : i->size()) * sizeof(unsigned short));
+    memcpy(temp + count, i->begin(), (i->size() > 80 ? 80 : i->size()) * sizeof(uint16_t));
     count += 80;
   }
-  hbinf.write((unsigned char *)temp, l.size() * 80 * sizeof(unsigned short));
+  hbinf.write((uint8_t *)temp, l.size() * 80 * sizeof(uint16_t));
   delete[] temp;
 
   assert(links.size() < (1 << 16));
@@ -454,7 +451,7 @@ void process(istream & textf, ostream & hbinf)
     buf[1] = (1 >> 8) & 0xFF;
     hbinf.write(buf, 2);
 
-    hbinf.write((unsigned char *)link_i->data.begin(), link_i->data.size() * sizeof(unsigned short));
+    hbinf.write((uint8_t *)link_i->data.begin(), link_i->data.size() * sizeof(uint16_t));
   }
 }
 

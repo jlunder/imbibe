@@ -24,8 +24,8 @@ int main(int argc, char * argv[])
   char * s;
   int c;
   int col;
-  unsigned long count;
-  unsigned long len;
+  uint32_t count;
+  uint32_t len;
 
   if(argc < 4)
   {
@@ -73,8 +73,8 @@ int main(int argc, char * argv[])
   f << "#define __" << fname_upper << "_INCLUDED" << endl;
   f << endl;
   f << endl;
-  f << "unsigned long const " << ident << "_length = " << len << ";" << endl;
-  f << "extern unsigned char " << ident << "_data[" << ident << "_length];" << endl;
+  f << "uint32_t const " << ident << "_length = " << len << ";" << endl;
+  f << "extern uint8_t " << ident << "_data[" << ident << "_length];" << endl;
   f << endl;
   f << endl;
   f << "#endif //__" << fname_upper << "_INCLUDED" << endl;
@@ -86,7 +86,7 @@ int main(int argc, char * argv[])
   f << "#include \"" << argv[2] << "\"" << endl;
   f << endl;
   f << endl;
-  f << "unsigned char " << ident << "_data[" << ident << "_length] =" << endl;
+  f << "uint8_t " << ident << "_data[" << ident << "_length] =" << endl;
   f << "{" << endl << "  ";
   count = 0;
   col = 0;

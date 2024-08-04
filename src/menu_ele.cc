@@ -8,16 +8,8 @@
 #include "window.hh"
 #include "pixel.hh"
 
-#include "menu_element.ii"
 
-#include "bitmap.ii"
-#include "element.ii"
-#include "graphics.ii"
-#include "window.ii"
-#include "pixel.ii"
-
-
-menu_element::menu_element(int n_x1, int n_y1, int n_x2, int n_y2, int n_z, window & n_owner, menu & n_m, int n_scroll_x, int n_scroll_y, int n_selection):
+menu_element::menu_element(int16_t n_x1, int16_t n_y1, int16_t n_x2, int16_t n_y2, int16_t n_z, window & n_owner, menu & n_m, int16_t n_scroll_x, int16_t n_scroll_y, int16_t n_selection):
   element(n_x1, n_y1, n_x2, n_y2, n_z, n_owner), m_m(n_m), m_scroll_x(n_scroll_x), m_scroll_y(n_scroll_y), m_selection(n_selection)
 {
   assert(m_selection < m_m.num_links());
@@ -40,18 +32,18 @@ void menu_element::paint(graphics & g) const
 }
 
 
-void menu_element::set_scroll_pos(int x, int y)
+void menu_element::set_scroll_pos(int16_t x, int16_t y)
 {
   m_scroll_x = x;
   m_scroll_y = y;
   if(visible())
   {
-    m_owner.repaint(frame_x1(), frame_y1(), frame_x2(), frame_y2());
+    owner().repaint(frame_x1(), frame_y1(), frame_x2(), frame_y2());
   }
 }
 
 
-void menu_element::set_selection(int n_selection)
+void menu_element::set_selection(int16_t n_selection)
 {
   assert(n_selection < m_m.num_links());
   if(n_selection == m_selection) return;

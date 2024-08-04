@@ -5,11 +5,9 @@
 
 #include "vector.hh"
 
-#include "vector.ii"
 
-
-typedef vector < unsigned short > line;
-typedef vector < line > line_list;
+typedef vector<uint16_t> line;
+typedef vector<line> line_list;
 
 
 void process(istream & textf, ostream & binf)
@@ -17,13 +15,13 @@ void process(istream & textf, ostream & binf)
   int c;
   line_list l;
   line_list::iterator i;
-  unsigned long count = 0;
-  unsigned short attr = 0x0700;
-  unsigned short const head = 0x0B00;
-  unsigned short const body = 0x0700;
-  unsigned short const bold = 0x0F00;
-  unsigned short const comment = 0x0800;
-  unsigned short * temp;
+  uint32_t count = 0;
+  uint16_t attr = 0x0700;
+  uint16_t const head = 0x0B00;
+  uint16_t const body = 0x0700;
+  uint16_t const bold = 0x0F00;
+  uint16_t const comment = 0x0800;
+  uint16_t * temp;
 
   clog << "parsing text file" << endl;
   l.push_back(line());
@@ -53,7 +51,7 @@ void process(istream & textf, ostream & binf)
     }
   }
   clog << "processing" << endl;
-  temp = new unsigned short[l.size() * 80];
+  temp = new uint16_t[l.size() * 80];
   for(count = 0; count < l.size() * 80; ++count)
   {
     temp[count] = 0x0700 | ' ';
@@ -61,11 +59,11 @@ void process(istream & textf, ostream & binf)
   count = 0;
   for(i = l.begin(); i != l.end(); ++i)
   {
-    memcpy(temp + count, i->begin(), (i->size() > 80 ? 80 : i->size()) * sizeof(unsigned short));
+    memcpy(temp + count, i->begin(), (i->size() > 80 ? 80 : i->size()) * sizeof(uint16_t));
     count += 80;
   }
   clog << "writing bin file" << endl;
-  binf.write((unsigned char *)temp, l.size() * 80 * sizeof(unsigned short));
+  binf.write((uint8_t *)temp, l.size() * 80 * sizeof (uint16_t));
   delete[] temp;
 }
 

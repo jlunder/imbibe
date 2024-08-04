@@ -8,8 +8,6 @@
 
 #include "string.hh"
 
-#include "string.ii"
-
 
 string read_word(istream & i)
 {
@@ -82,9 +80,9 @@ void skip_comma(istream & i)
 void process(istream & srcf, ostream & menuf)
 {
   ifstream f;
-  unsigned char buf[256];
+  uint8_t buf[256];
   size_t picture_size = 1024;
-  unsigned char * picture_buf = new unsigned char[picture_size];
+  uint8_t * picture_buf = new uint8_t[picture_size];
   streampos p;
   int count = 0;
   int x;
@@ -173,11 +171,11 @@ void process(istream & srcf, ostream & menuf)
     buf[1] = (h >> 8) & 0xFF;
     menuf.write(buf, 2);
 
-    if(w * h * sizeof(unsigned short) > picture_size)
+    if(w * h * sizeof(uint16_t) > picture_size)
     {
       delete[] picture_buf;
-      picture_size = (w * h * sizeof(unsigned short) * 3) / 2 + 1;
-      picture_buf = new unsigned char[picture_size];
+      picture_size = (w * h * sizeof(uint16_t) * 3) / 2 + 1;
+      picture_buf = new uint8_t[picture_size];
     }
 
     s = read_word(srcf);
@@ -188,9 +186,9 @@ void process(istream & srcf, ostream & menuf)
       clog << "unable to open file: \"" << s << "\"" << endl;
       abort();
     }
-    f.read(picture_buf, w * h * sizeof(unsigned short));
+    f.read(picture_buf, w * h * sizeof(uint16_t));
     f.close();
-    menuf.write(picture_buf, w * h * sizeof(unsigned short));
+    menuf.write(picture_buf, w * h * sizeof(uint16_t));
 
     s = read_word(srcf);
     eat_white(srcf);
@@ -200,9 +198,9 @@ void process(istream & srcf, ostream & menuf)
       clog << "unable to open file: \"" << s << "\"" << endl;
       abort();
     }
-    f.read(picture_buf, w * h * sizeof(unsigned short));
+    f.read(picture_buf, w * h * sizeof(uint16_t));
     f.close();
-    menuf.write(picture_buf, w * h * sizeof(unsigned short));
+    menuf.write(picture_buf, w * h * sizeof(uint16_t));
 
     ++count;
   }

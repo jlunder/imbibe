@@ -8,21 +8,21 @@
 struct dir_entry
 {
   char filename[56];
-  unsigned long location;
-  unsigned long length;
+  uint32_t location;
+  uint32_t length;
 };
 
 
 void pack(ifstream & descf, ofstream & packagef)
 {
   char buf[1024];
-  unsigned char data_buf[1024];
+  uint8_t data_buf[1024];
   size_t len;
   ifstream f;
   dir_entry * directory;
-  unsigned long dir_len = 0;
-  unsigned long data_end = -1;
-  unsigned long curr_dir = 0;
+  uint32_t dir_len = 0;
+  uint32_t data_end = -1;
+  uint32_t curr_dir = 0;
 
   clog << "  beginning pack" << endl;
   while(descf.good() && !descf.eof())
@@ -58,7 +58,7 @@ void pack(ifstream & descf, ofstream & packagef)
   clog << "writing directory pointer " << data_end << "..." << endl;
   descf.clear();
   descf.seekg(0);
-  packagef.write((unsigned char *)&data_end, sizeof(data_end));
+  packagef.write((uint8_t *)&data_end, sizeof(data_end));
   while(descf.good() && !descf.eof())
   {
     descf.getline(buf, 1024);
@@ -102,11 +102,11 @@ void pack(ifstream & descf, ofstream & packagef)
   }
   data_end = packagef.tellp();
   clog << "writing directory" << endl;
-  packagef.write((unsigned char *)directory, dir_len * sizeof(dir_entry));
+  packagef.write((uint8_t *)directory, dir_len * sizeof(dir_entry));
   clog << "  package file is " << dec << packagef.tellp() << hex << " bytes long" << endl;
   clog << "writing directory pointer " << data_end << endl;
   packagef.seekp(0);
-  packagef.write((unsigned char *)&data_end, sizeof(data_end));
+  packagef.write((uint8_t *)&data_end, sizeof(data_end));
   clog << dec;
   clog << "  done pack" << endl;
 }

@@ -12,12 +12,6 @@
 
 #include "data.hh"
 
-#include "cstream.ii"
-
-#include "functional.ii"
-#include "map.ii"
-#include "string.ii"
-
 
 icstream::icstream(string const & name):
   istrstream(dir.data(name), dir.length(name))
@@ -25,13 +19,13 @@ icstream::icstream(string const & name):
 }
 
 
-icstream::directory::directory(unsigned char * data, unsigned long length)
+icstream::directory::directory(uint8_t * data, uint32_t length)
 {
   istrstream s(data, length);
   dir_entry_list_value v;
-  unsigned long dir_begin;
-  unsigned long dir_size;
-  unsigned long i;
+  uint32_t dir_begin;
+  uint32_t dir_size;
+  uint32_t i;
   char buf[57];
 
   s.read(buf, 4);
@@ -57,7 +51,7 @@ icstream::directory::directory(unsigned char * data, unsigned long length)
 }
 
 
-unsigned char * icstream::directory::data(string const & name)
+uint8_t * icstream::directory::data(string const & name)
 {
   dir_entry_list_iterator i;
 
@@ -67,7 +61,7 @@ unsigned char * icstream::directory::data(string const & name)
 }
 
 
-unsigned long icstream::directory::length(string const & name)
+uint32_t icstream::directory::length(string const & name)
 {
   dir_entry_list_iterator i;
 

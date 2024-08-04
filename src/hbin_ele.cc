@@ -7,13 +7,6 @@
 #include "hbin.hh"
 #include "window.hh"
 
-#include "hbin_element.ii"
-
-#include "element.ii"
-#include "graphics.ii"
-#include "hbin.ii"
-#include "window.ii"
-
 
 hbin_element::hbin_element(int n_x1, int n_y1, int n_x2, int n_y2, int n_z, window & n_owner, hbin & n_hb, int n_scroll_x, int n_scroll_y, int n_selection):
   element(n_x1, n_y1, n_x2, n_y2, n_z, n_owner), m_hb(n_hb), m_scroll_x(n_scroll_x), m_scroll_y(n_scroll_y), m_selection(n_selection)

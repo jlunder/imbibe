@@ -7,13 +7,6 @@
 #include "window.hh"
 #include "pixel.hh"
 
-#include "rectangle_element.ii"
-
-#include "element.ii"
-#include "graphics.ii"
-#include "window.ii"
-#include "pixel.ii"
-
 
 rectangle_element::rectangle_element(int n_x1, int n_y1, int n_x2, int n_y2, int n_z, window & n_owner, pixel n_p):
   element(n_x1, n_y1, n_x2, n_y2, n_z, n_owner), m_p(n_p)

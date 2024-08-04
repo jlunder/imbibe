@@ -1,86 +1,127 @@
-#include "cplusplus.hh"
+#include "imbibe.hh"
 
 #include "task_man.hh"
 
 #include "task.hh"
 #include "vector.hh"
 
-#include "task_man.ii"
 
-#include "task.ii"
-#include "vector.ii"
+delete_reclaim<action> action::s_default_reclaim;
 
+do_nothing_reclaim<action> reusable_action::s_do_nothing_reclaim;
 
-task_manager::task_manager():
-  m_busy(false)
-{
-}
+bool task_manager::s_busy = false;
+task_manager::task_p_list task_manager::s_tasks;
+task_manager::task_p_list task_manager::s_tasks_to_run;
+task_manager::action_p_list task_manager::s_deferred_actions;
+task_manager::task_p_list task_manager::s_tasks_to_reclaim;
 
 
 void task_manager::add_task(task & t)
 {
-  if(!m_busy)
-  {
-    m_tasks.push_back(&t);
-    t.begin();
+  assert(!s_busy);
+  task_p_list::iterator e = s_tasks.end();
+  for (task_p_list::iterator i = s_tasks.begin(); i != e; ++i) {
+    if (*i == &t) {
+      return;
+    }
   }
-  else
-  {
-    m_tasks_to_add.push_back(&t);
-  }
+  s_tasks.push_back(&t);
 }
 
 
 void task_manager::remove_task(task & t)
 {
-  task_p_list::iterator i;
-
-  if(!m_busy)
-  {
-    t.end();
-    for(i = m_tasks.begin(); (i != m_tasks.end()) && (*i != &t); ++i);
-    assert(i != m_tasks.end());
-    m_tasks.erase(i);
+  assert(!s_busy);
+  task_p_list::iterator e = s_tasks.end();
+  for (task_p_list::iterator i = s_tasks.begin(); i != e; ) {
+    if (*i != &t) {
+      ++i;
+    } else {
+      --e;
+      *i = *e;
+    }
   }
-  else
-  {
-    m_tasks_to_remove.push_back(&t);
-  }
+  s_tasks.erase(e, s_tasks.end());
+  t.reclaimer()(&t);
 }
 
 
-void task_manager::run()
+void task_manager::request_run_task(task & t)
 {
-  task_p_list::iterator i;
-  unsigned long l = 0;
+  assert(!s_busy);
+  task_p_list::iterator e = s_tasks.end();
+  for (task_p_list::iterator i = s_tasks.begin(); i != e; ++i) {
+    if (*i == &t) {
+      return;
+    }
+  }
+  s_tasks.push_back(&t);
+}
 
-  while(!m_tasks.empty())
-  {
-    l = 0;
-    m_busy = true;
-    for(i = m_tasks.begin(); i != m_tasks.end(); ++i)
-    {
-      (*i)->pre_cycle();
+
+void task_manager::defer_action(action * a)
+{
+  assert(s_busy);
+  s_deferred_actions.push_back(a);
+}
+
+
+bool task_manager::run()
+{
+  assert(!s_busy);
+  assert(s_deferred_actions.empty());
+
+  if (s_tasks_to_run.empty()) {
+    return false;
+  }
+
+  { // Run waiting tasks
+    s_busy = true;
+    task_p_list::iterator e = s_tasks_to_run.end();
+    for (task_p_list::iterator i = s_tasks_to_run.begin(); i != e; ++i) {
+      (*i)->run();
     }
-    for(i = m_tasks.begin(); i != m_tasks.end(); ++i)
-    {
-      (*i)->cycle();
+    s_tasks_to_run.clear();
+    s_busy = false;
+  }
+
+  { // Follow up with any deferred actions
+    action_p_list::iterator e = s_deferred_actions.end();
+    for (action_p_list::iterator i = s_deferred_actions.begin(); i != e; ++i) {
+      (**i)();
+      (*i)->reclaimer()(*i);
     }
-    for(i = m_tasks.begin(); i != m_tasks.end(); ++i)
+    s_deferred_actions.clear();
+  }
+
+  return true;
+}
+
+
+void task_manager::idle()
+{
+  assert(!s_busy);
+  assert(s_deferred_actions.empty());
+
+  if (!s_tasks.empty()) {
     {
-      (*i)->post_cycle();
+      s_busy = true;
+      task_p_list::iterator e = s_tasks.end();
+      for (task_p_list::iterator i = s_tasks.begin(); i != e; ++i) {
+        (*i)->idle();
+      }
+      s_busy = false;
     }
-    m_busy = false;
-    for(i = m_tasks_to_add.begin(); i != m_tasks_to_add.end(); ++i)
+
     {
-      add_task(**i);
+      action_p_list::iterator e = s_deferred_actions.end();
+      for (action_p_list::iterator i = s_deferred_actions.begin(); i != e; ++i) {
+        (**i)();
+        (*i)->reclaimer()(*i);
+      }
+      s_deferred_actions.clear();
     }
-    m_tasks_to_add.clear();
-    for(i = m_tasks_to_remove.begin(); i != m_tasks_to_remove.end(); ++i)
-    {
-      remove_task(**i);
-    }
-    m_tasks_to_remove.clear();
   }
 }
 

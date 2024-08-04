@@ -4,28 +4,6 @@
 
 #include "timer.hh"
 
-#include "timer.ii"
-
-
-#ifdef __386__
-
-
-extern void ENTER_CRIT();
-#pragma aux ENTER_CRIT="pushfd"\
-                       "cli"\
-                       modify exact [] nomemory;
-
-
-extern void LEAVE_CRIT();
-#pragma aux LEAVE_CRIT="popfd"\
-                       modify exact [] nomemory;
-
-
-#endif //__386__
-
-
-#ifdef __I86__
-
 
 extern void ENTER_CRIT();
 #pragma aux ENTER_CRIT="pushf"\
@@ -38,35 +16,32 @@ extern void LEAVE_CRIT();
                        modify exact [] nomemory;
 
 
-#endif //__I86__
-
-
 extern void ACKINT();
 #pragma aux ACKINT="mov al, 20h"\
                    "out 20h, al"\
                    modify exact [al] nomemory;
 
 
-extern void OUTB(unsigned short port, unsigned char value);
+extern void OUTB(uint16_t port, uint8_t value);
 #pragma aux OUTB="out dx, al"\
                  parm [dx] [al]\
                  modify exact [] nomemory;
 
 
-extern void OUTWB(unsigned short port, unsigned short value);
+extern void OUTWB(uint16_t port, uint16_t value);
 #pragma aux OUTWB="out dx, al"\
                   "mov al, ah"\
                   "out dx, al"\
                   parm [dx] [ax]\
                   modify exact [ax] nomemory;
 
-extern unsigned short INB(unsigned short port);
+extern uint16_t INB(uint16_t port);
 #pragma aux INB="in al, dx"\
                 parm [dx]\
                 value [al]\
                 modify exact [al] nomemory;
 
-extern unsigned short INWB(unsigned short port);
+extern uint16_t INWB(uint16_t port);
 #pragma aux INWB="in al, dx"\
                  "mov ah, al"\
                  "in al, dx"\
@@ -176,16 +151,16 @@ static void (__interrupt timer::hw_timer::pit_handler_bios_faster)()
 static void (__interrupt * timer::hw_timer::pit_bios_handler)();
 
 
-static unsigned long timer::hw_timer::pit_tick_inc;
+static uint32_t timer::hw_timer::pit_tick_inc;
 
 
-static unsigned long timer::hw_timer::pit_tick_bios_inc;
+static uint32_t timer::hw_timer::pit_tick_bios_inc;
 
 
-static unsigned long timer::hw_timer::pit_tick_count;
+static uint32_t timer::hw_timer::pit_tick_count;
 
 
-static volatile unsigned long timer::hw_timer::timer_count;
+static volatile uint32_t timer::hw_timer::timer_count;
 
 
 static timer::hw_timer timer::hw_t;

@@ -9,19 +9,10 @@
 #include "string.hh"
 #include "vector.hh"
 
-#include "menu.ii"
 
-#include "bin_bitmap.ii"
-#include "bitmap.ii"
-#include "string.ii"
-#include "vector.ii"
-
-
-menu::menu(istream & i):
-  m_selection(0)
+menu::menu(istream & i)
 {
-  unsigned long x;
-  unsigned char buf[256];
+  uint8_t buf[256];
   int w;
   int h;
   link l;
@@ -33,10 +24,10 @@ menu::menu(istream & i):
 
   i.read(buf, 2);
   assert(i.good());
-  m_num_links = buf[0] + (buf[1] << 8);
-  m_links.reserve(m_num_selections);
+  uint_fast16_t num_links = buf[0] + (buf[1] << 8);
+  m_links.reserve(num_links);
 
-  for(x = 0; x < m_num_selections; ++x)
+  for(uint_fast16_t x = 0; x < num_links; ++x)
   {
     i.read(buf, 1);
     w = buf[0];

@@ -11,12 +11,6 @@
 #include "pixel.hh"
 #include "string.hh"
 
-#include "bitmap.ii"
-#include "bitmap_graphics.ii"
-#include "color.ii"
-#include "pixel.ii"
-#include "string.ii"
-
 
 string read_word(istream & i)
 {
@@ -140,7 +134,7 @@ void process(istream & srcf, ostream & menuf)
     f.open(fn, ios::out | ios::binary);
     b->g().draw_rectangle(0, 0, w, 1, pixel(' ', cn));
     b->g().draw_text(0, 0, cn, s);
-    f.write((unsigned char *)b->data(), w * sizeof(unsigned short));
+    f.write((uint8_t *)b->data(), w * sizeof(uint16_t));
     f.close();
 
     sprintf(fn, "%04xs.bin", count);
@@ -148,7 +142,7 @@ void process(istream & srcf, ostream & menuf)
     f.open(fn, ios::out | ios::binary);
     b->g().draw_rectangle(0, 0, w, 1, pixel(' ', cs));
     b->g().draw_text(0, 0, cs, s);
-    f.write((unsigned char *)b->data(), w * sizeof(unsigned short));
+    f.write((uint8_t *)b->data(), w * sizeof(uint16_t));
     f.close();
 
     ++count;

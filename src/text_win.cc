@@ -7,12 +7,8 @@
 #include <string.h>
 
 #include "bitmap.hh"
+#include "bitmap_graphics.hh"
 #include "element.hh"
-
-#include "text_window.ii"
-
-#include "bitmap.ii"
-#include "element.ii"
 
 
 text_window::text_window():
@@ -37,6 +33,7 @@ void text_window::lock()
 
 void text_window::unlock()
 {
+  assert(m_locked);
   --m_locked;
   if(!m_locked)
   {
@@ -62,7 +59,7 @@ void text_window::repaint()
 }
 
 
-void text_window::repaint(int x1, int y1, int x2, int y2)
+void text_window::repaint(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
 {
   element_list_iterator i;
 
@@ -81,7 +78,8 @@ void text_window::repaint(int x1, int y1, int x2, int y2)
 }
 
 
-void text_window::repaint(int x1, int y1, int x2, int y2, int z)
+void text_window::repaint(int16_t x1, int16_t y1, int16_t x2, int16_t y2,
+    int16_t z)
 {
   element_list_iterator i;
 
@@ -118,12 +116,13 @@ void text_window::remove_element(element & e)
 }
 
 
-void text_window::element_frame_pos_changed(element & e, int old_x1, int old_y1)
+void text_window::element_frame_pos_changed(element & e, int16_t old_x1,
+    int16_t old_y1)
 {
-  int x1;
-  int y1;
-  int x2;
-  int y2;
+  int16_t x1;
+  int16_t y1;
+  int16_t x2;
+  int16_t y2;
 
   if(old_x1 < e.frame_x1())
   {
@@ -149,12 +148,13 @@ void text_window::element_frame_pos_changed(element & e, int old_x1, int old_y1)
 }
 
 
-void text_window::element_frame_size_changed(element & e, int old_width, int old_height)
+void text_window::element_frame_size_changed(element & e, int16_t old_width,
+    int16_t old_height)
 {
-  int x1;
-  int y1;
-  int x2;
-  int y2;
+  int16_t x1;
+  int16_t y1;
+  int16_t x2;
+  int16_t y2;
 
   x1 = e.frame_x1();
   y1 = e.frame_y1();
@@ -166,7 +166,7 @@ void text_window::element_frame_size_changed(element & e, int old_width, int old
 }
 
 
-void text_window::element_frame_depth_changed(element & e, int old_z)
+void text_window::element_frame_depth_changed(element & e, int16_t old_z)
 {
   element_list_iterator i;
 
@@ -177,13 +177,14 @@ void text_window::element_frame_depth_changed(element & e, int old_z)
 }
 
 
-void text_window::element_frame_changed(element & e, int old_x1, int old_y1, int old_x2, int old_y2, int old_z)
+void text_window::element_frame_changed(element & e, int16_t old_x1,
+    int16_t old_y1, int16_t old_x2, int16_t old_y2, int16_t old_z)
 {
   element_list_iterator i;
-  int x1;
-  int y1;
-  int x2;
-  int y2;
+  int16_t x1;
+  int16_t y1;
+  int16_t x2;
+  int16_t y2;
 
   if(old_x1 < e.frame_x1()) x1 = old_x1;
   else x1 = e.frame_x1();
@@ -204,13 +205,14 @@ void text_window::element_frame_changed(element & e, int old_x1, int old_y1, int
 }
 
 
-void text_window::repaint_element(element const & e, int x1, int y1, int x2, int y2)
+void text_window::repaint_element(element const & e, int16_t x1, int16_t y1,
+    int16_t x2, int16_t y2)
 {
-  int t_x1;
-  int t_y1;
-  int t_x2;
-  int t_y2;
-  graphics & g = m_backbuffer->g();
+  int16_t t_x1;
+  int16_t t_y1;
+  int16_t t_x2;
+  int16_t t_y2;
+  bitmap_graphics g(*m_backbuffer);
 
   if((x1 < e.frame_x2()) && (x2 > e.frame_x1()) && (y1 < e.frame_y2()) && (y2 > e.frame_y1()))
   {
@@ -235,7 +237,8 @@ void text_window::repaint_element(element const & e, int x1, int y1, int x2, int
 }
 
 
-void text_window::locked_repaint(int x1, int y1, int x2, int y2)
+void text_window::locked_repaint(int16_t x1, int16_t y1, int16_t x2,
+    int16_t y2)
 {
   if(m_need_repaint)
   {
@@ -257,7 +260,8 @@ void text_window::locked_repaint(int x1, int y1, int x2, int y2)
 }
 
 
-void text_window::locked_repaint(int x1, int y1, int x2, int y2, int z)
+void text_window::locked_repaint(int16_t x1, int16_t y1, int16_t x2,
+    int16_t y2, int16_t z)
 {
   if(m_need_repaint)
   {
@@ -281,11 +285,11 @@ void text_window::locked_repaint(int x1, int y1, int x2, int y2, int z)
 
 
 extern void set_text_asm();
-#pragma aux set_text_asm = "mov ax, 00003h" "int 010h" modify exact [eax] nomemory
+#pragma aux set_text_asm = "mov ax, 00003h" "int 010h" modify exact [ax] nomemory
 
 
 extern void restore_text_asm();
-#pragma aux restore_text_asm = "mov ax, 00003h" "int 010h" modify exact [eax] nomemory
+#pragma aux restore_text_asm = "mov ax, 00003h" "int 010h" modify exact [ax] nomemory
 
 
 static void text_window::save_mode()
@@ -307,7 +311,8 @@ static void text_window::set_text_mode()
 
 static void text_window::flip(bitmap * backbuffer)
 {
-  memcpy((unsigned short *)0xB8000, backbuffer->data(), backbuffer->width() * backbuffer->height() * sizeof(unsigned short));
+  memcpy((uint16_t *)0xB8000, backbuffer->data(),
+    backbuffer->width() * backbuffer->height() * sizeof(uint16_t));
 }
 
 
