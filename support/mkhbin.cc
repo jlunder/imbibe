@@ -1,11 +1,11 @@
-#include "cplusplus.hh"
+#include "cplusplus.h"
 
 #include <assert.h>
 #include <iostream.h>
 #include <fstream.h>
 
-#include "string.hh"
-#include "vector.hh"
+#include "string.h"
+#include "vector.h"
 
 
 int hex_value(char c)

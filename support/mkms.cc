@@ -1,15 +1,15 @@
-#include "cplusplus.hh"
+#include "cplusplus.h"
 
 #include <assert.h>
 #include <fstream.h>
 #include <iostream.h>
 #include <stdio.h>
 
-#include "bitmap.hh"
-#include "bitmap_graphics.hh"
-#include "color.hh"
-#include "pixel.hh"
-#include "string.hh"
+#include "bitmap.h"
+#include "bitmap_graphics.h"
+#include "color.h"
+#include "pixel.h"
+#include "string.h"
 
 
 string read_word(istream & i)

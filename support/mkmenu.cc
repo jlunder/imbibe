@@ -1,4 +1,4 @@
-#include "cplusplus.hh"
+#include "cplusplus.h"
 
 #include <assert.h>
 #include <fstream.h>
@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "string.hh"
+#include "string.h"
 
 
 string read_word(istream & i)

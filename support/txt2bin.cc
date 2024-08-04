@@ -1,9 +1,9 @@
-#include "cplusplus.hh"
+#include "cplusplus.h"
 
 #include <iostream.h>
 #include <fstream.h>
 
-#include "vector.hh"
+#include "vector.h"
 
 
 typedef vector<uint16_t> line;

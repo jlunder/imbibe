@@ -1,4 +1,4 @@
-#include "cplusplus.hh"
+#include "cplusplus.h"
 
 #include <assert.h>
 #include <fstream.h>

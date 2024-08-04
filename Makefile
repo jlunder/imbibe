@@ -17,9 +17,9 @@ CC_OPT = -fo=$(OBJ_DIR) $(CC_OPT_$(VERSION)) -2 -ml -bt=dos -fpc
 
 CC = wpp
 
-imbibe_hhs = $(wildcard src/*.hh)
+imbibe_hhs = $(wildcard src/*.)
 
-imbibe_objs = $(patsubst $(SRC_DIR)%.cc,$(OBJ_DIR)%.obj,$(wildcard src/*.cc))
+imbibe_objs = $(patsubst $(SRC_DIR)%.cpp,$(OBJ_DIR)%.obj,$(wildcard src/*.cpp))
 
 .PHONY: all clean imbibe
 .DEFAULT_GOAL: all
@@ -52,7 +52,7 @@ $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(imbibe_objs)
 	  if test -f $$UPPER_TGT; \
 	    then mv $$UPPER_TGT $@; fi
 
-$(OBJ_DIR)%.obj: $(SRC_DIR)%.cc $(imbibe_hhs) | $(OBJ_DIR)
+$(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp $(imbibe_hhs) | $(OBJ_DIR)
 	cd workspace && \
 	  dosbox \
 	    -c "S:" \
