@@ -4,7 +4,8 @@
 
 #include "menu.hh"
 
-#include "bin_bitmap.hh"
+// #include "bin_bitmap.hh"
+#include "bin_bitm.hh"
 #include "bitmap.hh"
 #include "string.hh"
 #include "vector.hh"

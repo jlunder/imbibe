@@ -2,9 +2,6 @@
 #define __TIMED_TASK_HH_INCLUDED
 
 
-class timed_task;
-
-
 #include "task.hh"
 #include "timer.hh"
 

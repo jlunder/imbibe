@@ -9,7 +9,8 @@ class text_window;
 
 
 #include "element.hh"
-#include "functional.hh"
+// #include "functional.hh"
+#include "function.hh"
 #include "graphics.hh"
 #include "map.hh"
 #include "window.hh"

@@ -6,7 +6,8 @@
 
 #include "imbibe.hh"
 
-#include "functional.hh"
+//#include "functional.hh"
+#include "function.hh"
 #include "map.hh"
 #include "string.hh"
 

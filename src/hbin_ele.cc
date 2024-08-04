@@ -1,6 +1,7 @@
 #include "imbibe.hh"
 
-#include "hbin_element.hh"
+// #include "hbin_element.hh"
+#include "hbin_ele.hh"
 
 #include "element.hh"
 #include "graphics.hh"

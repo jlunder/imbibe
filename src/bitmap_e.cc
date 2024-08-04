@@ -1,6 +1,7 @@
 #include "imbibe.hh"
 
-#include "bitmap_element.hh"
+//#include "bitmap_element.hh"
+#include "bitmap_e.hh"
 
 #include "bitmap.hh"
 #include "element.hh"

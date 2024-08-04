@@ -1,10 +1,13 @@
 #include "imbibe.hh"
 
-#include "hbin_view_handler.hh"
+// #include "hbin_view_handler.hh"
+#include "hbin_vie.hh"
 
-#include "key_handler.hh"
+// #include "key_handler.hh"
+#include "key_hand.hh"
 #include "hbin.hh"
-#include "hbin_element.hh"
+// #include "hbin_element.hh"
+#include "hbin_ele.hh"
 
 
 hbin_view_handler::hbin_view_handler(hbin & n_hb, hbin_element & n_hbe):

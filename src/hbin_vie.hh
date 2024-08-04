@@ -4,9 +4,11 @@
 
 #include "imbibe.hh"
 
-#include "key_handler.hh"
+// #include "key_handler.hh"
+#include "key_hand.hh"
 #include "hbin.hh"
-#include "hbin_element.hh"
+// #include "hbin_element.hh"
+#include "hbin_ele.hh"
 
 
 class hbin_view_handler: public key_handler

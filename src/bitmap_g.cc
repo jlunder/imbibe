@@ -1,9 +1,8 @@
 #include "imbibe.hh"
 
-#include "bitmap_graphics.hh"
+//#include "bitmap_graphics.hh"
+#include "bitmap_g.hh"
 
-#include <assert.h>
-#include <stddef.h>
 #include <string.h>
 
 #include "bitmap.hh"

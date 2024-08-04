@@ -6,8 +6,10 @@
 #include "intro.hh"
 #include "outro.hh"
 #include "task.hh"
-#include "task_manager.hh"
-#include "text_window.hh"
+// #include "task_manager.hh"
+#include "task_man.hh"
+// #include "text_window.hh"
+#include "text_win.hh"
 
 
 class menu_task: public task
