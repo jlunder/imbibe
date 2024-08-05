@@ -1,7 +1,5 @@
 #include "imbibe.h"
 
-#include <dos.h>
-
 #include "timer.h"
 
 
@@ -74,6 +72,13 @@ public:
 };
 
 
+void (__interrupt * hw_timer::pit_bios_handler)();
+uint32_t hw_timer::pit_tick_inc;
+uint32_t hw_timer::pit_tick_bios_inc;
+uint32_t hw_timer::pit_tick_count;
+volatile uint32_t hw_timer::timer_count;
+
+
 uint32_t timer::now() {
   uint32_t result;
   ENTER_CRIT();
@@ -117,7 +122,7 @@ void hw_timer::start_timer() {
 }
 
 
-static void hw_timer::stop_timer() {
+void hw_timer::stop_timer() {
   ENTER_CRIT();
   if(pit_tick_inc < pit_tick_bios_inc) {
     OUTB(PIT_CONTROL, PIT_PERIOD);
@@ -128,7 +133,7 @@ static void hw_timer::stop_timer() {
 }
 
 
-static void (__interrupt hw_timer::pit_handler_bios_slower)() {
+void (__interrupt hw_timer::pit_handler_bios_slower)() {
   ++timer_count;
   pit_tick_count += pit_tick_inc;
   if(pit_tick_count >= PIT_BIOS_PERIOD) {
@@ -139,7 +144,7 @@ static void (__interrupt hw_timer::pit_handler_bios_slower)() {
 }
 
 
-static void (__interrupt hw_timer::pit_handler_bios_faster)() {
+void (__interrupt hw_timer::pit_handler_bios_faster)() {
   pit_tick_count += PIT_BIOS_PERIOD;
   if(pit_tick_count >= pit_tick_inc) {
     ++timer_count;
@@ -147,12 +152,5 @@ static void (__interrupt hw_timer::pit_handler_bios_faster)() {
   pit_tick_count -= pit_tick_inc;
   _chain_intr(pit_bios_handler);
 }
-
-
-void (__interrupt * hw_timer::pit_bios_handler)();
-uint32_t hw_timer::pit_tick_inc;
-uint32_t hw_timer::pit_tick_bios_inc;
-uint32_t hw_timer::pit_tick_count;
-volatile uint32_t hw_timer::timer_count;
 
 

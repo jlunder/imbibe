@@ -12,6 +12,9 @@
 #include "timer.h"
 
 
+#define logf cprintf
+
+
 class main_task: public task, public key_handler {
 public:
   main_task();
@@ -36,10 +39,10 @@ main_task::main_task(): task(), m_state(st_loading) {
 
 
 void main_task::run() {
-  cprintf("run(), state=%d\n", m_state);
+  logf("run(), state=%d\n", m_state);
   switch(m_state) {
   case st_loading:
-    cprintf("advancing to st_waiting\n");
+    logf("advancing to st_waiting\n");
     m_state = st_waiting;
     break;
   case st_waiting:
@@ -59,7 +62,7 @@ void main_task::idle() {
 
 
 bool main_task::handle_key(uint16_t key) {
-  cprintf("pressed: %x\n", key);
+  logf("pressed: %x\n", key);
   if(m_state == st_waiting) {
     m_state = st_done;
   }
@@ -114,9 +117,9 @@ int main(int argc, char * argv[]) {
   //m.start(true);
   key_manager::add_handler(main_instance);
   main_instance.start();
-  cprintf("imbibe 1.0 loaded\n");
+  logf("imbibe 1.0 loaded\n");
   run();
-  cprintf("imbibe 1.0 done\n");
+  logf("imbibe 1.0 done\n");
   timer::teardown();
   return 0;
 }

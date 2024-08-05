@@ -7,6 +7,9 @@
 #include "vector.h"
 
 
+// #define logf cprintf
+
+
 delete_reclaim<action> action::s_default_reclaim;
 
 do_nothing_reclaim<action> reusable_action::s_do_nothing_reclaim;
@@ -17,8 +20,6 @@ task_manager::task_p_list task_manager::s_tasks_to_run;
 task_manager::action_p_list task_manager::s_deferred_actions;
 task_manager::task_p_list task_manager::s_tasks_to_reclaim;
 
-
-#define logf(...) do {} while(false)
 
 void task_manager::add_task(task & t)
 {

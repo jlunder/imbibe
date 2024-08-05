@@ -7,10 +7,12 @@
 #include <stddef.h>
 
 
-#if !defined(M_I86) || !defined(__WATCOMC__)
+#if !(defined(M_I86) && defined(__WATCOMC__))
 
 // This is to make the editor happy when it tries to parse our code thinking
 // we have some kind of normal compiler
+
+#define __far
 
 #define __based(o)
 #define __segment uint16_t
@@ -18,16 +20,19 @@
 // __segname gets the named segment -- probably "_CODE", "_CONST", "_DATA"
 #define __self
 
-#define __far
-
 #define FP_SEG(p) 0
 #define FP_OFF(p) NULL
-
 #define MK_FP(s, o) NULL
+
+#define __interrupt
 
 #include <stdio.h>
 
 #define cprintf printf
+
+extern void _dos_setvect(int, void (*)());
+extern void (*_dos_getvect(int))();
+extern void _chain_intr(void (*)());
 
 #else
 
@@ -41,6 +46,8 @@
 
 
 #define LENGTHOF(a) (sizeof (a) / sizeof (a[0]))
+
+#define logf(...) do {} while(false)
 
 
 #endif // __IMBIBE_H_INCLUDED
