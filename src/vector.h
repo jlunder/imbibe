@@ -1,5 +1,5 @@
-#ifndef __VECTOR_HH_INCLUDED
-#define __VECTOR_HH_INCLUDED
+#ifndef __VECTOR_H_INCLUDED
+#define __VECTOR_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -513,6 +513,6 @@ inline vector<T> & vector<T>::operator =(vector<T> const & x)
 }
 
 
-#endif //__VECTOR_HH_INCLUDED
+#endif //__VECTOR_H_INCLUDED
 
 

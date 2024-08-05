@@ -1,5 +1,5 @@
-#ifndef __TEXT_WINDOW_HH_INCLUDED
-#define __TEXT_WINDOW_HH_INCLUDED
+#ifndef __TEXT_WINDOW_H_INCLUDED
+#define __TEXT_WINDOW_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -68,6 +68,6 @@ private:
 };
 
 
-#endif //__TEXT_WINDOW_HH_INCLUDED
+#endif //__TEXT_WINDOW_H_INCLUDED
 
 

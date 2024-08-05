@@ -1,5 +1,5 @@
-#ifndef __TIMED_TASK_HH_INCLUDED
-#define __TIMED_TASK_HH_INCLUDED
+#ifndef __TIMED_TASK_H_INCLUDED
+#define __TIMED_TASK_H_INCLUDED
 
 
 #include "task.h"
@@ -24,6 +24,6 @@ private:
 
 
 
-#endif //__TIMED_TASK_HH_INCLUDED
+#endif //__TIMED_TASK_H_INCLUDED
 
 

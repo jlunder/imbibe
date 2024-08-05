@@ -1,5 +1,5 @@
-#ifndef __BITMAP_ELEMENT_HH_INCLUDED
-#define __BITMAP_ELEMENT_HH_INCLUDED
+#ifndef __BITMAP_ELEMENT_H_INCLUDED
+#define __BITMAP_ELEMENT_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -44,6 +44,6 @@ inline bitmap const & bitmap_element::b() const
 }
 
 
-#endif //__BITMAP_ELEMENT_HH_INCLUDED
+#endif //__BITMAP_ELEMENT_H_INCLUDED
 
 

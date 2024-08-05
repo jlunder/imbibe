@@ -1,5 +1,5 @@
-#ifndef __PIXEL_HH_INCLUDED
-#define __PIXEL_HH_INCLUDED
+#ifndef __PIXEL_H_INCLUDED
+#define __PIXEL_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -90,6 +90,6 @@ inline pixel::operator uint16_t()
 }
 
 
-#endif //__PIXEL_HH_INCLUDED
+#endif //__PIXEL_H_INCLUDED
 
 

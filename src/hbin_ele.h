@@ -1,5 +1,5 @@
-#ifndef __HBIN_ELEMENT_HH_INCLUDED
-#define __HBIN_ELEMENT_HH_INCLUDED
+#ifndef __HBIN_ELEMENT_H_INCLUDED
+#define __HBIN_ELEMENT_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -47,6 +47,6 @@ inline int hbin_element::selection() const
 }
 
 
-#endif //__HBIN_ELEMENT_HH_INCLUDED
+#endif //__HBIN_ELEMENT_H_INCLUDED
 
 

@@ -1,5 +1,5 @@
-#ifndef __MAP_HH_INCLUDED
-#define __MAP_HH_INCLUDED
+#ifndef __MAP_H_INCLUDED
+#define __MAP_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -447,6 +447,6 @@ inline map<Key, T, Pred>::const_iterator map<Key, T, Pred>::upper_bound(Key cons
 }
 
 
-#endif //__MAP_HH_INCLUDED
+#endif //__MAP_H_INCLUDED
 
 

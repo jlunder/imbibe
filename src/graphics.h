@@ -1,5 +1,5 @@
-#ifndef __GRAPHICS_HH_INCLUDED
-#define __GRAPHICS_HH_INCLUDED
+#ifndef __GRAPHICS_H_INCLUDED
+#define __GRAPHICS_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -36,6 +36,6 @@ public:
 };
 
 
-#endif //__GRAPHICS_HH_INCLUDED
+#endif //__GRAPHICS_H_INCLUDED
 
 

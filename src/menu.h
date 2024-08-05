@@ -1,5 +1,5 @@
-#ifndef __MENU_HH_INCLUDED
-#define __MENU_HH_INCLUDED
+#ifndef __MENU_H_INCLUDED
+#define __MENU_H_INCLUDED
 
 
 #include <iostream.h>
@@ -51,6 +51,6 @@ private:
 };
 
 
-#endif //__MENU_HH_INCLUDED
+#endif //__MENU_H_INCLUDED
 
 

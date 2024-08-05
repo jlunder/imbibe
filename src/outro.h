@@ -1,5 +1,5 @@
-#ifndef __OUTRO_HH_INCLUDED
-#define __OUTRO_HH_INCLUDED
+#ifndef __OUTRO_H_INCLUDED
+#define __OUTRO_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -23,5 +23,5 @@ private:
 };
 
 
-#endif // __OUTRO_HH_INCLUDED
+#endif // __OUTRO_H_INCLUDED
 

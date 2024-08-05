@@ -1,5 +1,5 @@
-#ifndef __TASK_HH_INCLUDED
-#define __TASK_HH_INCLUDED
+#ifndef __TASK_H_INCLUDED
+#define __TASK_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -34,6 +34,6 @@ private:
 };
 
 
-#endif //__TASK_HH_INCLUDED
+#endif //__TASK_H_INCLUDED
 
 

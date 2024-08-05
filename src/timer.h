@@ -1,5 +1,5 @@
-#ifndef __TIMER_HH_INCLUDED
-#define __TIMER_HH_INCLUDED
+#ifndef __TIMER_H_INCLUDED
+#define __TIMER_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -52,6 +52,6 @@ inline uint32_t timer::hw_timer::time()
 }
 
 
-#endif //__TIMER_HH_INCLUDED
+#endif //__TIMER_H_INCLUDED
 
 

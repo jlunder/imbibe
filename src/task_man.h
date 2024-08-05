@@ -1,5 +1,5 @@
-#ifndef __TASK_MANAGER_HH_INCLUDED
-#define __TASK_MANAGER_HH_INCLUDED
+#ifndef __TASK_MANAGER_H_INCLUDED
+#define __TASK_MANAGER_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -56,6 +56,6 @@ private:
 };
 
 
-#endif //__TASK_MANAGER_HH_INCLUDED
+#endif //__TASK_MANAGER_H_INCLUDED
 
 

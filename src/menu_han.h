@@ -1,5 +1,5 @@
-#ifndef __MENU_HANDLER_HH_INCLUDED
-#define __MENU_HANDLER_HH_INCLUDED
+#ifndef __MENU_HANDLER_H_INCLUDED
+#define __MENU_HANDLER_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -23,6 +23,6 @@ private:
 };
 
 
-#endif //__MENU_HANDLER_HH_INCLUDED
+#endif //__MENU_HANDLER_H_INCLUDED
 
 

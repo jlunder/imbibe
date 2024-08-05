@@ -1,5 +1,5 @@
-#ifndef __BIN_BITMAP_HH_INCLUDED
-#define __BIN_BITMAP_HH_INCLUDED
+#ifndef __BIN_BITMAP_H_INCLUDED
+#define __BIN_BITMAP_H_INCLUDED
 
 
 #include <iostream.h>
@@ -16,6 +16,6 @@ public:
 };
 
 
-#endif //__BIN_BITMAP_HH_INCLUDED
+#endif //__BIN_BITMAP_H_INCLUDED
 
 

@@ -1,5 +1,5 @@
-#ifndef __HBIN_HH_INCLUDED
-#define __HBIN_HH_INCLUDED
+#ifndef __HBIN_H_INCLUDED
+#define __HBIN_H_INCLUDED
 
 
 #include <iostream.h>
@@ -113,6 +113,6 @@ inline bitmap const & hbin::link_picture(int which) const
 }
 
 
-#endif //__HBIN_HH_INCLUDED
+#endif //__HBIN_H_INCLUDED
 
 

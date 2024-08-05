@@ -1,5 +1,5 @@
-#ifndef __KEY_HANDLER_HH_INCLUDED
-#define __KEY_HANDLER_HH_INCLUDED
+#ifndef __KEY_HANDLER_H_INCLUDED
+#define __KEY_HANDLER_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -86,6 +86,6 @@ public:
 };
 
 
-#endif //__KEY_HANDLER_HH_INCLUDED
+#endif //__KEY_HANDLER_H_INCLUDED
 
 

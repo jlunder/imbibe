@@ -1,5 +1,5 @@
-#ifndef __FUNCTIONAL_HH_INCLUDED
-#define __FUNCTIONAL_HH_INCLUDED
+#ifndef __FUNCTIONAL_H_INCLUDED
+#define __FUNCTIONAL_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -20,6 +20,6 @@ inline bool less<T>::operator ()(T const & a, T const & b) const
 }
 
 
-#endif //__FUNCTIONAL_HH_INCLUDED
+#endif //__FUNCTIONAL_H_INCLUDED
 
 

@@ -1,5 +1,5 @@
-#ifndef __ELEMENT_HH_INCLUDED
-#define __ELEMENT_HH_INCLUDED
+#ifndef __ELEMENT_H_INCLUDED
+#define __ELEMENT_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -61,6 +61,6 @@ private:
 };
 
 
-#endif //__ELEMENT_HH_INCLUDED
+#endif //__ELEMENT_H_INCLUDED
 
 

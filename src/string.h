@@ -1,5 +1,5 @@
-#ifndef __STRING_HH_INCLUDED
-#define __STRING_HH_INCLUDED
+#ifndef __STRING_H_INCLUDED
+#define __STRING_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -480,6 +480,6 @@ inline string operator +(string const & x, char const * y)
 }
 
 
-#endif //__STRING_HH_INCLUDED
+#endif //__STRING_H_INCLUDED
 
 

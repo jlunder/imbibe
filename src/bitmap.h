@@ -1,5 +1,5 @@
-#ifndef __BITMAP_HH_INCLUDED
-#define __BITMAP_HH_INCLUDED
+#ifndef __BITMAP_H_INCLUDED
+#define __BITMAP_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -43,6 +43,6 @@ private:
 };
 
 
-#endif //__BITMAP_HH_INCLUDED
+#endif //__BITMAP_H_INCLUDED
 
 

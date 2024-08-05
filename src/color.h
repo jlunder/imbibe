@@ -1,5 +1,5 @@
-#ifndef __COLOR_HH_INCLUDED
-#define __COLOR_HH_INCLUDED
+#ifndef __COLOR_H_INCLUDED
+#define __COLOR_H_INCLUDED
 
 
 #include "imbibe.h"
@@ -79,6 +79,6 @@ inline void color::background(uint8_t n_back)
 }
 
 
-#endif //__COLOR_HH_INCLUDED
+#endif //__COLOR_H_INCLUDED
 
 
