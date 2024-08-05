@@ -3,7 +3,7 @@ VERSION = debug
 OBJ_DIR = build/$(VERSION)/
 SRC_DIR = src/
 
-LINK_OPT_RELEASE = 
+LINK_OPT_RELEASE =
 LINK_OPT_DEBUG = d all
 LINK_OPT_PROFILE = d all
 LINK_OPT = op elim sys dos $(LINK_OPT_$(PLATFORM))
@@ -13,7 +13,7 @@ LINK = wlink
 CC_OPT_RELEASE = -dNDEBUG -otexan
 CC_OPT_DEBUG = -d3
 CC_OPT_PROFILE = -dNDEBUG -d1 -otexan
-CC_OPT = -fo=$(OBJ_DIR) $(CC_OPT_$(VERSION)) -2 -ml -bt=dos -fpc
+CC_OPT = -fo=$(OBJ_DIR) $(CC_OPT_$(VERSION)) -2 -ml -bt=dos -fpc -d__STDC_LIMIT_MACROS
 
 CC = wpp
 
