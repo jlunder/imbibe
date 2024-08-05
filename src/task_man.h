@@ -55,6 +55,6 @@ private:
 };
 
 
-#endif //__TASK_MANAGER_H_INCLUDED
+#endif // __TASK_MANAGER_H_INCLUDED
 
 

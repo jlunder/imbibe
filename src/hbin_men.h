@@ -23,6 +23,6 @@ private:
 };
 
 
-#endif //__HBIN_MENU_HANDLER_H_INCLUDED
+#endif // __HBIN_MENU_HANDLER_H_INCLUDED
 
 

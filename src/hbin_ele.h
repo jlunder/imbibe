@@ -31,6 +31,6 @@ private:
 };
 
 
-#endif //__HBIN_ELEMENT_H_INCLUDED
+#endif // __HBIN_ELEMENT_H_INCLUDED
 
 

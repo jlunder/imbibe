@@ -48,6 +48,6 @@ private:
 };
 
 
-#endif //__BITMAP_GRAPHICS_H_INCLUDED
+#endif // __BITMAP_GRAPHICS_H_INCLUDED
 
 

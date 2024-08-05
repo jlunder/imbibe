@@ -43,6 +43,6 @@ private:
 };
 
 
-#endif //__BITMAP_H_INCLUDED
+#endif // __BITMAP_H_INCLUDED
 
 

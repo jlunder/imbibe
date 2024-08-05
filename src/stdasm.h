@@ -18,6 +18,6 @@ extern char read_key();
                      modify exact [ax] nomemory;
 
 
-#endif //__STDASM_H_INCLUDED
+#endif // __STDASM_H_INCLUDED
 
 

@@ -77,7 +77,7 @@ int main(int argc, char * argv[])
   f << "extern uint8_t " << ident << "_data[" << ident << "_length];" << endl;
   f << endl;
   f << endl;
-  f << "#endif //__" << fname_upper << "_INCLUDED" << endl;
+  f << "#endif // __" << fname_upper << "_INCLUDED" << endl;
   f << endl;
   f << endl;
   f.close();

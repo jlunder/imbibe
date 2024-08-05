@@ -86,6 +86,6 @@ public:
 };
 
 
-#endif //__KEY_HANDLER_H_INCLUDED
+#endif // __KEY_HANDLER_H_INCLUDED
 
 

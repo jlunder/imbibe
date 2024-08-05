@@ -31,6 +31,6 @@ public:
 };
 
 
-#endif //__WINDOW_H_INCLUDED
+#endif // __WINDOW_H_INCLUDED
 
 

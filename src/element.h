@@ -61,6 +61,6 @@ private:
 };
 
 
-#endif //__ELEMENT_H_INCLUDED
+#endif // __ELEMENT_H_INCLUDED
 
 

@@ -482,6 +482,6 @@ inline string operator +(string const & x, char const * y)
 }
 
 
-#endif //__STRING_H_INCLUDED
+#endif // __STRING_H_INCLUDED
 
 

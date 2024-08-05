@@ -30,6 +30,6 @@ private:
 };
 
 
-#endif //__TIMER_H_INCLUDED
+#endif // __TIMER_H_INCLUDED
 
 

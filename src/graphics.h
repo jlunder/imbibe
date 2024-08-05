@@ -36,6 +36,6 @@ public:
 };
 
 
-#endif //__GRAPHICS_H_INCLUDED
+#endif // __GRAPHICS_H_INCLUDED
 
 

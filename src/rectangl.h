@@ -21,6 +21,6 @@ private:
 };
 
 
-#endif //__RECTANGLE_ELEMENT_H_INCLUDED
+#endif // __RECTANGLE_ELEMENT_H_INCLUDED
 
 

@@ -43,6 +43,6 @@ private:
 };
 
 
-#endif //__HBIN_H_INCLUDED
+#endif // __HBIN_H_INCLUDED
 
 

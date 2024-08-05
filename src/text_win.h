@@ -64,6 +64,6 @@ private:
 };
 
 
-#endif //__TEXT_WINDOW_H_INCLUDED
+#endif // __TEXT_WINDOW_H_INCLUDED
 
 

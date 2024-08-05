@@ -513,6 +513,6 @@ inline vector<T> & vector<T>::operator =(vector<T> const & x)
 }
 
 
-#endif //__VECTOR_H_INCLUDED
+#endif // __VECTOR_H_INCLUDED
 
 

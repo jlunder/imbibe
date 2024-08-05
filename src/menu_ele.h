@@ -31,6 +31,6 @@ private:
 };
 
 
-#endif //__MENU_ELEMENT_H_INCLUDED
+#endif // __MENU_ELEMENT_H_INCLUDED
 
 

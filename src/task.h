@@ -34,6 +34,6 @@ private:
 };
 
 
-#endif //__TASK_H_INCLUDED
+#endif // __TASK_H_INCLUDED
 
 

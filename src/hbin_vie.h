@@ -25,6 +25,6 @@ private:
 };
 
 
-#endif //__HBIN_VIEW_HANDLER_H_INCLUDED
+#endif // __HBIN_VIEW_HANDLER_H_INCLUDED
 
 

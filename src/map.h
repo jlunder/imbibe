@@ -244,6 +244,6 @@ private:
 };
 
 
-#endif //__MAP_H_INCLUDED
+#endif // __MAP_H_INCLUDED
 
 

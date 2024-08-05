@@ -48,6 +48,6 @@ private:
 };
 
 
-#endif //__MENU_H_INCLUDED
+#endif // __MENU_H_INCLUDED
 
 

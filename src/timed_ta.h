@@ -24,6 +24,6 @@ private:
 
 
 
-#endif //__TIMED_TASK_H_INCLUDED
+#endif // __TIMED_TASK_H_INCLUDED
 
 

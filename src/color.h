@@ -43,6 +43,6 @@ private:
 };
 
 
-#endif //__COLOR_H_INCLUDED
+#endif // __COLOR_H_INCLUDED
 
 
