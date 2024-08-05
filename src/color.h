@@ -5,9 +5,6 @@
 #include "imbibe.h"
 
 
-class color;
-
-
 class color
 {
 public:
@@ -31,52 +28,18 @@ public:
     hi_white   = 0x0F
   };
 
-  color(color const & n_color);
-  color(uint8_t n_fore = white, uint8_t n_back = black);
-  void value(uint8_t n_value);
-  uint8_t value() const;
-  void foreground(uint8_t n_fore);
-  void background(uint8_t n_back);
+  color(color const & n_color): m_value(n_color.m_value) { }
+  color(uint8_t n_fore, uint8_t n_back): m_value(n_fore | (n_back << 4)) { }
+
+  void value(uint8_t n_value) { m_value = n_value; }
+  uint8_t value() const { return m_value; }
+  void foreground(uint8_t n_fore) { m_value = (m_value & 0xF0) | n_fore; }
+  void background(uint8_t n_back)
+    { m_value = (m_value & 0x0F) | (n_back << 4); }
 
 private:
   uint8_t m_value;
 };
-
-
-inline color::color(color const & n_color):
-  m_value(n_color.m_value)
-{
-}
-
-
-inline color::color(uint8_t n_fore, uint8_t n_back):
-  m_value(n_fore | (n_back << 4))
-{
-}
-
-
-inline void color::value(uint8_t n_value)
-{
-  m_value = n_value;
-}
-
-
-inline uint8_t color::value() const
-{
-  return m_value;
-}
-
-
-inline void color::foreground(uint8_t n_fore)
-{
-  m_value = (m_value & 0xF0) | n_fore;
-}
-
-
-inline void color::background(uint8_t n_back)
-{
-  m_value = (m_value & 0x0F) | (n_back << 4);
-}
 
 
 #endif //__COLOR_H_INCLUDED
