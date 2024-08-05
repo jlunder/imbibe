@@ -4,6 +4,8 @@
 
 #include "imbibe.h"
 
+#include <string.h>
+
 #include "vector.h"
 
 

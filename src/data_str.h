@@ -1,10 +1,12 @@
-#ifndef __CSTREAM_H_INCLUDED
-#define __CSTREAM_H_INCLUDED
+#ifndef __DATA_STREAM_H_INCLUDED
+#define __DATA_STREAM_H_INCLUDED
 
 
 #include "imbibe.h"
 
+#include "map.h"
 #include "stream.h"
+#include "string.h"
 
 
 class data_stream: public stream
@@ -27,9 +29,9 @@ private:
       uint8_t * data;
       uint32_t length;
     };
-    typedef map<string, dir_entry, less<string> > dir_entry_list;
-    typedef map<string, dir_entry, less<string> >::value_type dir_entry_list_value;
-    typedef map<string, dir_entry, less<string> >::iterator dir_entry_list_iterator;
+    typedef map<string, dir_entry> dir_entry_list;
+    typedef dir_entry_list::value_type dir_entry_list_value;
+    typedef dir_entry_list::iterator dir_entry_list_iterator;
 
     dir_entry_list m_dir_entries;
   };
@@ -38,6 +40,6 @@ private:
 };
 
 
-#endif //__CSTREAM_H_INCLUDED
+#endif // __DATA_STREAM_H_INCLUDED
 
 

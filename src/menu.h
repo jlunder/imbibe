@@ -2,8 +2,6 @@
 #define __MENU_H_INCLUDED
 
 
-#include <iostream.h>
-
 #include "imbibe.h"
 
 #include "bitmap.h"
@@ -14,7 +12,6 @@
 class menu
 {
 public:
-  menu(std::istream & i);
   ~menu();
   int width() const { return m_width; }
   int height() const { return m_height; }

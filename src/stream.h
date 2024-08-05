@@ -37,7 +37,7 @@ public:
     assert(dist <= INT32_MAX / 4);
     ssize_t new_pos = position() + dist;
     assert(new_pos >= 0);
-    seek_to(new_pos);
+    return seek_to(new_pos);
   }
   virtual ssize_t seek_to(ssize_t pos) = 0;
   virtual ssize_t read(void * dest, size_t size) {

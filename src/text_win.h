@@ -9,8 +9,6 @@ class text_window;
 
 
 #include "element.h"
-// #include "functional.h"
-#include "function.h"
 #include "graphics.h"
 #include "map.h"
 #include "window.h"
@@ -38,11 +36,9 @@ public:
     int16_t old_y1, int16_t old_x2, int16_t old_y2, int16_t old_z);
 
 private:
-  typedef map<int16_t, element *, less<int16_t> > element_list;
-  typedef map<int16_t, element *, less<int16_t> >::value_type
-    element_list_value;
-  typedef map<int16_t, element *, less<int16_t> >::iterator
-    element_list_iterator;
+  typedef map<int16_t, element *> element_list;
+  typedef element_list::value_type element_list_value;
+  typedef element_list::iterator element_list_iterator;
 
   void repaint_element(element const & e, int16_t x1, int16_t y1, int16_t x2,
     int16_t y2);

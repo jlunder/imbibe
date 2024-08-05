@@ -28,6 +28,7 @@ public:
     hi_white   = 0x0F
   };
 
+  color() { }
   color(color const & n_color): m_value(n_color.m_value) { }
   color(uint8_t n_fore, uint8_t n_back): m_value(n_fore | (n_back << 4)) { }
 

@@ -3,11 +3,6 @@
 // #include "data_stream.h"
 #include "data_str.h"
 
-//#include "functional.h"
-#include "function.h"
-#include "map.h"
-#include "string.h"
-
 #include "data.h"
 
 
