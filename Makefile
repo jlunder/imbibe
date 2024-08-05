@@ -1,12 +1,15 @@
-VERSION = debug
+VERSION = DEBUG
 
-OBJ_DIR = build/$(VERSION)/
+OBJ_DIR_RELEASE = build/release/
+OBJ_DIR_DEBUG = build/debug/
+OBJ_DIR_PROFILE = build/profile/
+OBJ_DIR = $(OBJ_DIR_$(VERSION))
 SRC_DIR = src/
 
 LINK_OPT_RELEASE =
-LINK_OPT_DEBUG = d all
-LINK_OPT_PROFILE = d all
-LINK_OPT = op elim sys dos $(LINK_OPT_$(PLATFORM))
+LINK_OPT_DEBUG = DEBUG WATCOM ALL
+LINK_OPT_PROFILE = DEBUG WATCOM ALL
+LINK_OPT = $(LINK_OPT_$(VERSION))
 
 LINK = wlink
 
@@ -36,7 +39,9 @@ imbibe: $(OBJ_DIR)imbibe.exe
 	    -c `echo $< | tr / \\` \
 
 $(OBJ_DIR)imbibe.lnk: | $(OBJ_DIR)
-	echo name $(OBJ_DIR)imbibe > $@
+	echo NAME $(OBJ_DIR)imbibe.exe > $@
+	echo SYSTEM DOS >> $@
+	echo OPTION ELIMINATE >> $@
 	echo $(LINK_OPT) >> $@
 	for i in $(imbibe_objs); do \
 	    echo file $$i >> $@; \
@@ -46,7 +51,7 @@ $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(imbibe_objs)
 	cd workspace && \
 	  dosbox \
 	    -c "S:" \
-	    -c "$(LINK) @$<" \
+	    -c "$(LINK) @$< > LINK.ERR" \
 	    -c "exit"
 	UPPER_TGT=$(@D)/`echo $(@F) | tr a-z A-Z`; \
 	  if test -f $$UPPER_TGT; \
