@@ -25,11 +25,17 @@
 
 #define MK_FP(s, o) NULL
 
+#include <stdio.h>
+
+#define cprintf printf
+
 #else
 
 // This part is for real
 
 #include <i86.h>
+#include <conio.h>
+#include <dos.h>
 
 #endif
 

@@ -15,7 +15,7 @@ timed_task::timed_task(uint32_t n_duration):
 
 void timed_task::run()
 {
-  m_time += m_t.delta_time();
+  m_time += m_t.delta_ms();
   if(m_time >= m_duration)
   {
     stop();
@@ -25,7 +25,7 @@ void timed_task::run()
 
 void timed_task::reset()
 {
-  m_t.delta_time();
+  m_t.delta_ms();
   m_time = 0;
 }
 

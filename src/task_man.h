@@ -36,7 +36,6 @@ private:
 class task_manager
 {
 public:
-  task_manager();
   static void add_task(task & t);
   static void remove_task(task & t);
   static void request_run_task(task & t);

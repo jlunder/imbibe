@@ -82,7 +82,7 @@ public:
     key_alt_f11 = 0x18b,
     key_alt_f12 = 0x18c
   };
-  virtual bool handle(int key) = 0;
+  virtual bool handle_key(uint16_t key) = 0;
 };
 
 

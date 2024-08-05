@@ -41,7 +41,7 @@ public:
     }
   }
 
-  void __far * data() { return MK_FP(m_seg, (void __based(m_seg) *)m_offset); }
+  void __far * data() { return MK_FP(m_seg, (void *)m_offset); }
 
 private:
   __segment m_seg;
