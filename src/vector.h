@@ -8,7 +8,8 @@
 namespace aux_vector {
   template<class T>
   inline T * allocate(uint_fast16_t n) {
-    T * p = (T *)malloc(n * sizeof (T));
+    assert(n > 0);
+    T * p = (T *)::malloc(n * sizeof (T));
     assert(p != NULL);
     return p;
   }
@@ -16,7 +17,7 @@ namespace aux_vector {
   template<class T>
   inline void free(T * p) {
     assert(p != NULL);
-    free(p);
+    ::free(p);
   }
 
   template<class T>
@@ -97,9 +98,7 @@ public:
 
   static size_type const c_size_max = (UINT16_MAX - 31) / sizeof (T);
 
-  vector(): m_size(0), m_capacity(round_up(0)) {
-    m_data = aux_vector::allocate<T>(m_capacity);
-    assert(m_data != NULL);
+  vector(): m_size(0), m_capacity(0), m_data(NULL) {
   }
 
   vector(vector const & x)
@@ -115,18 +114,25 @@ public:
   }
 
   vector(const_iterator first, const_iterator last)
-    : m_size((size_type)(last - first)),
-      m_capacity(round_up((size_type)(last - first))) {
+    : m_size((size_type)(last - first)) {
     assert(last - first >= 0);
     assert(last - first <= c_size_max);
-    m_data = aux_vector::allocate<T>(m_capacity);
-    aux_vector::copy_construct<T>(first, m_data, m_size);
+    if(first == last) {
+      m_capacity = 0;
+      m_data = NULL;
+    } else {
+      m_capacity = round_up((size_type)(last - first));
+      m_data = aux_vector::allocate<T>(m_capacity);
+      aux_vector::copy_construct<T>(first, m_data, m_size);
+    }
   }
 
   ~vector() {
-    assert(m_data != NULL);
-    aux_vector::destroy<T>(m_data, m_size);
-    aux_vector::free<T>(m_data);
+    assert((m_size == 0) || m_data);
+    if(m_data != NULL) {
+      aux_vector::destroy<T>(m_data, m_size);
+      aux_vector::free<T>(m_data);
+    }
 #ifndef NDEBUG
     m_data = NULL;
 #endif
@@ -218,13 +224,18 @@ public:
     } else {
       size_type n_capacity = round_up(m_size + n);
       T * n_data = aux_vector::allocate<T>(n_capacity);
-      aux_vector::move<T>(m_data, n_data, i);
-      aux_vector::copy_construct(x, n_data + i, n);
-      aux_vector::move<T>(m_data + i, n_data + i + n, m);
-      aux_vector::free<T>(m_data);
+      if(m_data) {
+        aux_vector::move<T>(m_data, n_data, i);
+        aux_vector::copy_construct(x, n_data + i, n);
+        aux_vector::move<T>(m_data + i, n_data + i + n, m);
+        aux_vector::free<T>(m_data);
+      } else {
+        aux_vector::copy_construct(x, n_data + i, n);
+      }
       m_data = n_data;
       m_capacity = n_capacity;
     }
+    m_size += n;
     return begin() + i;
   }
 
@@ -241,13 +252,18 @@ public:
     } else {
       size_type n_capacity = round_up(m_size + n);
       T * n_data = aux_vector::allocate<T>(n_capacity);
-      aux_vector::move<T>(m_data, n_data, i);
-      aux_vector::copy_construct(first, n_data + i, n);
-      aux_vector::move<T>(m_data + i, n_data + i + n, m);
-      aux_vector::free<T>(m_data);
+      if(m_data) {
+        aux_vector::move<T>(m_data, n_data, i);
+        aux_vector::copy_construct(first, n_data + i, n);
+        aux_vector::move<T>(m_data + i, n_data + i + n, m);
+        aux_vector::free<T>(m_data);
+      } else {
+        aux_vector::copy_construct(first, n_data + i, n);
+      }
       m_data = n_data;
       m_capacity = n_capacity;
     }
+    m_size += n;
     return begin() + i;
   }
 
@@ -265,6 +281,7 @@ public:
     for (size_type i = 0; i < m; ++i, ++p, ++q) {
       *p = *q;
     }
+    m_size -= n;
     aux_vector::destroy<T>(last, n);
   }
 
@@ -287,13 +304,9 @@ private:
     assert(n < (c_size_max / 3 * 2));
     assert(sizeof (T) <= c_size_max / 4);
     size_type r = (n * 3 + 1) / 2;
-    if (r * sizeof (T) >= 16) {
-      assert(r <= c_size_max);
-      return r;
-    } else {
-      assert(c_size_max > 1);
-      return (16 + sizeof (T) - 1) / sizeof (T);
-    }
+    r = max<size_type>(r, (16 + sizeof (T) - 1) / sizeof (T));
+    assert(c_size_max > 1); assert(r < c_size_max);
+    return r;
   }
 };
 

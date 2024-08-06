@@ -11,43 +11,40 @@ extern void aux_timer__outwb(uint16_t port, uint16_t value);
 extern uint16_t aux_timer__inb(uint16_t port);
 extern uint16_t aux_timer__inwb(uint16_t port);
 
-#ifdef SIMULATE
-void aux_timer__enter_crit() { }
-void aux_timer__leave_crit() { }
-void aux_timer__ackint() { }
-void aux_timer__outb(uint16_t port, uint8_t value)
-  { (void)port; (void)value; }
-void aux_timer__outwb(uint16_t port, uint16_t value)
-  { (void)port; (void)value; }
-uint16_t aux_timer__inb(uint16_t port) { (void)port; return 0; }
-uint16_t aux_timer__inwb(uint16_t port) { (void)port; return 0; }
-#else
+#if !defined(SIMULATE)
+
 #pragma aux aux_timer__enter_crit=\
   "pushf"\
   "cli"\
   modify exact [] nomemory;
+
 #pragma aux aux_timer__leave_crit=\
   "popf"\
   modify exact [] nomemory;
+
 #pragma aux aux_timer__ackint=\
   "mov al, 20h"\
   "out 20h, al"\
   modify exact [al] nomemory;
+
 #pragma aux aux_timer__outb=\
   "out dx, al"\
   parm [dx] [al]\
   modify exact [] nomemory;
+
 #pragma aux aux_timer__outwb=\
   "out dx, al"\
   "mov al, ah"\
   "out dx, al"\
   parm [dx] [ax]\
   modify exact [ax] nomemory;
+
 #pragma aux aux_timer__inb=\
   "in al, dx"\
   parm [dx]\
   value [al]\
   modify exact [al] nomemory;
+
 #pragma aux aux_timer__inwb=\
   "in al, dx"\
   "mov ah, al"\
@@ -56,6 +53,7 @@ uint16_t aux_timer__inwb(uint16_t port) { (void)port; return 0; }
   parm [dx]\
   value [ax]\
   modify exact [ax] nomemory;
+
 #endif
 
 

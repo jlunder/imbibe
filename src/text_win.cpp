@@ -13,17 +13,22 @@
 #include "element.h"
 
 
+#undef logf
+#define logf cprintf
+
+
 extern void aux_text_window__set_text_asm();
 extern void aux_text_window__restore_text_asm();
 
-#ifdef SIMULATE
-void aux_text_window__set_text_asm() { }
-void aux_text_window__restore_text_asm() { }
-#else
+
+#if !defined(SIMULATE)
+
 #pragma aux aux_text_window__set_text_asm = \
   "mov ax, 00003h" "int 010h" modify exact [ax] nomemory
+
 #pragma aux aux_text_window__restore_text_asm = \
   "mov ax, 00003h" "int 010h" modify exact [ax] nomemory
+
 #endif
 
 
@@ -166,10 +171,8 @@ void text_window::element_frame_size_changed(element & e, int16_t old_width,
 {
   int16_t x1 = e.frame_x1();
   int16_t y1 = e.frame_y1();
-  int16_t x2 = (old_width < e.frame_x2() - e.frame_x1())
-    ? e.frame_x2() : e.frame_x1() + old_width;
-  int16_t y2 = (old_height < e.frame_y2() - e.frame_y1())
-    ? e.frame_y2() : e.frame_y1() + old_height;
+  int16_t x2 = x1 + max<int16_t>(old_width, e.frame_width());
+  int16_t y2 = y1 + max<int16_t>(old_height, e.frame_height());
 
   repaint(x1, y1, x2, y2);
 }
@@ -277,8 +280,11 @@ void text_window::set_text_mode() {
 
 
 void text_window::flip(bitmap * backbuffer) {
-  memcpy(MK_FP(0xB800, (void *)0), backbuffer->data(),
-    backbuffer->width() * backbuffer->height() * sizeof(uint16_t));
+  uint16_t n = backbuffer->width() * backbuffer->height() * sizeof(uint16_t);
+  void * screen_buffer = MK_FP(0xB800, (void *)0);
+  logf("flip to %u pixels to %p, corner %04X -> %04X\n", n, screen_buffer,
+    *(uint16_t *)backbuffer->data(), *(uint16_t *)screen_buffer);
+  memcpy(screen_buffer, backbuffer->data(), n);
 }
 
 

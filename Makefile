@@ -46,7 +46,7 @@ $(OBJ_DIR_PROFILE):
 dirs: $(SIM_OBJ_DIR) $(DEP_DIR) $(OBJ_DIR)
 
 $(SIM_OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(SIM_OBJ_DIR) $(DEP_DIR)
-	g++ -MT $@ -MMD -MP -MF $(DEP_DIR)$*.d -c $< -g -W -Wall -Werror -o $@
+	g++ -std=gnu++98 -g -W -Wall -Werror -MT $@ -MMD -MP -MF $(DEP_DIR)$*.d -c $< -o $@
 
 $(DEP_DIR)%.d: $(SIM_OBJ_DIR)%.o
 
@@ -58,7 +58,7 @@ clean:
 	rm -rf build
 
 simbibe: $(IMBIBE_SIM_OBJS)
-	g++ -o $@ $^
+	g++ -std=gnu++98 -g -o $@ $^
 
 imbibe: $(OBJ_DIR)imbibe.exe
 	cd workspace && \

@@ -8,6 +8,10 @@
 #include "graphics.h"
 
 
+#undef logf
+#define logf cprintf
+
+
 bitmap_element::bitmap_element()
   : element(), m_b(NULL)
 {
@@ -33,8 +37,10 @@ void bitmap_element::set_b(bitmap * n_b) {
 
 void bitmap_element::paint(graphics & g) const
 {
+  logf("paint element %p, bitmap %p, corner %04X\n", this, m_b,
+    *(uint16_t*)m_b->data());
   if(m_b) {
-    g.draw_bitmap(0, 0, *m_b);
+    g.draw_bitmap(frame_x1(), frame_y1(), *m_b);
   }
 }
 

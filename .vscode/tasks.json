@@ -1,0 +1,23 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Makefile build simbibe",
+            "command": "/usr/bin/make",
+            "args": [
+                "simbibe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ],
+    "version": "2.0.0"
+}

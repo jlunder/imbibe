@@ -17,6 +17,7 @@
 main_task::main_task(): task(), m_state(st_loading), m_win(), m_canvas() {
   m_canvas.set_frame(0, 0, 80, 25, 0);
   m_canvas.set_b(new bitmap(80, 25));
+
   // bitmap_graphics g(m_canvas.b());
   // g.draw_rectangle(0, 0, 80, 25, pixel('+', color(color::hi_red, color::red)));
   // g.draw_text(34, 12, color(color::hi_white, color::white), "Hello world!");
@@ -24,9 +25,11 @@ main_task::main_task(): task(), m_state(st_loading), m_win(), m_canvas() {
   for(size_t i = 0; i < 80 * 25; ++i) {
     m_canvas.b().data()[i] = pixel('x', color(color::hi_green, color::red));
   }
+  logf("set up canvas element %p, bitmap %p, corner %04X\n", &m_canvas,
+    &m_canvas.b(), *(uint16_t*)m_canvas.b().data());
 
-  // m_canvas.set_owner(m_win);
-  // m_canvas.show();
+  m_canvas.set_owner(m_win);
+  m_canvas.show();
 }
 
 
@@ -51,23 +54,15 @@ void main_task::run() {
   }
 }
 
-#include <string.h>
+
+//#include <string.h>
 void main_task::idle() {
   key_manager::dispatch_keys();
 
-  //m_win.repaint();
+  // uint16_t * scr = (uint16_t *)MK_FP(0xB800, (void *)0);
+  // memcpy(scr, m_canvas.b().data(), 4000);
 
-  uint16_t * scr = (uint16_t *)MK_FP(0xB800, (void *)0);
-  // for(size_t i = 0; i < 80 * 25; ++i) {
-  //   scr[i] = pixel('x', color(color::cyan, color::magenta));
-  // }
-  for(size_t i = 0; i < 80 * 25; ++i) {
-    m_canvas.b().data()[i] = pixel('x', color(color::cyan, color::red));
-  }
-  bitmap_graphics g(m_canvas.b());
-  g.draw_rectangle(0, 0, 80, 25, pixel('+', color(color::hi_red, color::red)));
-  //g.draw_text(34, 12, color(color::hi_white, color::white), "Hello world!");
-  memcpy(scr, m_canvas.b().data(), 8000);
+  m_win.repaint();
 }
 
 
@@ -95,6 +90,10 @@ void main_task::run_loop() {
 
   task_manager::idle();
   while(!done()) {
+#if defined(SIMULATE)
+    step_simulator();
+#endif
+
     // This loop is very carefully arranged. We attempt run at least every
     // cycle, and if nothing is available, we also idle. If things are
     // running constantly, we try to idle at least once every
@@ -103,6 +102,7 @@ void main_task::run_loop() {
     // This check is after run() to capture the most recent view of how much
     // time has been consumed. run() returns false when it did no work.
     ms_since_idle += t.delta_ms();
+    logf("ms_since_idle: %d\n", ms_since_idle);
     if(ms_since_idle > max_idle_interval) {
       do_idle = true;
     }

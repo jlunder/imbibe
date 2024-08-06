@@ -57,7 +57,7 @@ void element::set_frame(int16_t x1, int16_t y1, int16_t x2, int16_t y2,
   m_z = z;
   if(m_visible) {
     m_owner->element_frame_changed(*this, old_x1, old_y1, old_x2, old_y2,
-      old_z < m_z ? old_z : m_z);
+      old_z);
   }
 }
 

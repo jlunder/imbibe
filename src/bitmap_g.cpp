@@ -81,7 +81,7 @@ int16_t bitmap_graphics::clip_y2() const {
 
 void bitmap_graphics::set_bounds(int16_t x1, int16_t y1, int16_t x2,
     int16_t y2) {
-  assert(x1 >= x2); assert(y1 >= y2);
+  assert(x1 <= x2); assert(y1 <= y2);
   m_bounds_x1 = x1;
   m_bounds_y1 = y1;
   m_bounds_x2 = x2;
@@ -91,7 +91,7 @@ void bitmap_graphics::set_bounds(int16_t x1, int16_t y1, int16_t x2,
 
 void bitmap_graphics::set_clip(int16_t x1, int16_t y1, int16_t x2,
     int16_t y2) {
-  assert(x1 >= x2); assert(y1 >= y2);
+  assert(x1 <= x2); assert(y1 <= y2);
   m_clip_x1 = max<int16_t>(max(m_bounds_x1, x1), 0);
   m_clip_y1 = max<int16_t>(max(m_bounds_y1, y1), 0);
   m_clip_x2 = min(min(x2, m_bounds_x2), m_b.width());
@@ -106,10 +106,10 @@ void bitmap_graphics::draw_rectangle(int16_t x1, int16_t y1, int16_t x2,
     return;
   }
 
-  int16_t cx1 = (x1 < m_clip_x1) ? m_clip_x1 : x1;
-  int16_t cy1 = (y1 < m_clip_y1) ? m_clip_y1 : y1;
-  int16_t cx2 = (x2 > m_clip_x2) ? m_clip_x2 : x2;
-  int16_t cy2 = (y2 > m_clip_y2) ? m_clip_y2 : y2;
+  int16_t cx1 = min(x1, m_clip_x1);
+  int16_t cy1 = min(y1, m_clip_y1);
+  int16_t cx2 = max(x2, m_clip_x2);
+  int16_t cy2 = max(y2, m_clip_y2);
 
   uint16_t rows = cy2 - cy1;
   uint16_t stride = m_b.width();

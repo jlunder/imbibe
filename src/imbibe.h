@@ -23,7 +23,10 @@
 
 #define FP_SEG(p) ((uintptr_t)(p))
 #define FP_OFF(p) 0
-#define MK_FP(s, o) ((void *)(s))
+#define MK_FP(s, o) \
+  ((uintptr_t)s == 0xB800 ? (void *)dummy_screen : (void *)(s))
+
+extern uint16_t dummy_screen[16384];
 
 #define __interrupt
 
@@ -31,11 +34,13 @@
 
 #define cprintf printf
 
-inline void _dos_setvect(int, void (*)()) { }
-inline void (*_dos_getvect(int))() { return nullptr; }
-inline void _chain_intr(void (*)()) { }
+extern void _dos_setvect(int, void (*)());
+extern void (*_dos_getvect(int))();
+extern void _chain_intr(void (*)());
 
 inline void * operator new (size_t size, void * p) { (void)size; return p; }
+
+extern void step_simulator();
 
 #define SIMULATE
 

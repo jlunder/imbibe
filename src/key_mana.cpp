@@ -14,10 +14,8 @@
 extern bool aux_key_manager__key_avail();
 extern uint16_t aux_key_manager__read_key();
 
-#ifdef SIMULATE
-extern bool aux_key_manager__key_avail() { return true; }
-extern uint16_t aux_key_manager__read_key() { return 0x1B; }
-#else
+#if !defined(SIMULATE)
+
 #pragma aux aux_key_manager__key_avail = \
   "mov ah, 011h"\
   "int 016h"\
@@ -33,6 +31,7 @@ extern uint16_t aux_key_manager__read_key() { return 0x1B; }
   "int 016h"\
   value [ax]\
   modify exact [ax] nomemory;
+
 #endif
 
 
