@@ -48,8 +48,7 @@ dirs: $(SIM_OBJ_DIR) $(DEP_DIR) $(OBJ_DIR)
 $(SIM_OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(SIM_OBJ_DIR) $(DEP_DIR)
 	g++ -MT $@ -MMD -MP -MF $(DEP_DIR)$*.d -c $< -g -W -Wall -Werror -o $@
 
-# $(SIM_OBJ_DIR)%.o $(DEP_DIR)%.d: $(SRC_DIR)%.cpp $(DEP_DIR)%.d | $(SIM_OBJ_DIR) $(DEP_DIR)
-# 	g++ -MT $@ -MMD -MP -MF $(DEP_DIR)/$*.d -c $< -g -W -Wall -Werror -o $@
+$(DEP_DIR)%.d: $(SIM_OBJ_DIR)%.o
 
 include $(wildcard $(DEP_DIR)*.d)
 
@@ -65,7 +64,7 @@ imbibe: $(OBJ_DIR)imbibe.exe
 	cd workspace && \
 	  dosbox \
 	    -c "S:" \
-	    -c "`echo $< | tr / \\` > RUN.LOG"
+	    -c "`echo $< | tr '/' '\\' ` > RUN.LOG"
 
 $(OBJ_DIR)imbibe.lnk: | $(OBJ_DIR)
 	echo NAME $(OBJ_DIR)imbibe.exe > $@
@@ -86,7 +85,7 @@ $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(IMBIBE_OBJS)
 	  if test -f $$UPPER_TGT; \
 	    then mv $$UPPER_TGT $@; fi
 
-$(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp $(IMBIBE_HEADERS) | $(OBJ_DIR)
+$(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp $(SIM_OBJ_DIR)%.o | $(OBJ_DIR)
 	cd workspace && \
 	  dosbox \
 	    -c "S:" \

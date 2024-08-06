@@ -81,6 +81,7 @@ int16_t bitmap_graphics::clip_y2() const {
 
 void bitmap_graphics::set_bounds(int16_t x1, int16_t y1, int16_t x2,
     int16_t y2) {
+  assert(x1 >= x2); assert(y1 >= y2);
   m_bounds_x1 = x1;
   m_bounds_y1 = y1;
   m_bounds_x2 = x2;
@@ -90,10 +91,11 @@ void bitmap_graphics::set_bounds(int16_t x1, int16_t y1, int16_t x2,
 
 void bitmap_graphics::set_clip(int16_t x1, int16_t y1, int16_t x2,
     int16_t y2) {
-  m_clip_x1 = x1;
-  m_clip_y1 = y1;
-  m_clip_x2 = x2;
-  m_clip_y2 = y2;
+  assert(x1 >= x2); assert(y1 >= y2);
+  m_clip_x1 = max<int16_t>(max(m_bounds_x1, x1), 0);
+  m_clip_y1 = max<int16_t>(max(m_bounds_y1, y1), 0);
+  m_clip_x2 = min(min(x2, m_bounds_x2), m_b.width());
+  m_clip_y2 = min(min(y2, m_bounds_y2), m_b.height());
 }
 
 

@@ -42,7 +42,7 @@ public:
     }
   }
 
-  void __far * data() { return MK_FP(m_seg, (void *)m_offset); }
+  void __far * data() { return MK_FP(m_seg, (void *)(uintptr_t)m_offset); }
 
 private:
   __segment m_seg;
@@ -57,8 +57,7 @@ private:
     if((uint16_t)FP_OFF(p) <= UINT8_MAX) {
       return p;
     }
-    p = MK_FP(FP_SEG(p) + (FP_OFF(p) >> 4), FP_OFF(p) & 0xF);
-    return p;
+    return MK_FP(FP_SEG(p) + (FP_OFF(p) >> 4), FP_OFF(p) & 0xF);
   }
 };
 

@@ -13,6 +13,20 @@
 #include "element.h"
 
 
+extern void aux_text_window__set_text_asm();
+extern void aux_text_window__restore_text_asm();
+
+#ifdef SIMULATE
+void aux_text_window__set_text_asm() { }
+void aux_text_window__restore_text_asm() { }
+#else
+#pragma aux aux_text_window__set_text_asm = \
+  "mov ax, 00003h" "int 010h" modify exact [ax] nomemory
+#pragma aux aux_text_window__restore_text_asm = \
+  "mov ax, 00003h" "int 010h" modify exact [ax] nomemory
+#endif
+
+
 text_window::text_window()
   : m_backbuffer(80, 25), m_locked(false) {
 }
@@ -162,23 +176,26 @@ void text_window::element_frame_size_changed(element & e, int16_t old_width,
 
 
 void text_window::element_frame_depth_changed(element & e, int16_t old_z) {
-  element_list_iterator i = m_elements.begin();
-  while((i != m_elements.end()) && (i->ref != &e)) {
+  element_list_iterator i = m_elements.lower_bound(old_z);
+  element_list_iterator ie = m_elements.upper_bound(old_z);
+  while((i != ie) && (i->ref != &e)) {
     ++i;
   }
+  assert(i != m_elements.end());
   m_elements.erase(i);
   m_elements.insert(element_list_value(e.frame_z(), &e));
-  repaint(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2(), e.frame_z());
+  repaint(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2(),
+    min(old_z, e.frame_z()));
 }
 
 
 void text_window::element_frame_changed(element & e, int16_t old_x1,
     int16_t old_y1, int16_t old_x2, int16_t old_y2, int16_t old_z)
 {
-  int16_t x1 = (old_x1 < e.frame_x1()) ? old_x1 : e.frame_x1();
-  int16_t y1 = (old_y1 < e.frame_y1()) ? old_y1 : e.frame_y1();
-  int16_t x2 = (old_x2 > e.frame_x2()) ? old_x2 : e.frame_x2();
-  int16_t y2 = (old_y2 > e.frame_y2()) ? old_y2 : e.frame_y2();
+  int16_t x1 = min(old_x1, e.frame_x1());
+  int16_t y1 = min(old_y1, e.frame_y1());
+  int16_t x2 = max(old_x2, e.frame_x2());
+  int16_t y2 = max(old_y2, e.frame_y2());
 
   if(e.frame_z() != old_z)
   {
@@ -189,34 +206,18 @@ void text_window::element_frame_changed(element & e, int16_t old_x1,
     m_elements.erase(i);
     m_elements.insert(element_list_value(e.frame_z(), &e));
   }
-  repaint(x1, y1, x2, y2);
+  repaint(x1, y1, x2, y2, min(old_z, e.frame_z()));
 }
 
 
 void text_window::repaint_element(element const & e, int16_t x1, int16_t y1,
     int16_t x2, int16_t y2) {
   if((x1 < e.frame_x2()) && (x2 > e.frame_x1()) && (y1 < e.frame_y2()) && (y2 > e.frame_y1())) {
-    int16_t t_x1 = (x1 > e.frame_x1()) ? x1 : e.frame_x1();
-    int16_t t_y1 = (y1 > e.frame_y1()) ? y1 : e.frame_y1();
-    int16_t t_x2 = (x2 < e.frame_x2()) ? x2 : e.frame_x2();
-    int16_t t_y2 = (y2 < e.frame_y2()) ? y2 : e.frame_y2();
     bitmap_graphics g(m_backbuffer);
 
-    if(t_x1 < 0) {
-      t_x1 = 0;
-    }
-    if(t_y1 < 0) {
-      t_y1 = 0;
-    }
-    if(t_x2 > m_backbuffer.width()) {
-      t_x2 = m_backbuffer.width();
-    }
-    if(t_y2 > m_backbuffer.height()) {
-      t_y2 = m_backbuffer.height();
-    }
-
     g.set_bounds(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2());
-    g.set_clip(t_x1, t_y1, t_x2, t_y2);
+    g.set_clip(max(x1, e.frame_x1()), max(y1, e.frame_y1()),
+      min(x2, e.frame_x2()), min(y2, e.frame_y2()));
     e.paint(g);
   }
 }
@@ -261,25 +262,17 @@ void text_window::locked_repaint(int16_t x1, int16_t y1, int16_t x2,
 }
 
 
-extern void set_text_asm();
-#pragma aux set_text_asm = "mov ax, 00003h" "int 010h" modify exact [ax] nomemory
-
-
-extern void restore_text_asm();
-#pragma aux restore_text_asm = "mov ax, 00003h" "int 010h" modify exact [ax] nomemory
-
-
 void text_window::save_mode() {
 }
 
 
 void text_window::restore_mode() {
-  restore_text_asm();
+  aux_text_window__restore_text_asm();
 }
 
 
 void text_window::set_text_mode() {
-  set_text_asm();
+  aux_text_window__set_text_asm();
 }
 
 

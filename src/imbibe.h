@@ -16,14 +16,14 @@
 #define __far
 
 #define __based(o)
-#define __segment uint16_t
+#define __segment uintptr_t
 #define __segname(n)
 // __segname gets the named segment -- probably "_CODE", "_CONST", "_DATA"
 #define __self
 
-#define FP_SEG(p) 0
-#define FP_OFF(p) NULL
-#define MK_FP(s, o) NULL
+#define FP_SEG(p) ((uintptr_t)(p))
+#define FP_OFF(p) 0
+#define MK_FP(s, o) ((void *)(s))
 
 #define __interrupt
 
@@ -31,9 +31,9 @@
 
 #define cprintf printf
 
-extern void _dos_setvect(int, void (*)());
-extern void (*_dos_getvect(int))();
-extern void _chain_intr(void (*)());
+inline void _dos_setvect(int, void (*)()) { }
+inline void (*_dos_getvect(int))() { return nullptr; }
+inline void _chain_intr(void (*)()) { }
 
 inline void * operator new (size_t size, void * p) { (void)size; return p; }
 
@@ -53,6 +53,18 @@ inline void * operator new (size_t size, void * p) { (void)size; return p; }
 #define LENGTHOF(a) (sizeof (a) / sizeof (a[0]))
 
 #define logf(...) do {} while(false)
+
+template<class T>
+inline T min(T x, T y) { return (x < y) ? x : y; }
+
+template<class T>
+inline T min(T x, T y, T z) { return min(min(x, y), z); }
+
+template<class T>
+inline T max(T x, T y) { return (x < y) ? x : y; }
+
+template<class T>
+inline T max(T x, T y, T z) { return max(max(x, y), z); }
 
 
 #endif // __IMBIBE_H_INCLUDED

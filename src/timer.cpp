@@ -3,50 +3,60 @@
 #include "timer.h"
 
 
-extern void ENTER_CRIT();
-#pragma aux ENTER_CRIT="pushf"\
-                       "cli"\
-                       modify exact [] nomemory;
+extern void aux_timer__enter_crit();
+extern void aux_timer__leave_crit();
+extern void aux_timer__ackint();
+extern void aux_timer__outb(uint16_t port, uint8_t value);
+extern void aux_timer__outwb(uint16_t port, uint16_t value);
+extern uint16_t aux_timer__inb(uint16_t port);
+extern uint16_t aux_timer__inwb(uint16_t port);
 
-
-extern void LEAVE_CRIT();
-#pragma aux LEAVE_CRIT="popf"\
-                       modify exact [] nomemory;
-
-
-extern void ACKINT();
-#pragma aux ACKINT="mov al, 20h"\
-                   "out 20h, al"\
-                   modify exact [al] nomemory;
-
-
-extern void OUTB(uint16_t port, uint8_t value);
-#pragma aux OUTB="out dx, al"\
-                 parm [dx] [al]\
-                 modify exact [] nomemory;
-
-
-extern void OUTWB(uint16_t port, uint16_t value);
-#pragma aux OUTWB="out dx, al"\
-                  "mov al, ah"\
-                  "out dx, al"\
-                  parm [dx] [ax]\
-                  modify exact [ax] nomemory;
-
-extern uint16_t INB(uint16_t port);
-#pragma aux INB="in al, dx"\
-                parm [dx]\
-                value [al]\
-                modify exact [al] nomemory;
-
-extern uint16_t INWB(uint16_t port);
-#pragma aux INWB="in al, dx"\
-                 "mov ah, al"\
-                 "in al, dx"\
-                 "xchg al, ah"\
-                 parm [dx]\
-                 value [ax]\
-                 modify exact [ax] nomemory;
+#ifdef SIMULATE
+void aux_timer__enter_crit() { }
+void aux_timer__leave_crit() { }
+void aux_timer__ackint() { }
+void aux_timer__outb(uint16_t port, uint8_t value)
+  { (void)port; (void)value; }
+void aux_timer__outwb(uint16_t port, uint16_t value)
+  { (void)port; (void)value; }
+uint16_t aux_timer__inb(uint16_t port) { (void)port; return 0; }
+uint16_t aux_timer__inwb(uint16_t port) { (void)port; return 0; }
+#else
+#pragma aux aux_timer__enter_crit=\
+  "pushf"\
+  "cli"\
+  modify exact [] nomemory;
+#pragma aux aux_timer__leave_crit=\
+  "popf"\
+  modify exact [] nomemory;
+#pragma aux aux_timer__ackint=\
+  "mov al, 20h"\
+  "out 20h, al"\
+  modify exact [al] nomemory;
+#pragma aux aux_timer__outb=\
+  "out dx, al"\
+  parm [dx] [al]\
+  modify exact [] nomemory;
+#pragma aux aux_timer__outwb=\
+  "out dx, al"\
+  "mov al, ah"\
+  "out dx, al"\
+  parm [dx] [ax]\
+  modify exact [ax] nomemory;
+#pragma aux aux_timer__inb=\
+  "in al, dx"\
+  parm [dx]\
+  value [al]\
+  modify exact [al] nomemory;
+#pragma aux aux_timer__inwb=\
+  "in al, dx"\
+  "mov ah, al"\
+  "in al, dx"\
+  "xchg al, ah"\
+  parm [dx]\
+  value [ax]\
+  modify exact [ax] nomemory;
+#endif
 
 
 #define PIT_INTERRUPT 8
@@ -81,9 +91,9 @@ volatile uint32_t hw_timer::timer_count;
 
 uint32_t timer::now() {
   uint32_t result;
-  ENTER_CRIT();
+  aux_timer__enter_crit();
   result = hw_timer::timer_count;
-  LEAVE_CRIT();
+  aux_timer__leave_crit();
   return result;
 }
 
@@ -103,8 +113,8 @@ void hw_timer::start_timer() {
   pit_tick_count = 0;
   timer_count = 0;
 
-  ENTER_CRIT();
-//  OUTB(PIT_CONTROL, PIT_PERIOD);
+  aux_timer__enter_crit();
+//  aux_timer__outb(PIT_CONTROL, PIT_PERIOD);
 //  pit_tick_bios_inc = INWB(PIT_DATA);
   pit_tick_bios_inc = 0;
   if(pit_tick_bios_inc == 0) {
@@ -113,23 +123,23 @@ void hw_timer::start_timer() {
   pit_bios_handler = _dos_getvect(PIT_INTERRUPT);
   if(pit_tick_inc < pit_tick_bios_inc) {
     _dos_setvect(PIT_INTERRUPT, pit_handler_bios_slower);
-    OUTB(PIT_CONTROL, PIT_PERIOD);
-    OUTWB(PIT_DATA, pit_tick_inc);
+    aux_timer__outb(PIT_CONTROL, PIT_PERIOD);
+    aux_timer__outwb(PIT_DATA, pit_tick_inc);
   } else {
     _dos_setvect(PIT_INTERRUPT, pit_handler_bios_faster);
   }
-  LEAVE_CRIT();
+  aux_timer__leave_crit();
 }
 
 
 void hw_timer::stop_timer() {
-  ENTER_CRIT();
+  aux_timer__enter_crit();
   if(pit_tick_inc < pit_tick_bios_inc) {
-    OUTB(PIT_CONTROL, PIT_PERIOD);
-    OUTWB(PIT_DATA, pit_tick_bios_inc);
+    aux_timer__outb(PIT_CONTROL, PIT_PERIOD);
+    aux_timer__outwb(PIT_DATA, pit_tick_bios_inc);
   }
   _dos_setvect(PIT_INTERRUPT, pit_bios_handler);
-  LEAVE_CRIT();
+  aux_timer__leave_crit();
 }
 
 
@@ -140,7 +150,7 @@ void (__interrupt hw_timer::pit_handler_bios_slower)() {
     pit_tick_count -= PIT_BIOS_PERIOD;
     _chain_intr(pit_bios_handler);
   }
-  else ACKINT();
+  else aux_timer__ackint();
 }
 
 

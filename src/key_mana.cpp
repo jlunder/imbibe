@@ -11,10 +11,14 @@
 #include "vector.h"
 
 
-extern bool key_manager_key_avail();
+extern bool aux_key_manager__key_avail();
+extern uint16_t aux_key_manager__read_key();
+
 #ifdef SIMULATE
+extern bool aux_key_manager__key_avail() { return true; }
+extern uint16_t aux_key_manager__read_key() { return 0x1B; }
 #else
-#pragma aux key_manager_key_avail = \
+#pragma aux aux_key_manager__key_avail = \
   "mov ah, 011h"\
   "int 016h"\
   "mov al, 0"\
@@ -23,18 +27,14 @@ extern bool key_manager_key_avail();
   "@1:"\
   value [al]\
   modify exact [ax] nomemory;
-#endif
 
-
-extern uint16_t key_manager_read_key();
-#ifdef SIMULATE
-#else
-#pragma aux key_manager_read_key = \
+#pragma aux aux_key_manager__read_key = \
   "mov ah, 010h"\
   "int 016h"\
   value [ax]\
   modify exact [ax] nomemory;
 #endif
+
 
 key_manager::key_handler_p_list key_manager::s_key_handlers;
 
@@ -43,8 +43,8 @@ void key_manager::dispatch_keys() {
   key_handler_p_list::iterator i;
   uint16_t c;
 
-  while(key_manager_key_avail())   {
-    c = key_manager_read_key();
+  while(aux_key_manager__key_avail())   {
+    c = aux_key_manager__read_key();
     if(((c & 0xFF) > 0) && ((c & 0xFF) < 128)) {
       c = c & 0xFF;
     } else {

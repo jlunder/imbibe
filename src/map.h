@@ -27,7 +27,6 @@ public:
     Key key;
     T ref;
     value_type() { }
-    value_type(value_type const & x): key(x.key), ref(x.ref) { }
     value_type(Key const & k, T const & r): key(k), ref(r) { }
   };
   class value_compare
