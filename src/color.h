@@ -38,6 +38,9 @@ public:
   void background(uint8_t n_back)
     { m_value = (m_value & 0x0F) | (n_back << 4); }
 
+  color & operator = (color const & other)
+    { m_value = other.m_value; return *this; }
+
 private:
   uint8_t m_value;
 };

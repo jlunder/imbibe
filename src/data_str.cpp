@@ -14,6 +14,8 @@
 
 data_stream::directory::directory(uint8_t * data, uint32_t length)
 {
+  (void)data;
+  (void)length;
   // istrstream s(data, length);
   // dir_entry_list_value v;
   // uint32_t dir_begin;

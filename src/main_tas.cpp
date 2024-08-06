@@ -16,9 +16,17 @@
 
 main_task::main_task(): task(), m_state(st_loading), m_win(), m_canvas() {
   m_canvas.set_frame(0, 0, 80, 25, 0);
-  m_canvas.set_b(
-    new bitmap(m_canvas.frame_width(), m_canvas.frame_height()));
-  m_canvas.set_owner(m_win);
+  m_canvas.set_b(new bitmap(80, 25));
+  // bitmap_graphics g(m_canvas.b());
+  // g.draw_rectangle(0, 0, 80, 25, pixel('+', color(color::hi_red, color::red)));
+  // g.draw_text(34, 12, color(color::hi_white, color::white), "Hello world!");
+
+  for(size_t i = 0; i < 80 * 25; ++i) {
+    m_canvas.b().data()[i] = pixel('x', color(color::hi_green, color::red));
+  }
+
+  // m_canvas.set_owner(m_win);
+  // m_canvas.show();
 }
 
 
@@ -43,15 +51,23 @@ void main_task::run() {
   }
 }
 
-
+#include <string.h>
 void main_task::idle() {
   key_manager::dispatch_keys();
 
+  //m_win.repaint();
+
+  uint16_t * scr = (uint16_t *)MK_FP(0xB800, (void *)0);
+  // for(size_t i = 0; i < 80 * 25; ++i) {
+  //   scr[i] = pixel('x', color(color::cyan, color::magenta));
+  // }
+  for(size_t i = 0; i < 80 * 25; ++i) {
+    m_canvas.b().data()[i] = pixel('x', color(color::cyan, color::red));
+  }
   bitmap_graphics g(m_canvas.b());
   g.draw_rectangle(0, 0, 80, 25, pixel('+', color(color::hi_red, color::red)));
-  g.draw_text(34, 22, color(color::hi_white, color::hi_black), "Hello world!");
-  // m_canvas.repaint();
-  m_win.repaint();
+  //g.draw_text(34, 12, color(color::hi_white, color::white), "Hello world!");
+  memcpy(scr, m_canvas.b().data(), 8000);
 }
 
 
@@ -71,7 +87,10 @@ void main_task::run_loop() {
 
   timer::setup();
   //m.start(true);
+  logf("w=%d, h=%d\n", (int)m_canvas.b().width(), (int)m_canvas.b().height());
   key_manager::add_handler(*this);
+  logf("w=%d, h=%d\n", (int)m_canvas.b().width(), (int)m_canvas.b().height());
+  m_win.setup();
   logf("imbibe 1.0 loaded\n");
 
   task_manager::idle();
@@ -108,5 +127,7 @@ void main_task::run_loop() {
   }
 
   logf("imbibe 1.0 done\n");
+  m_win.teardown();
+  // don't teardown key_manager b/c not needed
   timer::teardown();
 }

@@ -136,20 +136,15 @@ void hbin_view_handler::scroll_to(int x, int y, bool down)
 
 bool hbin_view_handler::handle(int c)
 {
-  int x;
-  int y;
-
   switch(c)
   {
   case key_tab:
-    if(m_hb.num_links() != 0)
-    {
+    if(m_hb.num_links() != 0) {
       select_link((m_hbe.selection() + 1) % m_hb.num_links());
     }
     break;
   case key_shift_tab:
-    if(m_hb.num_links() != 0)
-    {
+    if(m_hb.num_links() != 0) {
       select_link((m_hbe.selection() + m_hb.num_links() - 1) % m_hb.num_links());
     }
     break;

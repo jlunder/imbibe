@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <malloc.h>
 
 
 #if !(defined(M_I86) && defined(__WATCOMC__))
@@ -33,6 +34,10 @@
 extern void _dos_setvect(int, void (*)());
 extern void (*_dos_getvect(int))();
 extern void _chain_intr(void (*)());
+
+inline void * operator new (size_t size, void * p) { (void)size; return p; }
+
+#define SIMULATE
 
 #else
 

@@ -17,34 +17,35 @@ class bitmap_graphics: public graphics
 {
 public:
   bitmap_graphics(bitmap & n_b);
-  virtual int width() const;
-  virtual int height() const;
-  virtual int bounds_x1() const;
-  virtual int bounds_y1() const;
-  virtual int bounds_x2() const;
-  virtual int bounds_y2() const;
-  virtual int bounds_width() const;
-  virtual int bounds_height() const;
-  virtual int clip_x1() const;
-  virtual int clip_y1() const;
-  virtual int clip_x2() const;
-  virtual int clip_y2() const;
-  virtual void set_bounds(int x1, int y1, int x2, int y2);
-  virtual void set_clip(int x1, int y1, int x2, int y2);
-  virtual void draw_rectangle(int x1, int y1, int x2, int y2, pixel p);
-  virtual void draw_text(int x, int y, color c, char const * s);
-  virtual void draw_bitmap(int x, int y, bitmap const & b);
+  virtual int16_t width() const;
+  virtual int16_t height() const;
+  virtual int16_t bounds_x1() const;
+  virtual int16_t bounds_y1() const;
+  virtual int16_t bounds_x2() const;
+  virtual int16_t bounds_y2() const;
+  virtual int16_t bounds_width() const;
+  virtual int16_t bounds_height() const;
+  virtual int16_t clip_x1() const;
+  virtual int16_t clip_y1() const;
+  virtual int16_t clip_x2() const;
+  virtual int16_t clip_y2() const;
+  virtual void set_bounds(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
+  virtual void set_clip(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
+  virtual void draw_rectangle(int16_t x1, int16_t y1, int16_t x2, int16_t y2,
+    pixel p);
+  virtual void draw_text(int16_t x, int16_t y, color c, char const * s);
+  virtual void draw_bitmap(int16_t x, int16_t y, bitmap const & b);
 
 private:
   bitmap & m_b;
-  int m_clip_x1;
-  int m_clip_y1;
-  int m_clip_x2;
-  int m_clip_y2;
-  int m_bounds_x1;
-  int m_bounds_y1;
-  int m_bounds_x2;
-  int m_bounds_y2;
+  int16_t m_clip_x1;
+  int16_t m_clip_y1;
+  int16_t m_clip_x2;
+  int16_t m_clip_y2;
+  int16_t m_bounds_x1;
+  int16_t m_bounds_y1;
+  int16_t m_bounds_x2;
+  int16_t m_bounds_y2;
 };
 
 

@@ -20,8 +20,8 @@ void element::set_frame_pos(int16_t x1, int16_t y1) {
 
 
 void element::set_frame_size(int16_t width, int16_t height) {
-  int old_width = frame_width();
-  int old_height = frame_height();
+  int16_t old_width = frame_width();
+  int16_t old_height = frame_height();
 
   m_x2 = m_x1 + width;
   m_y2 = m_y1 + height;
@@ -44,18 +44,20 @@ void element::set_frame_depth(int16_t z) {
 
 void element::set_frame(int16_t x1, int16_t y1, int16_t x2, int16_t y2,
     int16_t z) {
-  int old_x1 = m_x1;
-  int old_y1 = m_y1;
-  int old_x2 = m_x2;
-  int old_y2 = m_y2;
-  int old_z = z;
+  int16_t old_x1 = m_x1;
+  int16_t old_y1 = m_y1;
+  int16_t old_x2 = m_x2;
+  int16_t old_y2 = m_y2;
+  int16_t old_z = m_z;
 
   m_x1 = x1;
   m_y1 = y1;
   m_x2 = x2;
   m_y2 = y2;
+  m_z = z;
   if(m_visible) {
-    m_owner->element_frame_changed(*this, old_x1, old_y1, old_x2, old_y2, z);
+    m_owner->element_frame_changed(*this, old_x1, old_y1, old_x2, old_y2,
+      old_z < m_z ? old_z : m_z);
   }
 }
 

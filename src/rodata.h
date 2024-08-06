@@ -14,17 +14,18 @@ public:
   typedef void (*reclaim_func_t)(void __far * p);
 
   rodata(prealloc_t policy, void const * p) {
+    (void)policy;
     p = normalize(p);
     m_seg = FP_SEG(p);
     m_index = 0;
-    m_offset = FP_OFF(p);
+    m_offset = (uint8_t)FP_OFF(p);
   }
 
   rodata(reclaim_func_t f, void const * p) {
     assert(p == normalize(p));
     p = normalize(p);
     m_seg = FP_SEG(p);
-    m_offset = FP_OFF(p);
+    m_offset = (uint8_t)FP_OFF(p);
     init(f);
   }
 
@@ -53,7 +54,7 @@ private:
   void unref();
 
   static void const * normalize(void const * p) {
-    if(FP_OFF(p) < 256) {
+    if((uint16_t)FP_OFF(p) <= UINT8_MAX) {
       return p;
     }
     p = MK_FP(FP_SEG(p) + (FP_OFF(p) >> 4), FP_OFF(p) & 0xF);
@@ -62,5 +63,5 @@ private:
 };
 
 
-#endif __RODATA_H_INCLUDED
+#endif // __RODATA_H_INCLUDED
 

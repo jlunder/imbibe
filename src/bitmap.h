@@ -21,7 +21,7 @@ public:
   int16_t width() const { return m_width; }
   int16_t height() const { return m_height; }
   uint16_t & at(int16_t x, int16_t y) { return m_data[y * m_width + x]; }
-  int16_t const & at(int16_t x, int16_t y) const
+  uint16_t const & at(int16_t x, int16_t y) const
     { return m_data[y * m_width + x]; }
   uint16_t * data() { return m_data; }
   uint16_t const * data() const { return m_data; }

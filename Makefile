@@ -1,5 +1,8 @@
 VERSION = DEBUG
 
+SIM_OBJ_DIR = build/simdebug/
+DEP_DIR = build/deps/
+
 OBJ_DIR_RELEASE = build/release/
 OBJ_DIR_DEBUG = build/debug/
 OBJ_DIR_PROFILE = build/profile/
@@ -20,34 +23,60 @@ CC_OPT = -fo=$(OBJ_DIR) $(CC_OPT_$(VERSION)) -2 -ml -bt=dos -fpc -d__STDC_LIMIT_
 
 CC = wpp
 
-imbibe_hhs = $(wildcard src/*.)
+IMBIBE_HEADERS = $(wildcard src/*.h)
 
-imbibe_objs = $(patsubst $(SRC_DIR)%.cpp,$(OBJ_DIR)%.obj,$(wildcard src/*.cpp))
+IMBIBE_OBJS = $(patsubst $(SRC_DIR)%.cpp,$(OBJ_DIR)%.obj,$(wildcard $(SRC_DIR)*.cpp))
+IMBIBE_SIM_OBJS = $(patsubst $(SRC_DIR)%.cpp,$(SIM_OBJ_DIR)%.o,$(wildcard $(SRC_DIR)*.cpp))
+IMBIBE_DEPS = $(patsubst $(SRC_DIR)%.cpp,$(DEP_DIR)%.d,$(wildcard $(SRC_DIR)*.cpp))
 
-.PHONY: all clean imbibe
+.PHONY: all clean deps dirs imbibe
 .DEFAULT_GOAL: all
+
+$(SIM_OBJ_DIR):
+	mkdir -p $@
+$(DEP_DIR):
+	mkdir -p $@
+$(OBJ_DIR_RELEASE):
+	mkdir -p $@
+$(OBJ_DIR_DEBUG):
+	mkdir -p $@
+$(OBJ_DIR_PROFILE):
+	mkdir -p $@
+
+dirs: $(SIM_OBJ_DIR) $(DEP_DIR) $(OBJ_DIR)
+
+$(SIM_OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(SIM_OBJ_DIR) $(DEP_DIR)
+	g++ -MT $@ -MMD -MP -MF $(DEP_DIR)$*.d -c $< -g -W -Wall -Werror -o $@
+
+# $(SIM_OBJ_DIR)%.o $(DEP_DIR)%.d: $(SRC_DIR)%.cpp $(DEP_DIR)%.d | $(SIM_OBJ_DIR) $(DEP_DIR)
+# 	g++ -MT $@ -MMD -MP -MF $(DEP_DIR)/$*.d -c $< -g -W -Wall -Werror -o $@
+
+include $(wildcard $(DEP_DIR)*.d)
 
 all: imbibe
 
 clean:
 	rm -rf build
 
+simbibe: $(IMBIBE_SIM_OBJS)
+	g++ -o $@ $^
+
 imbibe: $(OBJ_DIR)imbibe.exe
 	cd workspace && \
 	  dosbox \
 	    -c "S:" \
-	    -c `echo $< | tr / \\` \
+	    -c "`echo $< | tr / \\` > RUN.LOG"
 
 $(OBJ_DIR)imbibe.lnk: | $(OBJ_DIR)
 	echo NAME $(OBJ_DIR)imbibe.exe > $@
 	echo SYSTEM DOS >> $@
 	echo OPTION ELIMINATE >> $@
 	echo $(LINK_OPT) >> $@
-	for i in $(imbibe_objs); do \
+	for i in $(IMBIBE_OBJS); do \
 	    echo file $$i >> $@; \
 	  done
 
-$(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(imbibe_objs)
+$(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(IMBIBE_OBJS)
 	cd workspace && \
 	  dosbox \
 	    -c "S:" \
@@ -57,7 +86,7 @@ $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(imbibe_objs)
 	  if test -f $$UPPER_TGT; \
 	    then mv $$UPPER_TGT $@; fi
 
-$(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp $(imbibe_hhs) | $(OBJ_DIR)
+$(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp $(IMBIBE_HEADERS) | $(OBJ_DIR)
 	cd workspace && \
 	  dosbox \
 	    -c "S:" \
@@ -66,7 +95,3 @@ $(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp $(imbibe_hhs) | $(OBJ_DIR)
 	UPPER_TGT=$(@D)/`echo $(@F) | tr a-z A-Z`; \
 	  if test -f $$UPPER_TGT; \
 	    then mv $$UPPER_TGT $@; fi
-
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
-

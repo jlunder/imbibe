@@ -12,6 +12,8 @@
 
 
 extern bool key_manager_key_avail();
+#ifdef SIMULATE
+#else
 #pragma aux key_manager_key_avail = \
   "mov ah, 011h"\
   "int 016h"\
@@ -21,15 +23,18 @@ extern bool key_manager_key_avail();
   "@1:"\
   value [al]\
   modify exact [ax] nomemory;
+#endif
 
 
 extern uint16_t key_manager_read_key();
+#ifdef SIMULATE
+#else
 #pragma aux key_manager_read_key = \
   "mov ah, 010h"\
   "int 016h"\
   value [ax]\
   modify exact [ax] nomemory;
-
+#endif
 
 key_manager::key_handler_p_list key_manager::s_key_handlers;
 

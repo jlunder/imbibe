@@ -14,7 +14,7 @@ template<class T>
 class do_nothing_reclaim : public reclaim<T>
 {
 public:
-  void operator()(T * x) /*override*/ { }
+  void operator()(T * x) /*override*/ { (void)x; }
 };
 
 

@@ -13,26 +13,26 @@ class graphics;
 #include "pixel.h"
 
 
-class graphics
-{
+class graphics {
 public:
-  virtual int width() const = 0;
-  virtual int height() const = 0;
-  virtual int bounds_x1() const = 0;
-  virtual int bounds_y1() const = 0;
-  virtual int bounds_x2() const = 0;
-  virtual int bounds_y2() const = 0;
-  virtual int bounds_width() const = 0;
-  virtual int bounds_height() const = 0;
-  virtual int clip_x1() const = 0;
-  virtual int clip_y1() const = 0;
-  virtual int clip_x2() const = 0;
-  virtual int clip_y2() const = 0;
-  virtual void set_bounds(int x1, int y1, int x2, int y2) = 0;
-  virtual void set_clip(int x1, int y1, int x2, int y2) = 0;
-  virtual void draw_rectangle(int x1, int y1, int x2, int y2, pixel p) = 0;
-  virtual void draw_text(int x, int y, color c, char const * s) = 0;
-  virtual void draw_bitmap(int x, int y, bitmap const & b) = 0;
+  virtual int16_t width() const = 0;
+  virtual int16_t height() const = 0;
+  virtual int16_t bounds_x1() const = 0;
+  virtual int16_t bounds_y1() const = 0;
+  virtual int16_t bounds_x2() const = 0;
+  virtual int16_t bounds_y2() const = 0;
+  virtual int16_t bounds_width() const = 0;
+  virtual int16_t bounds_height() const = 0;
+  virtual int16_t clip_x1() const = 0;
+  virtual int16_t clip_y1() const = 0;
+  virtual int16_t clip_x2() const = 0;
+  virtual int16_t clip_y2() const = 0;
+  virtual void set_bounds(int16_t x1, int16_t y1, int16_t x2, int16_t y2) = 0;
+  virtual void set_clip(int16_t x1, int16_t y1, int16_t x2, int16_t y2) = 0;
+  virtual void draw_rectangle(int16_t x1, int16_t y1, int16_t x2, int16_t y2,
+    pixel p) = 0;
+  virtual void draw_text(int16_t x, int16_t y, color c, char const * s) = 0;
+  virtual void draw_bitmap(int16_t x, int16_t y, bitmap const & b) = 0;
 };
 
 

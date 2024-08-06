@@ -23,6 +23,8 @@ public:
   void setup();
   void teardown();
 
+  bitmap & backbuffer() { return m_backbuffer; }
+
   virtual void lock();
   virtual void unlock();
   virtual void repaint();
@@ -51,7 +53,7 @@ private:
     int16_t z);
 
   element_list m_elements;
-  bitmap * m_backbuffer;
+  bitmap m_backbuffer;
   int8_t m_locked;
   bool m_need_repaint;
   int16_t m_repaint_x1;

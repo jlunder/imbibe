@@ -5,7 +5,7 @@
 template<class T>
 class inplace {
 public:
-  void setup() { new (&**this) T; }
+  void setup() { new ((void *)m_buf) T; }
   void teardown() { (*this)->~T(); }
 
   operator T * () { return (T *)m_buf; }

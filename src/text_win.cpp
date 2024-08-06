@@ -14,7 +14,7 @@
 
 
 text_window::text_window()
-  : m_backbuffer(new bitmap(80, 25)), m_locked(false) {
+  : m_backbuffer(80, 25), m_locked(false) {
 }
 
 
@@ -56,18 +56,34 @@ void text_window::unlock() {
 
 
 void text_window::repaint() {
-  repaint(0, 0, m_backbuffer->width(), m_backbuffer->height());
+  repaint(0, 0, m_backbuffer.width(), m_backbuffer.height());
 }
 
 
 void text_window::repaint(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
-  element_list_iterator i;
+  assert(x1 >= 0); assert(x1 <= m_backbuffer.width());
+  assert(y1 >= 0); assert(y1 <= m_backbuffer.width());
+  assert(x2 >= x1); assert(x2 <= m_backbuffer.width());
+  assert(y2 >= y1); assert(y2 <= m_backbuffer.width());
+
+#ifndef NDEBUG
+  // Make a
+  static uint16_t const ugly_px =
+    pixel('x', color(color::hi_cyan, color::hi_magenta));
+  for(int16_t y = y1; y < y2; ++y) {
+    uint16_t * row = m_backbuffer.data() + (y * m_backbuffer.width());
+    for(int16_t x = x1; x < x2; ++x) {
+      row[x] = ugly_px;
+    }
+  }
+#endif
 
   if(!m_locked) {
-    for(i = m_elements.begin(); i != m_elements.end(); ++i) {
+    for(element_list_iterator i = m_elements.begin(); i != m_elements.end();
+        ++i) {
       repaint_element(*i->ref, x1, y1, x2, y2);
     }
-    flip(m_backbuffer);
+    flip(&m_backbuffer);
   } else {
     locked_repaint(x1, y1, x2, y2);
   }
@@ -82,7 +98,7 @@ void text_window::repaint(int16_t x1, int16_t y1, int16_t x2, int16_t y2,
     for(i = m_elements.lower_bound(z); i != m_elements.end(); ++i) {
       repaint_element(*i->ref, x1, y1, x2, y2);
     }
-    flip(m_backbuffer);
+    flip(&m_backbuffer);
   } else {
     locked_repaint(x1, y1, x2, y2, z);
   }
@@ -184,7 +200,7 @@ void text_window::repaint_element(element const & e, int16_t x1, int16_t y1,
     int16_t t_y1 = (y1 > e.frame_y1()) ? y1 : e.frame_y1();
     int16_t t_x2 = (x2 < e.frame_x2()) ? x2 : e.frame_x2();
     int16_t t_y2 = (y2 < e.frame_y2()) ? y2 : e.frame_y2();
-    bitmap_graphics g(*m_backbuffer);
+    bitmap_graphics g(m_backbuffer);
 
     if(t_x1 < 0) {
       t_x1 = 0;
@@ -192,11 +208,11 @@ void text_window::repaint_element(element const & e, int16_t x1, int16_t y1,
     if(t_y1 < 0) {
       t_y1 = 0;
     }
-    if(t_x2 > m_backbuffer->width()) {
-      t_x2 = m_backbuffer->width();
+    if(t_x2 > m_backbuffer.width()) {
+      t_x2 = m_backbuffer.width();
     }
-    if(t_y2 > m_backbuffer->height()) {
-      t_y2 = m_backbuffer->height();
+    if(t_y2 > m_backbuffer.height()) {
+      t_y2 = m_backbuffer.height();
     }
 
     g.set_bounds(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2());

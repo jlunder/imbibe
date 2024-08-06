@@ -16,7 +16,7 @@ public:
   typedef int32_t ssize_t;
 
   stream():
-    m_last_error(err_none), m_size(0), m_position(0), m_at_eof(false)
+    m_last_error(err_none), m_at_eof(false), m_size(0), m_position(0)
     { }
   virtual ~stream() { }
 
@@ -41,13 +41,17 @@ public:
   }
   virtual ssize_t seek_to(ssize_t pos) = 0;
   virtual ssize_t read(void * dest, size_t size) {
+    (void)dest;
+    (void)size;
     if (m_last_error != err_none) {
       return 0;
     }
     m_last_error = err_not_supported;
     return 0;
   }
-  virtual ssize_t write(void * dest, size_t size) {
+  virtual ssize_t write(void * src, size_t size) {
+    (void)src;
+    (void)size;
     if (m_last_error != err_none) {
       return 0;
     }
