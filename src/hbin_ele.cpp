@@ -12,9 +12,11 @@
 hbin_element::hbin_element(int16_t n_x1, int16_t n_y1, int16_t n_x2,
     int16_t n_y2, int16_t n_z, window & n_owner, hbin & n_hb,
     int16_t n_scroll_x, int16_t n_scroll_y, int16_t n_selection)
-  : element(n_x1, n_y1, n_x2, n_y2, n_z, n_owner), m_hb(n_hb),
+  : element(), m_hb(n_hb),
     m_scroll_x(n_scroll_x), m_scroll_y(n_scroll_y), m_selection(n_selection)
 {
+  set_frame(n_x1, n_y1, n_x2, n_y2, n_z);
+  set_owner(n_owner);
 }
 
 

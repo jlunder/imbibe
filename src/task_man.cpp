@@ -7,6 +7,7 @@
 #include "vector.h"
 
 
+// #undef logf
 // #define logf cprintf
 
 

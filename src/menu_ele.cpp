@@ -11,9 +11,11 @@
 
 
 menu_element::menu_element(int16_t n_x1, int16_t n_y1, int16_t n_x2, int16_t n_y2, int16_t n_z, window & n_owner, menu & n_m, int16_t n_scroll_x, int16_t n_scroll_y, int16_t n_selection):
-  element(n_x1, n_y1, n_x2, n_y2, n_z, n_owner), m_m(n_m), m_scroll_x(n_scroll_x), m_scroll_y(n_scroll_y), m_selection(n_selection)
+  element(), m_m(n_m), m_scroll_x(n_scroll_x), m_scroll_y(n_scroll_y), m_selection(n_selection)
 {
   assert(m_selection < m_m.num_links());
+  set_frame(n_x1, n_y1, n_x2, n_y2, n_z);
+  set_owner(n_owner);
 }
 
 
