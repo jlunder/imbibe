@@ -13,8 +13,8 @@
 #include "element.h"
 
 
-#undef logf
-#define logf cprintf
+// #undef logf
+// #define logf cprintf
 
 
 extern void aux_text_window__set_text_asm();

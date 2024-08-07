@@ -122,7 +122,7 @@ void hw_timer::start_timer() {
   if(pit_tick_inc < pit_tick_bios_inc) {
     _dos_setvect(PIT_INTERRUPT, pit_handler_bios_slower);
     aux_timer__outb(PIT_CONTROL, PIT_PERIOD);
-    aux_timer__outwb(PIT_DATA, pit_tick_inc);
+    aux_timer__outwb(PIT_DATA, (uint16_t)pit_tick_inc);
   } else {
     _dos_setvect(PIT_INTERRUPT, pit_handler_bios_faster);
   }
@@ -134,7 +134,7 @@ void hw_timer::stop_timer() {
   aux_timer__enter_crit();
   if(pit_tick_inc < pit_tick_bios_inc) {
     aux_timer__outb(PIT_CONTROL, PIT_PERIOD);
-    aux_timer__outwb(PIT_DATA, pit_tick_bios_inc);
+    aux_timer__outwb(PIT_DATA, (uint16_t)pit_tick_bios_inc);
   }
   _dos_setvect(PIT_INTERRUPT, pit_bios_handler);
   aux_timer__leave_crit();

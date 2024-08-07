@@ -32,7 +32,6 @@ bool hbin_menu_handler::handle(int c)
     break;
   default:
     return false;
-    break;
   }
   x = m_hbe.scroll_x();
   y = m_hbe.scroll_y();

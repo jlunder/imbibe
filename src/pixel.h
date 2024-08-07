@@ -17,9 +17,11 @@ public:
     m_character(n_character), m_attribute(color::white, color::black) { }
   pixel(char n_character, color n_attribute):
     m_character(n_character), m_attribute(n_attribute) { }
-  pixel(uint16_t us):
-    m_character(us & 0xFF),
-    m_attribute((us & 0xF00) >> 8, (us & 0xF000) >> 12) { }
+  pixel(uint16_t us)
+    : m_character((char)(us & 0xFF)),
+      m_attribute((uint8_t)((us & 0xF00) >> 8),
+        (uint8_t)((us & 0xF000) >> 12))
+    { }
 
   void character(char n_character) { m_character = n_character; }
   char character() const { return m_character; }

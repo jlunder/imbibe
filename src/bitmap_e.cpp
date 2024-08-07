@@ -8,8 +8,8 @@
 #include "graphics.h"
 
 
-#undef logf
-#define logf cprintf
+// #undef logf
+// #define logf cprintf
 
 
 bitmap_element::bitmap_element()

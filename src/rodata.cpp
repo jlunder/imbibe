@@ -32,7 +32,7 @@ void rodata::init(reclaim_func_t f)
   // If we still don't have a next_unrefd, we need a bigger index
   assert(rodata_index[0].next_unrefd != 0);
   assert(rodata_index[0].next_unrefd < max_reclaimable);
-  m_index = rodata_index[0].next_unrefd;
+  m_index = (uint8_t)rodata_index[0].next_unrefd;
   rodata_index[0].next_unrefd = rodata_index[m_index].next_unrefd;
   rodata_index[m_index].live_refs = 1;
   rodata_index[m_index].reclaimer = f;

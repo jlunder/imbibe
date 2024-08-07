@@ -14,6 +14,7 @@
 extern bool aux_key_manager__key_avail();
 extern uint16_t aux_key_manager__read_key();
 
+
 #if !defined(SIMULATE)
 
 #pragma aux aux_key_manager__key_avail = \

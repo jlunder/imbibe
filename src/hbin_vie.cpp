@@ -174,7 +174,6 @@ bool hbin_view_handler::handle(int c)
     break;
   default:
     return false;
-    break;
   }
   return true;
 }

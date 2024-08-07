@@ -14,22 +14,14 @@
 #define logf cprintf
 
 
-main_task::main_task(): task(), m_state(st_loading), m_win(), m_canvas() {
+main_task::main_task()
+  : task(), m_state(st_loading), m_win(), m_canvas(), m_key_thunk(*this) {
   m_canvas.set_frame(0, 0, 80, 25, 0);
   m_canvas.set_b(new bitmap(80, 25));
 
-  // bitmap_graphics g(m_canvas.b());
-  // g.draw_rectangle(0, 0, 80, 25, pixel('+', color(color::hi_red, color::red)));
-  // g.draw_text(34, 12, color(color::hi_white, color::white), "Hello world!");
-
-  for(size_t i = 0; i < 80 * 25; ++i) {
-    m_canvas.b().data()[i] = pixel('x', color(color::hi_green, color::red));
-  }
-  logf("set up canvas element %p, bitmap %p, corner %04X\n", &m_canvas,
-    &m_canvas.b(), *(uint16_t*)m_canvas.b().data());
-
-  m_canvas.set_owner(m_win);
-  m_canvas.show();
+  bitmap_graphics g(m_canvas.b());
+  g.draw_rectangle(0, 0, 80, 25, pixel('+', color(color::hi_red, color::red)));
+  g.draw_text(34, 12, color(color::hi_white, color::white), "Hello world!");
 }
 
 
@@ -38,7 +30,7 @@ main_task::~main_task() {
 
 
 void main_task::run() {
-  logf("run(), state=%d\n", m_state);
+  // logf("run(), state=%d\n", m_state);
   switch(m_state) {
   case st_loading:
     logf("advancing to st_waiting\n");
@@ -62,12 +54,12 @@ void main_task::idle() {
   // uint16_t * scr = (uint16_t *)MK_FP(0xB800, (void *)0);
   // memcpy(scr, m_canvas.b().data(), 4000);
 
-  m_win.repaint();
+  // m_win.repaint();
 }
 
 
 bool main_task::handle_key(uint16_t key) {
-  logf("pressed: %x\n", key);
+  logf("pressed [m_state=%d]: %x\n", (int)m_state, key);
   if(m_state == st_waiting) {
     m_state = st_done;
   }
@@ -81,12 +73,12 @@ void main_task::run_loop() {
   uint32_t ms_since_idle = 0;
 
   timer::setup();
-  //m.start(true);
-  logf("w=%d, h=%d\n", (int)m_canvas.b().width(), (int)m_canvas.b().height());
-  key_manager::add_handler(*this);
-  logf("w=%d, h=%d\n", (int)m_canvas.b().width(), (int)m_canvas.b().height());
+  key_manager::add_handler(m_key_thunk);
   m_win.setup();
   logf("imbibe 1.0 loaded\n");
+
+  m_canvas.set_owner(m_win);
+  m_canvas.show();
 
   task_manager::idle();
   while(!done()) {
@@ -102,7 +94,7 @@ void main_task::run_loop() {
     // This check is after run() to capture the most recent view of how much
     // time has been consumed. run() returns false when it did no work.
     ms_since_idle += t.delta_ms();
-    logf("ms_since_idle: %d\n", ms_since_idle);
+    // logf("ms_since_idle: %d\n", ms_since_idle);
     if(ms_since_idle > max_idle_interval) {
       do_idle = true;
     }

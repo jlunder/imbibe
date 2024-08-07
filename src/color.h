@@ -30,13 +30,15 @@ public:
 
   color() { }
   color(color const & n_color): m_value(n_color.m_value) { }
-  color(uint8_t n_fore, uint8_t n_back): m_value(n_fore | (n_back << 4)) { }
+  color(uint8_t n_fore, uint8_t n_back)
+    : m_value((uint8_t)(n_fore | (n_back << 4))) { }
 
   void value(uint8_t n_value) { m_value = n_value; }
   uint8_t value() const { return m_value; }
-  void foreground(uint8_t n_fore) { m_value = (m_value & 0xF0) | n_fore; }
+  void foreground(uint8_t n_fore)
+    { m_value = (uint8_t)((m_value & 0xF0) | n_fore); }
   void background(uint8_t n_back)
-    { m_value = (m_value & 0x0F) | (n_back << 4); }
+    { m_value = (uint8_t)((m_value & 0x0F) | (n_back << 4)); }
 
   color & operator = (color const & other)
     { m_value = other.m_value; return *this; }

@@ -17,9 +17,9 @@ LINK_OPT = $(LINK_OPT_$(VERSION))
 LINK = wlink
 
 CC_OPT_RELEASE = -dNDEBUG -otexan
-CC_OPT_DEBUG = -d3
+CC_OPT_DEBUG = -d3i -od
 CC_OPT_PROFILE = -dNDEBUG -d1 -otexan
-CC_OPT = -fo=$(OBJ_DIR) $(CC_OPT_$(VERSION)) -2 -ml -bt=dos -fpc -d__STDC_LIMIT_MACROS
+CC_OPT = -fo=$(OBJ_DIR) $(CC_OPT_$(VERSION)) -2 -ml -bt=dos -fpc -d__STDC_LIMIT_MACROS -wx -ze
 
 CC = wpp
 
@@ -75,22 +75,25 @@ $(OBJ_DIR)imbibe.lnk: | $(OBJ_DIR)
 	    echo file $$i >> $@; \
 	  done
 
+uc = $(shell echo $(1) | tr a-z A-Z)
+
+$(OBJ_DIR)%.exe: private UPPER_TGT = $(@D)/$(call uc,$(@F))
+$(OBJ_DIR)%.exe: private LINK_LOG = $(patsubst %.EXE,%.LOG,$(UPPER_TGT))
 $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(IMBIBE_OBJS)
 	cd workspace && \
 	  dosbox \
 	    -c "S:" \
-	    -c "$(LINK) @$< > LINK.ERR" \
+	    -c "$(LINK) @$< > $(LINK_LOG)" \
 	    -c "exit"
-	UPPER_TGT=$(@D)/`echo $(@F) | tr a-z A-Z`; \
-	  if test -f $$UPPER_TGT; \
-	    then mv $$UPPER_TGT $@; fi
+	mv $(UPPER_TGT) $@
 
+$(OBJ_DIR)%.obj: private UPPER_TGT = $(@D)/$(call uc,$(@F))
+$(OBJ_DIR)%.obj: private CC_LOG = $(patsubst %.OBJ,%.LOG,$(UPPER_TGT))
 $(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp $(SIM_OBJ_DIR)%.o | $(OBJ_DIR)
 	cd workspace && \
 	  dosbox \
 	    -c "S:" \
-	    -c "$(CC) $(CC_OPT) $<" \
+	    -c "$(CC) $(CC_OPT) $< > $(CC_LOG)" \
 	    -c "exit"
-	UPPER_TGT=$(@D)/`echo $(@F) | tr a-z A-Z`; \
-	  if test -f $$UPPER_TGT; \
-	    then mv $$UPPER_TGT $@; fi
+	mv $(UPPER_TGT) $@
+

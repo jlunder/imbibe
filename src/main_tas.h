@@ -13,14 +13,13 @@
 #include "text_win.h"
 
 
-class main_task: public task, public key_handler {
+class main_task: public task {
 public:
   main_task();
   ~main_task();
   bool done() { return m_state == st_done; }
   virtual void run();
   virtual void idle();
-  virtual bool handle_key(uint16_t key);
 
   void run_loop();
 
@@ -31,9 +30,20 @@ private:
     st_done
   };
 
+  class key_handler_thunk: public key_handler {
+  public:
+    key_handler_thunk(main_task & n_target): m_target(n_target) { }
+    main_task & m_target;
+    virtual bool handle_key(uint16_t key)
+      { return m_target.handle_key(key); }
+  };
+
   state_t m_state;
   text_window m_win;
   bitmap_element m_canvas;
+  key_handler_thunk m_key_thunk;
+
+  bool handle_key(uint16_t key);
 };
 
 
