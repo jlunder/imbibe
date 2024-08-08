@@ -19,7 +19,7 @@ LINK = wlink
 CC_OPT_RELEASE = -dNDEBUG -otexan
 CC_OPT_DEBUG = -d3i -od
 CC_OPT_PROFILE = -dNDEBUG -d1 -otexan
-CC_OPT = -fo=$(OBJ_DIR) $(CC_OPT_$(VERSION)) -2 -ml -bt=dos -fpc -d__STDC_LIMIT_MACROS -wx -ze
+CC_OPT = -fo=$(OBJ_DIR) $(CC_OPT_$(VERSION)) -2 -ml -bt=dos -fpc -d__STDC_LIMIT_MACROS -w5 -ze
 
 CC = wpp
 
@@ -78,7 +78,7 @@ $(OBJ_DIR)imbibe.lnk: | $(OBJ_DIR)
 uc = $(shell echo $(1) | tr a-z A-Z)
 
 $(OBJ_DIR)%.exe: private UPPER_TGT = $(@D)/$(call uc,$(@F))
-$(OBJ_DIR)%.exe: private LINK_LOG = $(patsubst %.EXE,%.LOG,$(UPPER_TGT))
+$(OBJ_DIR)%.exe: private LINK_LOG = $(@D)/LINK.LOG
 $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(IMBIBE_OBJS)
 	rm -f $@
 	cd workspace && \
