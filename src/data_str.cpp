@@ -46,7 +46,7 @@ data_stream::directory::directory(uint8_t * data, uint32_t length)
 }
 
 
-uint8_t * data_stream::directory::data(string const & name)
+uint8_t * data_stream::directory::data(imstring const & name)
 {
   dir_entry_list_iterator i;
 
@@ -56,7 +56,7 @@ uint8_t * data_stream::directory::data(string const & name)
 }
 
 
-uint32_t data_stream::directory::length(string const & name)
+uint32_t data_stream::directory::length(imstring const & name)
 {
   dir_entry_list_iterator i;
 

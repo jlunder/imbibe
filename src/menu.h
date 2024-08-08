@@ -5,7 +5,7 @@
 #include "imbibe.h"
 
 #include "bitmap.h"
-#include "string.h"
+#include "imstring.h"
 #include "vector.h"
 
 
@@ -16,8 +16,8 @@ public:
   int width() const { return m_width; }
   int height() const { return m_height; }
   int num_links() const { return m_links.size(); }
-  string link_action(int which) const { return *m_links[which].action; }
-  string link_target(int which) const { return *m_links[which].target; }
+  imstring link_action(int which) const { return *m_links[which].action; }
+  imstring link_target(int which) const { return *m_links[which].target; }
   int link_x(int which) const { return m_links[which].x; }
   int link_y(int which) const { return m_links[which].y; }
   int link_width(int which) const { return m_links[which].width; }
@@ -34,8 +34,8 @@ private:
     int y;
     int width;
     int height;
-    string * action;
-    string * target;
+    imstring * action;
+    imstring * target;
     bitmap * normal_picture;
     bitmap * selected_picture;
   };

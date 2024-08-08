@@ -5,8 +5,8 @@
 #include "imbibe.h"
 
 #include "map.h"
+#include "imstring.h"
 #include "stream.h"
-#include "string.h"
 
 
 class data_stream: public stream
@@ -20,8 +20,8 @@ private:
   {
   public:
     directory(uint8_t * n_data, uint32_t n_length);
-    uint8_t * data(string const & name);
-    uint32_t length(string const & name);
+    uint8_t * data(imstring const & name);
+    uint32_t length(imstring const & name);
 
   private:
     struct dir_entry
@@ -29,7 +29,7 @@ private:
       uint8_t * data;
       uint32_t length;
     };
-    typedef map<string, dir_entry> dir_entry_list;
+    typedef map<imstring, dir_entry> dir_entry_list;
     typedef dir_entry_list::value_type dir_entry_list_value;
     typedef dir_entry_list::iterator dir_entry_list_iterator;
 
