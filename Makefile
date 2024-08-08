@@ -80,6 +80,7 @@ uc = $(shell echo $(1) | tr a-z A-Z)
 $(OBJ_DIR)%.exe: private UPPER_TGT = $(@D)/$(call uc,$(@F))
 $(OBJ_DIR)%.exe: private LINK_LOG = $(patsubst %.EXE,%.LOG,$(UPPER_TGT))
 $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(IMBIBE_OBJS)
+	rm -f $@
 	cd workspace && \
 	  dosbox \
 	    -c "S:" \
@@ -90,6 +91,7 @@ $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(IMBIBE_OBJS)
 $(OBJ_DIR)%.obj: private UPPER_TGT = $(@D)/$(call uc,$(@F))
 $(OBJ_DIR)%.obj: private CC_LOG = $(patsubst %.OBJ,%.LOG,$(UPPER_TGT))
 $(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp $(SIM_OBJ_DIR)%.o | $(OBJ_DIR)
+	rm -f $@
 	cd workspace && \
 	  dosbox \
 	    -c "S:" \

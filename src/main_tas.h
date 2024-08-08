@@ -34,8 +34,7 @@ private:
   public:
     key_handler_thunk(main_task & n_target): m_target(n_target) { }
     main_task & m_target;
-    virtual bool handle_key(uint16_t key)
-      { return m_target.handle_key(key); }
+    virtual bool handle_key(uint16_t key);
   };
 
   state_t m_state;

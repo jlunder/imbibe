@@ -13,7 +13,7 @@ public:
   T * operator -> () { return (T *)m_buf; }
 
 private:
-  uint32_t m_buf[sizeof (T) / sizeof (uint32_t)];
+  uint32_t m_buf[(sizeof (T) + sizeof (uint32_t) - 1) / sizeof (uint32_t)];
 };
 
 

@@ -11,6 +11,10 @@
 #include "vector.h"
 
 
+#undef logf
+#define logf cprintf
+
+
 extern bool aux_key_manager__key_avail();
 extern uint16_t aux_key_manager__read_key();
 
@@ -51,6 +55,7 @@ void key_manager::dispatch_keys() {
       c = (c >> 8) | 0x100;
     }
     for(i = s_key_handlers.begin(); i != s_key_handlers.end(); ++i) {
+      logf("calling key_handler %p\n", *i);
       if((*i)->handle_key(c)) {
         break;
       }
@@ -62,6 +67,10 @@ void key_manager::dispatch_keys() {
 void key_manager::add_handler(key_handler & k)
 {
   s_key_handlers.insert(s_key_handlers.begin(), &k);
+  logf("full list:\n");
+  for (uint16_t i = 0; i < s_key_handlers.size(); ++i) {
+    logf("  %u: %p\n", i, s_key_handlers[i]);
+  }
 }
 
 

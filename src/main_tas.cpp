@@ -14,6 +14,12 @@
 #define logf cprintf
 
 
+bool main_task::key_handler_thunk::handle_key(uint16_t key) {
+  logf("calling through [this=%p, target=%p]\n", this, &m_target);
+  return m_target.handle_key(key);
+}
+
+
 main_task::main_task()
   : task(), m_state(st_loading), m_win(), m_canvas(), m_key_thunk(*this) {
   m_canvas.set_frame(0, 0, 80, 25, 0);
@@ -47,19 +53,13 @@ void main_task::run() {
 }
 
 
-//#include <string.h>
 void main_task::idle() {
   key_manager::dispatch_keys();
-
-  // uint16_t * scr = (uint16_t *)MK_FP(0xB800, (void *)0);
-  // memcpy(scr, m_canvas.b().data(), 4000);
-
-  // m_win.repaint();
 }
 
 
 bool main_task::handle_key(uint16_t key) {
-  logf("pressed [m_state=%d]: %x\n", (int)m_state, key);
+  logf("pressed [this=%p, m_state=%d]: %x\n", this, (int)m_state, key);
   if(m_state == st_waiting) {
     m_state = st_done;
   }
@@ -81,6 +81,8 @@ void main_task::run_loop() {
   m_canvas.show();
 
   task_manager::idle();
+  logf("starting run [this=%p, m_state=%d]\n", this, (int)m_state);
+
   while(!done()) {
 #if defined(SIMULATE)
     step_simulator();

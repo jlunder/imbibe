@@ -4,6 +4,8 @@
 // #include "main_task.h"
 #include "main_tas.h"
 
+#include "key_mana.h"
+
 
 #undef logf
 #define logf cprintf
