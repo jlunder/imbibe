@@ -2,11 +2,6 @@
 #define __INPLACE_H_INCLUDED
 
 
-#if defined(__WATCOMC__)
-#pragma warning 549 9
-#endif
-
-
 template<class T>
 class inplace {
 public:

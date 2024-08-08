@@ -12,104 +12,36 @@
 
 
 bitmap_graphics::bitmap_graphics(bitmap & n_b)
-  : m_b(n_b), m_clip_x1(0), m_clip_y1(0), m_clip_x2(n_b.width()),
-    m_clip_y2(n_b.height()), m_bounds_x1(0), m_bounds_y1(0),
-    m_bounds_x2(n_b.width()), m_bounds_y2(n_b.height())
+  : graphics(0, 0, n_b.width(), n_b.height()), m_b(n_b)
 {
-}
-
-
-int16_t bitmap_graphics::width() const {
-  return m_b.width();
-}
-
-
-int16_t bitmap_graphics::height() const {
-  return m_b.height();
-}
-
-
-int16_t bitmap_graphics::bounds_x1() const {
-  return m_bounds_x1;
-}
-
-
-int16_t bitmap_graphics::bounds_y1() const {
-  return m_bounds_y1;
-}
-
-
-int16_t bitmap_graphics::bounds_x2() const {
-  return m_bounds_x2;
-}
-
-
-int16_t bitmap_graphics::bounds_y2() const {
-  return m_bounds_y2;
-}
-
-
-int16_t bitmap_graphics::bounds_width() const {
-  return m_bounds_x2 - m_bounds_x1;
-}
-
-
-int16_t bitmap_graphics::bounds_height() const {
-  return m_bounds_y2 - m_bounds_y1;
-}
-
-
-int16_t bitmap_graphics::clip_x1() const {
-  return m_clip_x1;
-}
-
-
-int16_t bitmap_graphics::clip_y1() const {
-  return m_clip_y1;
-}
-
-
-int16_t bitmap_graphics::clip_x2() const {
-  return m_clip_x2;
-}
-
-
-int16_t bitmap_graphics::clip_y2() const {
-  return m_clip_y2;
-}
-
-
-void bitmap_graphics::set_bounds(int16_t x1, int16_t y1, int16_t x2,
-    int16_t y2) {
-  assert(x1 <= x2); assert(y1 <= y2);
-  m_bounds_x1 = x1;
-  m_bounds_y1 = y1;
-  m_bounds_x2 = x2;
-  m_bounds_y2 = y2;
 }
 
 
 void bitmap_graphics::set_clip(int16_t x1, int16_t y1, int16_t x2,
     int16_t y2) {
-  assert(x1 <= x2); assert(y1 <= y2);
-  m_clip_x1 = max<int16_t>(max(m_bounds_x1, x1), 0);
-  m_clip_y1 = max<int16_t>(max(m_bounds_y1, y1), 0);
-  m_clip_x2 = min(min(x2, m_bounds_x2), m_b.width());
-  m_clip_y2 = min(min(y2, m_bounds_y2), m_b.height());
+  assert_margin(x1, INT16_MAX); assert_margin(y1, INT16_MAX);
+  assert_margin(x2, INT16_MAX); assert_margin(y2, INT16_MAX);
+  graphics::set_clip(max<int16_t>(x1, 0), max<int16_t>(y1, 0),
+    min<int16_t>(x2, m_b.width()), min<int16_t>(y2, m_b.height()));
 }
 
 
 void bitmap_graphics::draw_rectangle(int16_t x1, int16_t y1, int16_t x2,
     int16_t y2, pixel p) {
-  if ((x1 == x2) || (x1 >= m_clip_x2) || (x2 <= m_clip_x1)
-      || (y1 == y2) || (y1 >= m_clip_y2) || (y2 <= m_clip_y1)) {
+  assert(clip_x1() >= 0); assert(clip_y1() >= 0);
+  assert(clip_x2() >= 0); assert(clip_y2() >= 0);
+  assert_margin(x1, INT16_MAX); assert_margin(y1, INT16_MAX);
+  assert_margin(x2, INT16_MAX); assert_margin(y2, INT16_MAX);
+
+  if ((x1 == x2) || (x1 >= clip_x2()) || (x2 <= clip_x1())
+      || (y1 == y2) || (y1 >= clip_y2()) || (y2 <= clip_y1())) {
     return;
   }
 
-  int16_t cx1 = min(x1, m_clip_x1);
-  int16_t cy1 = min(y1, m_clip_y1);
-  int16_t cx2 = max(x2, m_clip_x2);
-  int16_t cy2 = max(y2, m_clip_y2);
+  int16_t cx1 = min(x1, clip_x1());
+  int16_t cy1 = min(y1, clip_y1());
+  int16_t cx2 = max(x2, clip_x2());
+  int16_t cy2 = max(y2, clip_y2());
 
   uint16_t rows = cy2 - cy1;
   uint16_t stride = m_b.width();
@@ -126,21 +58,23 @@ void bitmap_graphics::draw_rectangle(int16_t x1, int16_t y1, int16_t x2,
 
 void bitmap_graphics::draw_text(int16_t x, int16_t y, color c,
     char const * s) {
+  assert(clip_x1() >= 0); assert(clip_y1() >= 0);
+  assert(clip_x2() >= 0); assert(clip_y2() >= 0);
   int16_t i;
   int16_t s_len = strlen(s);
 
-  x += m_bounds_x1;
-  y += m_bounds_y1;
+  x += bounds_x1();
+  y += bounds_y1();
 
-  if((y < m_clip_y2) && (y >= m_clip_y1)) {
-    if((x < m_clip_x2) && (x + s_len > m_clip_x1)) {
-      if(x < m_clip_x1) {
-        s += m_clip_x1 - x;
-        s_len -= m_clip_x1 - x;
-        x = m_clip_x1;
+  if((y < clip_y2()) && (y >= clip_y1())) {
+    if((x < clip_x2()) && (x + s_len > clip_x1())) {
+      if(x < clip_x1()) {
+        s += clip_x1() - x;
+        s_len -= clip_x1() - x;
+        x = clip_x1();
       }
-      if(x + s_len > m_clip_x2) {
-        s_len = m_clip_x2 - x;
+      if(x + s_len > clip_x2()) {
+        s_len = clip_x2() - x;
       }
       for(i = 0; i < s_len; ++i) {
         m_b.at(x + i, y) = pixel(*s, c);
@@ -152,36 +86,38 @@ void bitmap_graphics::draw_text(int16_t x, int16_t y, color c,
 
 
 void bitmap_graphics::draw_bitmap(int16_t x, int16_t y, bitmap const & b) {
-  int16_t dest_x = x + m_bounds_x1;
-  int16_t dest_y = y + m_bounds_y1;
+  assert(clip_x1() >= 0); assert(clip_y1() >= 0);
+  assert(clip_x2() >= 0); assert(clip_y2() >= 0);
+  assert_margin(x, INT16_MAX); assert_margin(y, INT16_MAX);
+  assert(&b != &m_b);
+
+  int16_t dest_x = bounds_x1() + x;
+  int16_t dest_y = bounds_y1() + y;
   int16_t source_x1 = 0;
   int16_t source_y1 = 0;
   int16_t source_x2 = b.width();
   int16_t source_y2 = b.height();
 
-  if((dest_y < m_clip_y2) && (dest_y + b.height() > m_clip_y1)) {
-    if((dest_x < m_clip_x2) && (dest_x + b.width() > m_clip_x1)) {
-      if(dest_x < m_clip_x1) {
-        source_x1 += m_clip_x1 - dest_x;
-        dest_x = m_clip_x1;
-      }
-      if(dest_y < m_clip_y1) {
-        source_y1 += m_clip_y1 - dest_y;
-        dest_y = m_clip_y1;
-      }
-      if(dest_x + b.width() > m_clip_x2) {
-        source_x2 -= dest_x + b.width() - m_clip_x2 - source_x1;
-      }
-      if(dest_y + b.height() > m_clip_y2) {
-        source_y2 -= dest_y + b.height() - m_clip_y2 - source_y1;
-      }
-      if(&b != &m_b) {
-        m_b.copy_bitmap(dest_x, dest_y, b, source_x1, source_y1, source_x2, source_y2);
-      } else {
-        m_b.copy_this_bitmap(dest_x, dest_y, source_x1, source_y1, source_x2, source_y2);
-      }
-    }
+  if(dest_x < clip_x1()) {
+    source_x1 += clip_x1() - dest_x;
+    dest_x = clip_x1();
   }
+  if(dest_y < clip_y1()) {
+    source_y1 += clip_y1() - dest_y;
+    dest_y = clip_y1();
+  }
+  if(dest_x + b.width() > clip_x2()) {
+    source_x2 -= dest_x + b.width() - clip_x2() - source_x1;
+  }
+  if(dest_y + b.height() > clip_y2()) {
+    source_y2 -= dest_y + b.height() - clip_y2() - source_y1;
+  }
+
+  if ((source_x2 <= source_x1) || (source_y2 <= source_y1)) {
+    return;
+  }
+
+  m_b.copy_bitmap(dest_x, dest_y, b, source_x1, source_y1, source_x2, source_y2);
 }
 
 

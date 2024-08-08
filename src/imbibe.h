@@ -2,10 +2,20 @@
 #define __IMBIBE_H_INCLUDED
 
 
+#if defined(__WATCOMC__)
+#define __STDC_LIMIT_MACROS
+#pragma warning 549 9
+#endif
+
+
 #include <assert.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
 #include <malloc.h>
+
+
+#define assert_margin(x, mag) assert((x >= -((mag) / 4)) && (x <= (mag) / 4))
 
 
 #if !(defined(M_I86) && defined(__WATCOMC__))
