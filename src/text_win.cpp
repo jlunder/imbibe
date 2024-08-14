@@ -13,8 +13,7 @@
 #include "element.h"
 
 
-// #undef logf
-// #define logf cprintf
+#define logf_text_window logf
 
 
 extern void aux_text_window__set_text_asm();
@@ -33,7 +32,7 @@ extern void aux_text_window__restore_text_asm();
 
 
 text_window::text_window()
-  : m_backbuffer(80, 25), m_locked(false) {
+  : m_backbuffer(80, 25), m_lock_count(0) {
 }
 
 
@@ -52,215 +51,112 @@ void text_window::teardown() {
 }
 
 
-void text_window::lock() {
-  ++m_locked;
+void text_window::lock_repaint() {
+  ++m_lock_count;
+  assert_margin(m_lock_count, INT8_MAX);
 }
 
 
-void text_window::unlock() {
-  assert(m_locked);
-  --m_locked;
-  if(!m_locked)
+void text_window::unlock_repaint() {
+  assert(m_lock_count > 0);
+  --m_lock_count;
+  if(!m_lock_count)
   {
     if(m_need_repaint) {
-      if(m_repaint_z_minus_infinity) {
-        repaint(m_repaint_x1, m_repaint_y1, m_repaint_x2, m_repaint_y2);
-      } else {
-        repaint(m_repaint_x1, m_repaint_y1, m_repaint_x2, m_repaint_y2, m_repaint_z);
-      }
+      repaint(m_repaint_x1, m_repaint_y1, m_repaint_x2, m_repaint_y2);
       m_need_repaint = false;
     }
   }
 }
 
 
-void text_window::repaint() {
-  repaint(0, 0, m_backbuffer.width(), m_backbuffer.height());
-}
+void text_window::repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
+  assert_margin(x1, COORD_MAX); assert_margin(y1, COORD_MAX);
+  assert_margin(x2, COORD_MAX); assert_margin(y2, COORD_MAX);
 
-
-void text_window::repaint(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
-  assert(x1 >= 0); assert(x1 <= m_backbuffer.width());
-  assert(y1 >= 0); assert(y1 <= m_backbuffer.width());
-  assert(x2 >= x1); assert(x2 <= m_backbuffer.width());
-  assert(y2 >= y1); assert(y2 <= m_backbuffer.width());
-
-#ifndef NDEBUG
-  // Make a
-  static uint16_t const ugly_px =
-    pixel('x', color(color::hi_cyan, color::hi_magenta));
-  for(int16_t y = y1; y < y2; ++y) {
-    uint16_t * row = m_backbuffer.data() + (y * m_backbuffer.width());
-    for(int16_t x = x1; x < x2; ++x) {
-      row[x] = ugly_px;
-    }
+  if (!m_element) {
+    return;
   }
-#endif
 
-  if(!m_locked) {
-    for(element_list_iterator i = m_elements.begin(); i != m_elements.end();
-        ++i) {
-      repaint_element(*i->ref, x1, y1, x2, y2);
+  if (m_lock_count == 0) {
+#ifndef NDEBUG
+    // Make a hideous background to highlight unpainted areas
+    static uint16_t const ugly_px =
+      pixel('x', color(color::hi_cyan, color::hi_magenta));
+    for (coord_t y = y1; y < y2; ++y) {
+      uint16_t * row = m_backbuffer.data() + (y * m_backbuffer.width());
+      for (coord_t x = x1; x < x2; ++x) {
+        row[x] = ugly_px;
+      }
     }
-    flip(&m_backbuffer);
+#endif
+    bitmap_graphics g(m_backbuffer);
+    graphics::subregion_state s;
+    g.enter_subregion(s, 0, 0, x1, y1, x2, y2);
+    if (!g.subregion_trivial()) {
+      paint_element(g, *m_element);
+      flip(m_backbuffer.data(), m_backbuffer.width(), m_backbuffer.height(),
+        x1, y1, x2, y2);
+    }
+    // graphics will be discarded, don't need to leave_subregion()
   } else {
     locked_repaint(x1, y1, x2, y2);
   }
 }
 
 
-void text_window::repaint(int16_t x1, int16_t y1, int16_t x2, int16_t y2,
-    int16_t z) {
-  element_list_iterator i;
-
-  if(!m_locked) {
-    for(i = m_elements.lower_bound(z); i != m_elements.end(); ++i) {
-      repaint_element(*i->ref, x1, y1, x2, y2);
-    }
-    flip(&m_backbuffer);
-  } else {
-    locked_repaint(x1, y1, x2, y2, z);
-  }
-}
-
-
 void text_window::add_element(element & e) {
-  m_elements.insert(element_list_value(e.frame_z(), &e));
-  repaint(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2(), e.frame_z());
-}
-
-
-void text_window::remove_element(element & e) {
-  element_list_iterator i = m_elements.begin();
-  while((i != m_elements.end()) && (i->ref != &e)) {
-    ++i;
-  }
-  m_elements.erase(i);
-
+  assert(m_element == NULL);
+  m_element = &e;
   repaint(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2());
 }
 
 
-void text_window::element_frame_pos_changed(element & e, int16_t old_x1,
-    int16_t old_y1) {
-  int16_t x1;
-  int16_t y1;
-  int16_t x2;
-  int16_t y2;
-
-  if(old_x1 < e.frame_x1()) {
-    x1 = old_x1;
-    x2 = e.frame_x2();
-  } else {
-    x1 = e.frame_x1();
-    x2 = e.frame_x2() - e.frame_x1() + old_x1;
-  }
-  if(old_y1 < e.frame_y1()) {
-    y1 = old_y1;
-    y2 = e.frame_y2();
-  } else {
-    y1 = e.frame_y1();
-    y2 = e.frame_y2() - e.frame_y1() + old_y1;
-  }
-  repaint(x1, y1, x2, y2);
+void text_window::remove_element(element & e) {
+  (void)e;
+  assert(&e == m_element);
+  m_element = NULL;
 }
 
 
-void text_window::element_frame_size_changed(element & e, int16_t old_width,
-    int16_t old_height)
+void text_window::element_frame_changed(element & e, coord_t old_x1,
+    coord_t old_y1, coord_t old_x2, coord_t old_y2, coord_t old_z)
 {
-  int16_t x1 = e.frame_x1();
-  int16_t y1 = e.frame_y1();
-  int16_t x2 = x1 + max<int16_t>(old_width, e.frame_width());
-  int16_t y2 = y1 + max<int16_t>(old_height, e.frame_height());
-
-  repaint(x1, y1, x2, y2);
+  (void)old_z;
+  assert(&e == m_element);
+  repaint(min(old_x1, e.frame_x1()), min(old_y1, e.frame_y1()),
+    max(old_x2, e.frame_x2()), max(old_y2, e.frame_y2()));
 }
 
 
-void text_window::element_frame_depth_changed(element & e, int16_t old_z) {
-  element_list_iterator i = m_elements.lower_bound(old_z);
-  element_list_iterator ie = m_elements.upper_bound(old_z);
-  while((i != ie) && (i->ref != &e)) {
-    ++i;
-  }
-  assert(i != m_elements.end());
-  m_elements.erase(i);
-  m_elements.insert(element_list_value(e.frame_z(), &e));
-  repaint(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2(),
-    min(old_z, e.frame_z()));
-}
+void text_window::paint_element(graphics & g, element & e) {
+  assert(e.visible());
 
+  graphics::subregion_state s;
 
-void text_window::element_frame_changed(element & e, int16_t old_x1,
-    int16_t old_y1, int16_t old_x2, int16_t old_y2, int16_t old_z)
-{
-  int16_t x1 = min(old_x1, e.frame_x1());
-  int16_t y1 = min(old_y1, e.frame_y1());
-  int16_t x2 = max(old_x2, e.frame_x2());
-  int16_t y2 = max(old_y2, e.frame_y2());
-
-  if(e.frame_z() != old_z)
-  {
-    element_list_iterator i = m_elements.begin();
-    while((i != m_elements.end()) && (i->ref != &e)) {
-      ++i;
-    }
-    m_elements.erase(i);
-    m_elements.insert(element_list_value(e.frame_z(), &e));
-  }
-  repaint(x1, y1, x2, y2, min(old_z, e.frame_z()));
-}
-
-
-void text_window::repaint_element(element const & e, int16_t x1, int16_t y1,
-    int16_t x2, int16_t y2) {
-  if((x1 < e.frame_x2()) && (x2 > e.frame_x1()) && (y1 < e.frame_y2()) && (y2 > e.frame_y1())) {
-    bitmap_graphics g(m_backbuffer);
-
-    g.set_bounds(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2());
-    g.set_clip(max(x1, e.frame_x1()), max(y1, e.frame_y1()),
-      min(x2, e.frame_x2()), min(y2, e.frame_y2()));
+  g.enter_subregion(s, e.frame_x1(), e.frame_y1(), e.frame_x1(),
+    e.frame_y1(), e.frame_x2(), e.frame_y2());
+  if(!g.subregion_trivial()) {
+    logf_text_window("text_window paint %p\n", &e);
     e.paint(g);
   }
+  g.leave_subregion(s);
 }
 
 
-void text_window::locked_repaint(int16_t x1, int16_t y1, int16_t x2,
-    int16_t y2) {
+void text_window::locked_repaint(coord_t x1, coord_t y1, coord_t x2,
+    coord_t y2) {
   if(m_need_repaint) {
     if(x1 < m_repaint_x1) m_repaint_x1 = x1;
     if(y1 < m_repaint_y1) m_repaint_y1 = y1;
     if(x2 > m_repaint_x2) m_repaint_x2 = x2;
     if(y2 > m_repaint_y2) m_repaint_y2 = y2;
-    m_repaint_z_minus_infinity = true;
   } else {
     m_need_repaint = true;
     m_repaint_x1 = x1;
     m_repaint_y1 = y1;
     m_repaint_x2 = x2;
     m_repaint_y2 = y2;
-    m_repaint_z_minus_infinity = true;
-  }
-}
-
-
-void text_window::locked_repaint(int16_t x1, int16_t y1, int16_t x2,
-    int16_t y2, int16_t z) {
-  if(m_need_repaint) {
-    if(x1 < m_repaint_x1) m_repaint_x1 = x1;
-    if(y1 < m_repaint_y1) m_repaint_y1 = y1;
-    if(x2 > m_repaint_x2) m_repaint_x2 = x2;
-    if(y2 > m_repaint_y2) m_repaint_y2 = y2;
-    if(z < m_repaint_z) m_repaint_z = z;
-  } else {
-    m_need_repaint = true;
-    m_repaint_x1 = x1;
-    m_repaint_y1 = y1;
-    m_repaint_x2 = x2;
-    m_repaint_y2 = y2;
-    m_repaint_z = z;
-    m_repaint_z_minus_infinity = false;
   }
 }
 
@@ -279,12 +175,28 @@ void text_window::set_text_mode() {
 }
 
 
-void text_window::flip(bitmap * backbuffer) {
-  uint16_t n = backbuffer->width() * backbuffer->height() * sizeof(uint16_t);
-  void * screen_buffer = MK_FP(0xB800, (void *)0);
-  logf("flip to %u pixels to %p, corner %04X -> %04X\n", n, screen_buffer,
-    *(uint16_t *)backbuffer->data(), *(uint16_t *)screen_buffer);
-  memcpy(screen_buffer, backbuffer->data(), n);
+void text_window::flip(uint16_t const * backbuffer, coord_t width,
+    coord_t height, coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
+  assert(x1 <= x2); assert(y1 <= y2); assert(x1 >= 0); assert(y1 >= 0);
+  assert(x2 <= width); assert(y2 <= height);
+
+  uint16_t * screen_buffer = (uint16_t *)MK_FP(0xB800, (void *)0);
+
+  logf_text_window("flip region (%d,%d-%d,%d) to %p, corner %04X -> %04X\n",
+    x1, y1, x2, y2, (void *)screen_buffer, *backbuffer, *screen_buffer);
+
+  coord_t i;
+  coord_t bytes_per_line = (x2 - x1) * sizeof (uint16_t);
+  coord_t lines = min(y2, height) - min(y1, height);
+  uint8_t const * source_p = (uint8_t const *)(backbuffer + y1 * width + x1);
+  uint8_t * dest_p = (uint8_t *)(screen_buffer + y1 * width + x1);
+  uint16_t stride = width * sizeof (uint16_t);
+
+  for(i = 0; i < lines; ++i) {
+    memcpy(dest_p, source_p, bytes_per_line);
+    dest_p += stride;
+    source_p += stride;
+  }
 }
 
 

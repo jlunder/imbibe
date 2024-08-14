@@ -11,12 +11,17 @@ public:
   timer(): m_last_ms(now()) { }
 
   //in milliseconds
-  uint32_t delta_ms() {
+  uint32_t reset_ms() {
     uint32_t new_ms = now();
     uint32_t result = new_ms - m_last_ms;
 
     m_last_ms = new_ms;
     return result;
+  }
+
+  uint32_t delta_ms() {
+    uint32_t new_ms = now();
+    return new_ms - m_last_ms;
   }
 
   //in milliseconds

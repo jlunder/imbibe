@@ -7,6 +7,9 @@
 #include "vector.h"
 
 
+#define logf_map cprintf
+
+
 template<class T>
 class less
 {

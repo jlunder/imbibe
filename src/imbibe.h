@@ -15,7 +15,14 @@
 #include <malloc.h>
 
 
-#define assert_margin(x, mag) assert((x >= -((mag) / 4)) && (x <= (mag) / 4))
+#define assert_margin(x, mag) assert(((x) >= -((mag) / 4)) && ((x) <= (mag) / 4))
+
+
+typedef int16_t coord_t;
+
+
+#define COORD_MIN INT16_MIN
+#define COORD_MAX INT16_MAX
 
 
 #if !(defined(M_I86) && defined(__WATCOMC__))
@@ -76,7 +83,7 @@ template<class T>
 inline T min(T x, T y, T z) { return min(min(x, y), z); }
 
 template<class T>
-inline T max(T x, T y) { return (x < y) ? x : y; }
+inline T max(T x, T y) { return (x > y) ? x : y; }
 
 template<class T>
 inline T max(T x, T y, T z) { return max(max(x, y), z); }

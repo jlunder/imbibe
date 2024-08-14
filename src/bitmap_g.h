@@ -18,11 +18,10 @@ class bitmap_graphics: public graphics
 public:
   bitmap_graphics(bitmap & n_b);
 
-  virtual void set_clip(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
-  virtual void draw_rectangle(int16_t x1, int16_t y1, int16_t x2, int16_t y2,
+  virtual void draw_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t y2,
     pixel p);
-  virtual void draw_text(int16_t x, int16_t y, color c, char const * s);
-  virtual void draw_bitmap(int16_t x, int16_t y, bitmap const & b);
+  virtual void draw_text(coord_t x, coord_t y, color c, char const * s);
+  virtual void draw_bitmap(coord_t x, coord_t y, bitmap const & b);
 
 private:
   bitmap & m_b;

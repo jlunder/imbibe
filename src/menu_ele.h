@@ -4,30 +4,32 @@
 
 #include "imbibe.h"
 
-#include "bitmap.h"
 #include "element.h"
-#include "graphics.h"
-#include "menu.h"
-#include "window.h"
-#include "pixel.h"
+
+
+class graphics;
+class menu;
+class window;
 
 
 class menu_element: public element
 {
 public:
-  menu_element(int16_t n_x1, int16_t n_y1, int16_t n_x2, int16_t n_y2, int16_t n_z, window & n_owner, menu & n_m, int16_t n_scroll_x = 0, int16_t n_scroll_y = 0, int16_t n_selection = 0);
-  virtual void paint(graphics & g) const;
-  int16_t scroll_x() const { return m_scroll_x; }
-  int16_t scroll_y() const { return m_scroll_y; }
-  int16_t selection() const { return m_selection; }
-  void set_scroll_pos(int16_t x, int16_t y);
-  void set_selection(int16_t n_selection);
+  menu_element(coord_t n_x1, coord_t n_y1, coord_t n_x2, coord_t n_y2,
+    coord_t n_z, window & n_owner, menu & n_m, coord_t n_scroll_x = 0,
+    coord_t n_scroll_y = 0, coord_t n_selection = 0);
+  virtual void paint(graphics & g);
+  coord_t scroll_x() const { return m_scroll_x; }
+  coord_t scroll_y() const { return m_scroll_y; }
+  coord_t selection() const { return m_selection; }
+  void set_scroll_pos(coord_t x, coord_t y);
+  void set_selection(coord_t n_selection);
 
 private:
   menu & m_m;
-  int16_t m_scroll_x;
-  int16_t m_scroll_y;
-  int16_t m_selection;
+  coord_t m_scroll_x;
+  coord_t m_scroll_y;
+  coord_t m_selection;
 };
 
 

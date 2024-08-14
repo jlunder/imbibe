@@ -5,6 +5,9 @@
 #include "imbibe.h"
 
 
+#define logf_vector cprintf
+
+
 namespace aux_vector {
   template<class T>
   inline T * allocate(uint_fast16_t n) {
@@ -157,7 +160,8 @@ public:
   iterator end() { return m_data + m_size; }
   const_iterator end() const { return m_data + m_size; }
 
-  void resize(size_type n, T const & x) {
+  void resize(size_type n, T const & x) {\
+    assert(n <= c_size_max);
     reserve(n);
     if (n > m_size) {
       aux_vector::copy_construct<T>(x, m_data + m_size, n - m_size);
@@ -186,6 +190,7 @@ public:
     { assert(m_size > 0); return m_data[m_size - 1]; }
 
   void push_back(T const & x) {
+    assert(m_size < c_size_max);
     insert(end(), x);
   }
 
@@ -197,6 +202,7 @@ public:
   void assign(const_iterator first, const_iterator last) {
     assert(last >= first); assert(last - first < c_size_max);
     size_type n = last - first;
+    assert(m_size <= c_size_max - n);
     clear();
     reserve(n);
     aux_vector::copy_construct<T>(first, m_data, n);
@@ -210,11 +216,13 @@ public:
   }
 
   iterator insert(iterator it, T const & x) {
+    assert(m_size < c_size_max);
     return insert(it, 1, x);
   }
 
   iterator insert(iterator it, size_type n, T const & x) {
     assert(it >= m_data); assert(it - m_data <= m_size);
+    assert(m_size <= c_size_max - n);
     size_type i = it - m_data;
     assert(i <= m_size);
     size_type m = m_size - i;
@@ -227,7 +235,7 @@ public:
       if(m_data) {
         aux_vector::move<T>(m_data, n_data, i);
         aux_vector::copy_construct(x, n_data + i, n);
-        aux_vector::move<T>(m_data + i, n_data + i + n, m);
+        aux_vector::move<T>(it, n_data + i + n, m);
         aux_vector::free<T>(m_data);
       } else {
         aux_vector::copy_construct(x, n_data + i, n);
@@ -243,6 +251,7 @@ public:
     assert(it >= m_data); assert(it - m_data <= m_size);
     assert(last - first >= 0);
     size_type n = last - first;
+    assert(m_size <= c_size_max - n);
     size_type i = it - m_data;
     assert(i <= m_size);
     size_type m = m_size - i;
@@ -268,12 +277,14 @@ public:
   }
 
   void erase(iterator it) {
+    assert(it >= m_data); assert(it - m_data < m_size);
     erase(it, it + 1);
   }
 
   void erase(iterator first, iterator last) {
     assert(first >= m_data); assert(first - m_data <= m_size);
     assert(last >= m_data); assert(last - m_data <= m_size);
+    assert(first <= last);
     size_type n = last - first;
     size_type m = m_size - (last - m_data);
     T * p = first;
@@ -306,6 +317,7 @@ private:
     size_type r = (n * 3 + 1) / 2;
     r = max<size_type>(r, (16 + sizeof (T) - 1) / sizeof (T));
     assert(c_size_max > 1); assert(r < c_size_max);
+    assert(r >= n);
     return r;
   }
 };

@@ -41,10 +41,10 @@ void hbin_view_handler::select_link(int selection)
   }
   if((x != m_hbe.scroll_x()) || (y != m_hbe.scroll_y()))
   {
-    m_hbe.owner().lock();
+    m_hbe.owner().lock_repaint();
     m_hbe.set_scroll_pos(x, y);
     m_hbe.set_selection(selection);
-    m_hbe.owner().unlock();
+    m_hbe.owner().unlock_repaint();
   }
   else
   {
@@ -106,10 +106,10 @@ void hbin_view_handler::scroll_to(int x, int y, bool down)
     {
       if((x != m_hbe.scroll_x()) || (y != m_hbe.scroll_y()))
       {
-        m_hbe.owner().lock();
+        m_hbe.owner().lock_repaint();
         m_hbe.set_scroll_pos(x, y);
         m_hbe.set_selection(i);
-        m_hbe.owner().unlock();
+        m_hbe.owner().unlock_repaint();
       }
       else
       {

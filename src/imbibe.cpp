@@ -7,10 +7,6 @@
 #include "key_mana.h"
 
 
-#undef logf
-#define logf cprintf
-
-
 inplace<main_task> main_instance;
 
 

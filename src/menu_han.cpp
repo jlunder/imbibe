@@ -45,10 +45,10 @@ bool menu_handler::handle(int c) {
   } if(y > m_m.link_y(selection)) {
     y = m_m.link_y(selection);
   } if((x != m_me.scroll_x()) || (y != m_me.scroll_y())) {
-    m_me.owner().lock();
+    m_me.owner().lock_repaint();
     m_me.set_scroll_pos(x, y);
     m_me.set_selection(selection);
-    m_me.owner().unlock();
+    m_me.owner().unlock_repaint();
   } else {
     m_me.set_selection(selection);
   }

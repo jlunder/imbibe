@@ -40,6 +40,7 @@ public:
   static void remove_task(task & t);
   static void request_run_task(task & t);
   static void defer_action(action * action);
+  static bool poll();
   static bool run();
   static void idle();
 
@@ -49,9 +50,10 @@ private:
 
   static bool s_busy;
   static task_p_list s_tasks;
+  static task_p_list s_tasks_to_poll;
   static task_p_list s_tasks_to_run;
+  static task_p_list s_tasks_to_idle;
   static action_p_list s_deferred_actions;
-  static task_p_list s_tasks_to_reclaim;
 };
 
 

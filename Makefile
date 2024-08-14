@@ -78,9 +78,9 @@ $(OBJ_DIR)imbibe.lnk: | $(OBJ_DIR)
 	  done
 
 # $(patsubst $(SRC_DIR)%,%,$^)
-$(OBJ_DIR)u_imbibe.cpp: $(IMBIBE_SOURCES) | $(OBJ_DIR)
+$(OBJ_DIR)u_imbibe.cpp: $(IMBIBE_SOURCES) $(IMBIBE_HEADERS) | $(OBJ_DIR)
 	echo '// Unity build file -- '$@ > $@ && \
-	  for i in $^; do \
+	  for i in $(IMBIBE_SOURCES); do \
 	    echo '#include "'$$i'"' >> $@; \
 	  done
 

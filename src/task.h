@@ -13,6 +13,7 @@ class task
 {
 public:
   virtual ~task() {}
+  virtual void poll() {}
   virtual void run() {}
   virtual void idle() {}
   virtual reclaim<task> & reclaimer() const { return s_do_nothing_reclaim; }

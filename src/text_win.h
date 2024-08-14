@@ -5,13 +5,13 @@
 #include "imbibe.h"
 
 
-class text_window;
-
-
-#include "element.h"
-#include "graphics.h"
+#include "bitmap.h"
 #include "map.h"
 #include "window.h"
+
+
+class element;
+class graphics;
 
 
 class text_window: public window
@@ -25,48 +25,36 @@ public:
 
   bitmap & backbuffer() { return m_backbuffer; }
 
-  virtual void lock();
-  virtual void unlock();
-  virtual void repaint();
-  virtual void repaint(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
-  virtual void repaint(int16_t x1, int16_t y1, int16_t x2, int16_t y2,
-    int16_t z);
+  virtual void lock_repaint();
+  virtual void unlock_repaint();
+  virtual void repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2);
   virtual void add_element(element & e);
   virtual void remove_element(element & e);
-  virtual void element_frame_pos_changed(element & e, int16_t old_x1,
-    int16_t old_y1);
-  virtual void element_frame_size_changed(element & e, int16_t old_width,
-    int16_t old_height);
-  virtual void element_frame_depth_changed(element & e, int16_t old_z);
-  virtual void element_frame_changed(element & e, int16_t old_x1,
-    int16_t old_y1, int16_t old_x2, int16_t old_y2, int16_t old_z);
+  virtual void element_frame_changed(element & e, coord_t old_x1,
+    coord_t old_y1, coord_t old_x2, coord_t old_y2, coord_t old_z);
 
 private:
-  typedef map<int16_t, element *> element_list;
-  typedef element_list::value_type element_list_value;
-  typedef element_list::iterator element_list_iterator;
+  void paint_element(graphics & g, element & e);
+  void locked_repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2);
+  void locked_repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2,
+    coord_t z);
 
-  void repaint_element(element const & e, int16_t x1, int16_t y1, int16_t x2,
-    int16_t y2);
-  void locked_repaint(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
-  void locked_repaint(int16_t x1, int16_t y1, int16_t x2, int16_t y2,
-    int16_t z);
-
-  element_list m_elements;
+  element * m_element;
   bitmap m_backbuffer;
-  int8_t m_locked;
+  int8_t m_lock_count;
   bool m_need_repaint;
-  int16_t m_repaint_x1;
-  int16_t m_repaint_y1;
-  int16_t m_repaint_x2;
-  int16_t m_repaint_y2;
-  int16_t m_repaint_z;
+  coord_t m_repaint_x1;
+  coord_t m_repaint_y1;
+  coord_t m_repaint_x2;
+  coord_t m_repaint_y2;
+  coord_t m_repaint_z;
   bool m_repaint_z_minus_infinity;
 
   static void save_mode();
   static void restore_mode();
   static void set_text_mode();
-  static void flip(bitmap * backbuffer);
+  static void flip(uint16_t const * backbuffer, coord_t width,
+    coord_t height, coord_t x1, coord_t y1, coord_t x2, coord_t y2);
 };
 
 

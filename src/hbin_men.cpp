@@ -53,10 +53,10 @@ bool hbin_menu_handler::handle(int c)
   }
   if((x != m_hbe.scroll_x()) || (y != m_hbe.scroll_y()))
   {
-    m_hbe.owner().lock();
+    m_hbe.owner().lock_repaint();
     m_hbe.set_scroll_pos(x, y);
     m_hbe.set_selection(selection);
-    m_hbe.owner().unlock();
+    m_hbe.owner().unlock_repaint();
   }
   else
   {

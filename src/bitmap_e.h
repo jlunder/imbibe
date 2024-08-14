@@ -7,7 +7,6 @@
 #include "bitmap.h"
 #include "element.h"
 #include "graphics.h"
-#include "window.h"
 
 
 class bitmap_element: public element
@@ -18,7 +17,7 @@ public:
   void set_b(bitmap * n_b);
   bitmap & b() { return *m_b; }
   bitmap const & b() const { return *m_b; }
-  virtual void paint(graphics & g) const;
+  virtual void paint(graphics & g);
 
 private:
   bitmap * m_b;

@@ -15,41 +15,56 @@ class graphics;
 
 class graphics {
 public:
-  graphics(int16_t n_x1, int16_t n_y1, int16_t n_x2, int16_t n_y2)
-    : m_bounds_x1(n_x1), m_bounds_y1(n_y1), m_bounds_x2(n_x2),
-      m_bounds_y2(n_y2), m_clip_x1(n_x1), m_clip_y1(n_y1),
-      m_clip_x2(n_x2), m_clip_y2(n_y2) { }
-  virtual ~graphics() { }
-  int16_t bounds_x1() const { return m_bounds_x1; }
-  int16_t bounds_y1() const { return m_bounds_y1; }
-  int16_t bounds_x2() const { return m_bounds_x2; }
-  int16_t bounds_y2() const { return m_bounds_y2; }
-  int16_t bounds_width() const { return m_bounds_x2 - m_bounds_x1; }
-  int16_t bounds_height() const { return m_bounds_y2 - m_bounds_y1; }
+  class subregion_state {
+  private:
+    coord_t m_x;
+    coord_t m_y;
+    coord_t m_clip_x1;
+    coord_t m_clip_y1;
+    coord_t m_clip_x2;
+    coord_t m_clip_y2;
+#ifndef NDEBUG
+    coord_t m_subregion_depth;
+#endif
 
-  // Setting bounds invalidates the clip rectangle, follow with set_clip()
-  virtual void set_bounds(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
-  virtual void set_clip(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
-  virtual void draw_rectangle(int16_t x1, int16_t y1, int16_t x2, int16_t y2,
+    friend class graphics;
+  };
+
+  graphics(coord_t n_clip_x1, coord_t n_clip_y1, coord_t n_clip_x2,
+      coord_t n_clip_y2);
+  graphics();
+  virtual ~graphics() { }
+
+  bool subregion_trivial() const
+    { return (m_clip_x1 == m_clip_x2) || (m_clip_y1 == m_clip_y2); }
+
+  virtual void enter_subregion(subregion_state & save, coord_t x, coord_t y,
+    coord_t clip_x1, coord_t clip_y1, coord_t clip_x2, coord_t clip_y2);
+  virtual void leave_subregion(subregion_state const & restore);
+  virtual void draw_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t y2,
     pixel p) = 0;
-  virtual void draw_text(int16_t x, int16_t y, color c, char const * s) = 0;
-  virtual void draw_bitmap(int16_t x, int16_t y, bitmap const & b) = 0;
+  virtual void draw_text(coord_t x, coord_t y, color c, char const * s) = 0;
+  virtual void draw_bitmap(coord_t x, coord_t y, bitmap const & b) = 0;
 
 protected:
-  int16_t clip_x1() const { return m_clip_x1; }
-  int16_t clip_y1() const { return m_clip_y1; }
-  int16_t clip_x2() const { return m_clip_x2; }
-  int16_t clip_y2() const { return m_clip_y2; }
+  coord_t origin_x() const { return m_x; }
+  coord_t origin_y() const { return m_y; }
+  coord_t clip_x1() const { return m_clip_x1; }
+  coord_t clip_y1() const { return m_clip_y1; }
+  coord_t clip_x2() const { return m_clip_x2; }
+  coord_t clip_y2() const { return m_clip_y2; }
 
 private:
-  int16_t m_bounds_x1;
-  int16_t m_bounds_y1;
-  int16_t m_bounds_x2;
-  int16_t m_bounds_y2;
-  int16_t m_clip_x1;
-  int16_t m_clip_y1;
-  int16_t m_clip_x2;
-  int16_t m_clip_y2;
+  coord_t m_x;
+  coord_t m_y;
+  coord_t m_clip_x1;
+  coord_t m_clip_y1;
+  coord_t m_clip_x2;
+  coord_t m_clip_y2;
+
+#ifndef NDEBUG
+  coord_t m_subregion_depth;
+#endif
 };
 
 
