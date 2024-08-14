@@ -4,14 +4,12 @@
 
 #include "imbibe.h"
 
-// #include "key_handler.h"
-#include "key_hand.h"
 #include "hbin.h"
 // #include "hbin_element.h"
 #include "hbin_ele.h"
 
 
-class hbin_menu_handler: public key_handler
+class hbin_menu_handler
 {
 public:
   hbin_menu_handler(hbin & n_hb, hbin_element & n_hbe);

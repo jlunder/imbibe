@@ -145,3 +145,14 @@ void element::request_repaint(coord_t x1, coord_t y1, coord_t x2,
 }
 
 
+void element::animate(uint32_t delta_ms) {
+  (void)delta_ms;
+}
+
+
+bool element::handle_key(uint16_t key) {
+  (void)key;
+  return false;
+}
+
+

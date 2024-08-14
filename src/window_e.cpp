@@ -10,6 +10,20 @@ window_element::~window_element() {
 }
 
 
+void window_element::animate(uint32_t delta_ms) {
+  for (element_list_iterator i = m_elements.begin(); i != m_elements.end();
+      ++i) {
+    i->ref->animate(delta_ms);
+  }
+}
+
+
+bool window_element::handle_key(uint16_t key) {
+  (void)key;
+  return false;
+}
+
+
 void window_element::paint(graphics & g) {
   for (element_list_iterator i = m_elements.begin(); i != m_elements.end();
       ++i) {
@@ -104,6 +118,36 @@ void window_element::element_frame_changed(element & e, coord_t old_x1,
   request_repaint(m_offset_x + e.frame_x1(), m_offset_y + e.frame_y1(),
     m_offset_x + e.frame_x2(), m_offset_y + e.frame_y2());
   owner().unlock_repaint();
+}
+
+
+bool window_element::is_element() {
+  return true;
+}
+
+
+element & window_element::as_element() {
+  return *this;
+}
+
+
+void window_element::set_focus(element & e) {
+  owner().set_focus(e);
+}
+
+
+void window_element::clear_focus() {
+  owner().clear_focus();
+}
+
+
+bool window_element::has_focus() {
+  return owner().has_focus();
+}
+
+
+element & window_element::focus() {
+  return owner().focus();
 }
 
 

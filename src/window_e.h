@@ -12,6 +12,8 @@ class window_element: public element, public window {
 public:
   virtual ~window_element();
 
+  virtual void animate(uint32_t delta_ms);
+  virtual bool handle_key(uint16_t key);
   virtual void paint(graphics & g);
 
   virtual void lock_repaint();
@@ -21,6 +23,14 @@ public:
   virtual void remove_element(element & e);
   virtual void element_frame_changed(element & e, coord_t old_x1,
     coord_t old_y1, coord_t old_x2, coord_t old_y2, coord_t old_z);
+
+  virtual bool is_element();
+  virtual element & as_element();
+
+  virtual void set_focus(element & e);
+  virtual void clear_focus();
+  virtual bool has_focus();
+  virtual element & focus();
 
   coord_t offset_x() { return m_offset_x; }
   coord_t offset_y() { return m_offset_y; }

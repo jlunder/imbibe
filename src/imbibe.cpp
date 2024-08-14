@@ -1,8 +1,16 @@
 #include "imbibe.h"
 
+// #define RENDER_TEST
+
 #include "inplace.h"
+
+#if defined(RENDER_TEST)
+// #include "render_test_task.h"
+#include "render_t.h"
+#else
 // #include "main_task.h"
 #include "main_tas.h"
+#endif
 
 #include "key_mana.h"
 
@@ -10,7 +18,11 @@
 #define logf_imbibe(...) disable_logf("IMBIBE: " __VA_ARGS__)
 
 
+#if defined(RENDER_TEST)
+inplace<render_test_task> main_instance;
+#else
 inplace<main_task> main_instance;
+#endif
 
 
 int main(int argc, char * argv[]) {

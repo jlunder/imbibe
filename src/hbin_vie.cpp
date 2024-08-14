@@ -3,8 +3,8 @@
 // #include "hbin_view_handler.h"
 #include "hbin_vie.h"
 
-// #include "key_handler.h"
-#include "key_hand.h"
+// #include "key_manager.h"
+#include "key_mana.h"
 #include "hbin.h"
 // #include "hbin_element.h"
 #include "hbin_ele.h"
@@ -134,7 +134,7 @@ void hbin_view_handler::scroll_to(int x, int y, bool down)
 }
 
 
-bool hbin_view_handler::handle(int c)
+bool hbin_view_handler::handle_key(int c)
 {
   switch(c)
   {
