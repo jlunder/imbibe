@@ -8,7 +8,7 @@
 #include "graphics.h"
 
 
-#define logf_bitmap_element logf
+#define logf_bitmap_element disable_logf
 
 
 bitmap_element::bitmap_element()

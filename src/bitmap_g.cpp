@@ -11,7 +11,7 @@
 #include "pixel.h"
 
 
-#define logf_bitmap_graphics cprintf
+#define logf_bitmap_graphics(...) disable_logf("BITMAP_GRAPHICS: " __VA_ARGS__)
 
 
 bitmap_graphics::bitmap_graphics(bitmap & n_b)

@@ -3,7 +3,7 @@
 #include "graphics.h"
 
 
-#define logf_graphics cprintf
+#define logf_graphics(...) disable_logf("GRAPHICS: " __VA_ARGS__)
 
 
 graphics::graphics(coord_t n_clip_x1, coord_t n_clip_y1, coord_t n_clip_x2,

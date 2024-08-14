@@ -11,7 +11,7 @@
 #include "vector.h"
 
 
-#define logf_key_manager cprintf
+#define logf_key_manager(...) disable_logf("KEY_MANAGER: " __VA_ARGS__)
 
 
 extern bool aux_key_manager__key_avail();

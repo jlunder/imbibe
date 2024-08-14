@@ -74,7 +74,8 @@ extern void step_simulator();
 
 #define LENGTHOF(a) (sizeof (a) / sizeof (a[0]))
 
-#define logf(...) do {} while(false)
+#define logf(...) cprintf(__VA_ARGS__)
+#define disable_logf(...) do {} while(false)
 
 template<class T>
 inline T min(T x, T y) { return (x < y) ? x : y; }

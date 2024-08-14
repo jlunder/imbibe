@@ -3,7 +3,7 @@
 #include "window_e.h"
 
 
-#define logf_window_element cprintf
+#define logf_window_element(...) disable_logf("WINDOW_ELEMENT: " __VA_ARGS__)
 
 
 window_element::~window_element() {

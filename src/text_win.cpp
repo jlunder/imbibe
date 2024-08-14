@@ -13,7 +13,7 @@
 #include "element.h"
 
 
-#define logf_text_window logf
+#define logf_text_window disable_logf
 
 
 extern void aux_text_window__set_text_asm();

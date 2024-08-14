@@ -7,7 +7,7 @@
 #include "vector.h"
 
 
-#define logf_map cprintf
+#define logf_map(...) disable_logf("MAP: " __VA_ARGS__)
 
 
 template<class T>

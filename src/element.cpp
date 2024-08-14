@@ -5,7 +5,7 @@
 #include "window.h"
 
 
-#define logf_element cprintf
+#define logf_element(...) disable_logf("ELEMENT: " __VA_ARGS__)
 
 
 void element::set_frame_pos(coord_t x1, coord_t y1) {

@@ -5,7 +5,7 @@
 #include "imbibe.h"
 
 
-#define logf_vector cprintf
+#define logf_vector(...) disable_logf("VECTOR: " __VA_ARGS__)
 
 
 namespace aux_vector {

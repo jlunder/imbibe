@@ -9,7 +9,7 @@
 #include "main_tas.h"
 
 
-#define logf_main_task cprintf
+#define logf_main_task(...) disable_logf("MAIN_TASK: " __VA_ARGS__)
 
 
 namespace aux_main_task {
@@ -123,6 +123,7 @@ void main_task::idle() {
 
 
 bool main_task::handle_key(uint16_t key) {
+  (void)key;
   logf_main_task("pressed [this=%p, m_state=%d]: %x\n", this, (int)m_state,
     key);
   if (m_state == st_waiting) {
