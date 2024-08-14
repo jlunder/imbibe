@@ -62,7 +62,7 @@ private:
   text_window m_win;
   window_element m_frame;
 
-  int16_t m_anim_time;
+  uint32_t m_anim_time;
   repaint_element m_background;
   window_element m_clipper;
   repaint_element m_clip_background;

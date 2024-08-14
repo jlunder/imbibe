@@ -16,8 +16,10 @@ void window_element::paint(graphics & g) {
     element & e = *i->ref;
     graphics::subregion_state s;
 
-    g.enter_subregion(s, e.frame_x1(), e.frame_y1(), e.frame_x1(),
-      e.frame_y1(), e.frame_x2(), e.frame_y2());
+    g.enter_subregion(s,
+      m_offset_x + e.frame_x1(), m_offset_y + e.frame_y1(),
+      m_offset_x + e.frame_x1(), m_offset_y + e.frame_y1(),
+      m_offset_x + e.frame_x2(), m_offset_y + e.frame_y2());
     if(!g.subregion_trivial()) {
       logf_window_element("window_element paint %p\n", &e);
       e.paint(g);
@@ -54,7 +56,8 @@ void window_element::repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
 
 void window_element::add_element(element & e) {
   m_elements.insert(element_list_value(e.frame_z(), &e));
-  request_repaint(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2());
+  request_repaint(m_offset_x + e.frame_x1(), m_offset_y + e.frame_y1(),
+    m_offset_x + e.frame_x2(), m_offset_y + e.frame_y2());
 }
 
 
@@ -72,7 +75,8 @@ void window_element::remove_element(element & e) {
   }
 #endif
 
-  request_repaint(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2());
+  request_repaint(m_offset_x + e.frame_x1(), m_offset_y + e.frame_y1(),
+    m_offset_x + e.frame_x2(), m_offset_y + e.frame_y2());
 }
 
 
@@ -95,9 +99,25 @@ void window_element::element_frame_changed(element & e, coord_t old_x1,
     m_elements.insert(element_list_value(e.frame_z(), &e));
   }
   owner().lock_repaint();
-  request_repaint(old_x1, old_y1, old_x2, old_y2);
-  request_repaint(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2());
+  request_repaint(m_offset_x + old_x1, m_offset_y + old_y1,
+    m_offset_x + old_x2, m_offset_y + old_y2);
+  request_repaint(m_offset_x + e.frame_x1(), m_offset_y + e.frame_y1(),
+    m_offset_x + e.frame_x2(), m_offset_y + e.frame_y2());
   owner().unlock_repaint();
 }
 
+
+void window_element::set_offset_pos(coord_t offset_x, coord_t offset_y) {
+  assert_margin(offset_x, COORD_MAX); assert_margin(offset_y, COORD_MAX);
+
+  if((offset_x == m_offset_x) && (offset_y == m_offset_y)) {
+    return;
+  }
+
+  m_offset_x = offset_x;
+  m_offset_y = offset_y;
+  if(!m_elements.empty()) {
+    request_repaint();
+  }
+}
 
