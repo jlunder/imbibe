@@ -11,6 +11,9 @@
 #include "pixel.h"
 
 
+#define logf_bitmap_graphics cprintf
+
+
 bitmap_graphics::bitmap_graphics(bitmap & n_b)
   : graphics(0, 0, n_b.width(), n_b.height()), m_b(n_b)
 {
@@ -24,15 +27,19 @@ void bitmap_graphics::draw_rectangle(coord_t x1, coord_t y1, coord_t x2,
   assert_margin(x1, COORD_MAX); assert_margin(y1, COORD_MAX);
   assert_margin(x2, COORD_MAX); assert_margin(y2, COORD_MAX);
 
-  if ((x1 == x2) || (x1 >= clip_x2()) || (x2 <= clip_x1())
-      || (y1 == y2) || (y1 >= clip_y2()) || (y2 <= clip_y1())) {
+  coord_t cx1 = max<coord_t>(origin_x() + x1, clip_x1());
+  coord_t cx2 = min<coord_t>(origin_x() + x2, clip_x2());
+  if (x1 >= x2) {
+    return;
+  }
+  coord_t cy1 = max<coord_t>(origin_y() + y1, clip_y1());
+  coord_t cy2 = min<coord_t>(origin_y() + y2, clip_y2());
+  if (y1 >= y2) {
     return;
   }
 
-  coord_t cx1 = min(x1, clip_x1());
-  coord_t cy1 = min(y1, clip_y1());
-  coord_t cx2 = max(x2, clip_x2());
-  coord_t cy2 = max(y2, clip_y2());
+  logf_bitmap_graphics("clipped draw_rectangle %d, %d, %d, %d; %c, %02X\n",
+    cx1, cy1, cx2, cy2, p.character(), p.attribute());
 
   uint16_t rows = cy2 - cy1;
   uint16_t stride = m_b.width();

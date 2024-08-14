@@ -51,10 +51,6 @@ void graphics::enter_subregion(subregion_state & save, coord_t x, coord_t y,
   ++m_subregion_depth;
 #endif
 
-  clip_x1 += m_x;
-  clip_y1 += m_y;
-  clip_x2 += m_x;
-  clip_y2 += m_y;
   m_clip_x1 = max<coord_t>(m_clip_x1, m_x + clip_x1);
   m_clip_y1 = max<coord_t>(m_clip_y1, m_y + clip_y1);
   m_clip_x2 = min<coord_t>(m_clip_x2, m_x + clip_x2);

@@ -39,11 +39,11 @@ private:
 
   class repaint_element: public element {
   public:
-    repaint_element(color fill): m_fill(fill), m_counter(0) { }
+    repaint_element(color fill): m_fill(fill) { }
     virtual void paint(graphics & g);
   private:
     color m_fill;
-    uint8_t m_counter;
+    static uint8_t m_counter;
   };
 
   class text_element: public element {

@@ -17,6 +17,9 @@ namespace aux_main_task {
 }
 
 
+uint8_t main_task::repaint_element::m_counter = 0;
+
+
 void main_task::repaint_element::paint(graphics & g) {
   g.draw_rectangle(0, 0, frame_width(), frame_height(),
     pixel(aux_main_task::repaint_sequence[m_counter], m_fill));
@@ -38,8 +41,16 @@ main_task::main_task()
     m_orbit1(),
     m_orbit2(pixel('*', color(color::yellow, color::red)),
       color(color::hi_white, color::red), "Bjelo worlb?") {
+  logf_main_task("m_frame = %p\n", &m_frame);
+  logf_main_task("m_background = %p\n", &m_background);
+  logf_main_task("m_clipper = %p\n", &m_clipper);
+  logf_main_task("m_clip_background = %p\n", &m_clip_background);
+  logf_main_task("m_orbit1 = %p\n", &m_orbit1);
+  logf_main_task("m_orbit2 = %p\n", &m_orbit2);
+
   coord_t w = m_win.backbuffer().width();
   coord_t h = m_win.backbuffer().height();
+
   m_frame.set_frame(0, 0, w, h, 0);
   m_frame.set_owner(m_win);
 
