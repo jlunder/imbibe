@@ -49,7 +49,7 @@ extern uint16_t dummy_screen[16384];
 
 #include <stdio.h>
 
-#define cprintf printf
+#define cprintf(...) fprintf(stderr, __VA_ARGS__)
 
 extern void _dos_setvect(int, void (*)());
 extern void (*_dos_getvect(int))();

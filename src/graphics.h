@@ -36,7 +36,7 @@ public:
   virtual ~graphics() { }
 
   bool subregion_trivial() const
-    { return (m_clip_x1 == m_clip_x2) || (m_clip_y1 == m_clip_y2); }
+    { return (m_clip_x1 >= m_clip_x2) || (m_clip_y1 >= m_clip_y2); }
 
   virtual void enter_subregion(subregion_state & save, coord_t x, coord_t y,
     coord_t clip_x1, coord_t clip_y1, coord_t clip_x2, coord_t clip_y2);
@@ -46,7 +46,6 @@ public:
   virtual void draw_text(coord_t x, coord_t y, color c, char const * s) = 0;
   virtual void draw_bitmap(coord_t x, coord_t y, bitmap const & b) = 0;
 
-protected:
   coord_t origin_x() const { return m_x; }
   coord_t origin_y() const { return m_y; }
   coord_t clip_x1() const { return m_clip_x1; }

@@ -9,11 +9,12 @@
 #include "main_tas.h"
 
 
-#define logf_main_task(...) disable_logf("MAIN_TASK: " __VA_ARGS__)
+#define logf_main_task(...) logf("MAIN_TASK: " __VA_ARGS__)
 
 
 namespace aux_main_task {
-  char const repaint_sequence[] = "-/|\\";
+  // char const repaint_sequence[] = "-\\|/";
+  char const repaint_sequence[] = "0123456789ABCDEFG";
 }
 
 
@@ -23,11 +24,17 @@ uint8_t main_task::repaint_element::m_counter = 0;
 void main_task::repaint_element::paint(graphics & g) {
   g.draw_rectangle(0, 0, frame_width(), frame_height(),
     pixel(aux_main_task::repaint_sequence[m_counter], m_fill));
-  m_counter = (uint8_t)(
-    (m_counter + 1) % (LENGTHOF(aux_main_task::repaint_sequence) - 1));
+  ++m_counter;
+  if (m_counter >= LENGTHOF(aux_main_task::repaint_sequence) - 1) {
+    m_counter = 0;
+  }
 }
 
 void main_task::text_element::paint(graphics & g) {
+  logf_main_task("paint text_element at %d, %d; clip %d, %d, %d, %d; "
+      "frame %d, %d, %d, %d\n",
+    g.origin_x(), g.origin_y(), g.clip_x1(), g.clip_y1(), g.clip_x2(),
+    g.clip_y2(), frame_x1(), frame_y1(), frame_x2(), frame_y2());
   g.draw_rectangle(0, 0, frame_width(), frame_height(), m_fill);
   g.draw_text((frame_width() - (coord_t)strlen(m_message)) / 2,
     frame_height() / 2, m_text, m_message);
@@ -63,8 +70,8 @@ main_task::main_task()
   m_clip_background.set_frame(0, 0, w, h, 0);
   m_clip_background.set_owner(m_clipper);
   m_clip_background.show();
-  // coord_t ow = 16;
-  // coord_t oh = 5;
+  coord_t ow = 16;
+  coord_t oh = 5;
   // {
   //   m_orbit1.set_frame(0, 0, ow, oh, 1);
   //   m_orbit1.set_b(new bitmap(ow, oh));
@@ -75,9 +82,9 @@ main_task::main_task()
   //   m_orbit1.set_owner(m_clipper);
   //   m_orbit1.show();
   // }
-  // m_orbit2.set_frame(0, 0, ow, oh, 2);
-  // m_orbit2.set_owner(m_clipper);
-  // m_orbit2.show();
+  m_orbit2.set_frame(0, 0, ow, oh, 2);
+  m_orbit2.set_owner(m_clipper);
+  m_orbit2.show();
 
   m_clipper.show();
 
@@ -135,7 +142,7 @@ bool main_task::handle_key(uint16_t key) {
 
 void main_task::animate(uint32_t delta_ms) {
   static int16_t const seqs = 8;
-  static int16_t const seq_ms = 1000;
+  static int16_t const seq_ms = 4000;
   static int16_t const total_ms = seqs * seq_ms;
 
   assert(delta_ms < total_ms);
@@ -166,48 +173,48 @@ void main_task::animate(uint32_t delta_ms) {
     m_clipper.set_frame(w * 1 / 4, h * 1 / 4, w * 3 / 4, h * 3 / 4, 1);
   }
 
-  // coord_t ow = m_orbit1.frame_width();
-  // coord_t oh = m_orbit1.frame_height();
-  // static int16_t const t_max = (1 << t_shift) - 1;
+  coord_t ow = m_orbit1.frame_width();
+  coord_t oh = m_orbit1.frame_height();
+  static int16_t const t_max = (1 << t_shift) - 1;
 
-  // switch(seq % (seqs / 2)) {
-  // case 0:
-  //   m_orbit1.set_frame_pos(
-  //     (coord_t)(((uint16_t)(w + ow) * t) >> t_shift) - ow,
-  //     (h * 2 / 4) - oh / 2);
-  //   m_orbit2.set_frame_pos(
-  //     (coord_t)(((uint16_t)(w + ow) * (t_max - t)) >> t_shift) - ow,
-  //     (h * 2 / 4) - (oh + 1) / 2);
-  //   break;
-  // case 1:
-  //   m_clipper.lock_repaint();
-  //   m_orbit1.set_frame_pos(
-  //     (coord_t)(((uint16_t)(w + ow) * t) >> t_shift) - ow,
-  //     (h * 1 / 4) - oh / 2);
-  //   m_orbit2.set_frame_pos(
-  //     (coord_t)(((uint16_t)(w + ow) * (t_max - t)) >> t_shift) - ow,
-  //     (h * 3 / 4) - (oh + 1) / 2);
-  //   m_clipper.unlock_repaint();
-  //   break;
-  // case 2:
-  //   m_orbit1.set_frame_pos(
-  //     (w * 2 / 4) - ow / 2,
-  //     (coord_t)(((uint16_t)(h + oh) * t) >> t_shift) - oh);
-  //   m_orbit2.set_frame_pos(
-  //     (w * 2 / 4) - (ow + 1) / 2,
-  //     (coord_t)(((uint16_t)(h + oh) * (t_max - t)) >> t_shift) - oh);
-  //   break;
-  // case 3:
-  //   m_clipper.lock_repaint();
-  //   m_orbit1.set_frame_pos(
-  //     (w * 1 / 4) - ow / 2,
-  //     (coord_t)(((uint16_t)(h + oh) * t) >> t_shift) - oh);
-  //   m_orbit2.set_frame_pos(
-  //     (w * 3 / 4) - (ow + 1) / 2,
-  //     (coord_t)(((uint16_t)(h + oh) * (t_max - t)) >> t_shift) - oh);
-  //   m_clipper.unlock_repaint();
-  //   break;
-  // }
+  switch(seq % (seqs / 2)) {
+  case 0:
+    m_orbit1.set_frame_pos(
+      (((w + ow) * t) >> t_shift) - ow,
+      (h * 2 / 4) - oh / 2);
+    m_orbit2.set_frame_pos(
+      (((w + ow) * (t_max - t)) >> t_shift) - ow,
+      (h * 2 / 4) - (oh + 1) / 2);
+    break;
+  case 1:
+    m_clipper.lock_repaint();
+    m_orbit1.set_frame_pos(
+      (((w + ow) * t) >> t_shift) - ow,
+      (h * 1 / 4) - oh / 2);
+    m_orbit2.set_frame_pos(
+      (((w + ow) * (t_max - t)) >> t_shift) - ow,
+      (h * 3 / 4) - (oh + 1) / 2);
+    m_clipper.unlock_repaint();
+    break;
+  case 2:
+    m_orbit1.set_frame_pos(
+      (w * 2 / 4) - ow / 2,
+      (((h + oh) * t) >> t_shift) - oh);
+    m_orbit2.set_frame_pos(
+      (w * 2 / 4) - (ow + 1) / 2,
+      (((h + oh) * (t_max - t)) >> t_shift) - oh);
+    break;
+  case 3:
+    m_clipper.lock_repaint();
+    m_orbit1.set_frame_pos(
+      (w * 1 / 4) - ow / 2,
+      (((h + oh) * t) >> t_shift) - oh);
+    m_orbit2.set_frame_pos(
+      (w * 3 / 4) - (ow + 1) / 2,
+      (((h + oh) * (t_max - t)) >> t_shift) - oh);
+    m_clipper.unlock_repaint();
+    break;
+  }
 
   // Do this at the end because coming into this method, the animated
   // positions may not have been set up yet
@@ -218,7 +225,7 @@ void main_task::animate(uint32_t delta_ms) {
 
 
 void main_task::run_loop() {
-  static uint32_t const min_poll_interval_ms = 1000;
+  static uint32_t const min_poll_interval_ms = 200;
   static uint32_t const max_run_ms = 100;
   static uint32_t const max_idle_interval_ms = 200;
   timer idle_timer;

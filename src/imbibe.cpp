@@ -7,6 +7,9 @@
 #include "key_mana.h"
 
 
+#define logf_imbibe(...) disable_logf("IMBIBE: " __VA_ARGS__)
+
+
 inplace<main_task> main_instance;
 
 
@@ -61,7 +64,7 @@ void step_simulator() {
     }
     ++sim_seq_i_ms;
   }
-  fprintf(stderr, "sim_step [%u:%u, %u ms]\n",
+  logf_imbibe("sim_step [%u:%u, %u ms]\n",
     sim_seq_i, sim_seq_i_step, sim_seq_i_ms);
 }
 
@@ -69,7 +72,7 @@ bool aux_key_manager__key_avail() {
   assert(sim_seq_i < LENGTHOF(sim_seq));
   bool avail = (sim_seq[sim_seq_i].key != 0)
     && (sim_seq_i_step >= sim_seq[sim_seq_i].steps);
-  fprintf(stderr, "key_avail: %d\n", (int)avail);
+  logf_imbibe("key_avail: %d\n", (int)avail);
   return avail;
 }
 
@@ -86,7 +89,7 @@ uint16_t aux_key_manager__read_key() {
     ++sim_seq_i;
     sim_seq_i_step = 0;
     sim_seq_i_ms = 0;
-    fprintf(stderr, "read_key: 0x%04X\n", key);
+    logf_imbibe("read_key: 0x%04X\n", key);
     return key;
   } else {
     assert(!"read_key no key available!");
@@ -95,11 +98,11 @@ uint16_t aux_key_manager__read_key() {
 }
 
 void aux_text_window__set_text_asm() {
-  fprintf(stderr, "set text mode 03h\n");
+  logf_imbibe("set text mode 03h\n");
 }
 
 void aux_text_window__restore_text_asm() {
-  fprintf(stderr, "restore mode\n");
+  logf_imbibe("restore mode\n");
 }
 
 void aux_timer__enter_crit() {
@@ -109,43 +112,51 @@ void aux_timer__leave_crit() {
 }
 
 void aux_timer__ackint() {
-  //fprintf(stderr, "ackint\n");
+  //logf_imbibe("ackint\n");
 }
 
 void aux_timer__outb(uint16_t port, uint8_t value) {
-  fprintf(stderr, "outb 0x%02X, 0x%02X\n", port, value);
+  (void)port;
+  (void)value;
+  logf_imbibe("outb 0x%02X, 0x%02X\n", port, value);
 }
 
 void aux_timer__outwb(uint16_t port, uint16_t value) {
-  fprintf(stderr, "outwb 0x%02X, 0x%02X\n", port, value);
+  (void)port;
+  (void)value;
+  logf_imbibe("outwb 0x%02X, 0x%02X\n", port, value);
 }
 
 uint16_t aux_timer__inb(uint16_t port) {
-  fprintf(stderr, "inb 0x%02X: 0\n", port);
+  (void)port;
+  logf_imbibe("inb 0x%02X: 0\n", port);
   return 0;
 }
 
 uint16_t aux_timer__inwb(uint16_t port) {
-  fprintf(stderr, "inwb 0x%02X: 0\n", port);
+  (void)port;
+  logf_imbibe("inwb 0x%02X: 0\n", port);
   return 0;
 }
 
 void _dos_setvect(int int_no, void (*int_handler)()) {
+  (void)int_no;
   assert(int_no == 8);
-  fprintf(stderr, "setvect 0x%02X, %p (overwrites %p)\n", int_no,
+  logf_imbibe("setvect 0x%02X, %p (overwrites %p)\n", int_no,
     int_handler, pit_int_handler);
   pit_int_handler = int_handler;
 }
 
 void (*_dos_getvect(int int_no))() {
+  (void)int_no;
   assert(int_no == 8);
-  fprintf(stderr, "getvect 0x%02X: %p\n", int_no, pit_int_handler);
+  logf_imbibe("getvect 0x%02X: %p\n", int_no, pit_int_handler);
   return pit_int_handler;
 }
 
 void _chain_intr(void (*int_handler)()) {
   assert(int_handler);
-  fprintf(stderr, "chain_intr %p\n", int_handler);
+  logf_imbibe("chain_intr %p\n", int_handler);
   int_handler();
 }
 
