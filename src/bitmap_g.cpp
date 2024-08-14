@@ -39,7 +39,7 @@ void bitmap_graphics::draw_rectangle(coord_t x1, coord_t y1, coord_t x2,
   }
 
   logf_bitmap_graphics("clipped draw_rectangle %d, %d, %d, %d; %c, %02X\n",
-    cx1, cy1, cx2, cy2, p.character(), p.attribute());
+    cx1, cy1, cx2, cy2, p.character(), p.attribute().value());
 
   uint16_t rows = cy2 - cy1;
   uint16_t stride = m_b.width();
@@ -49,7 +49,7 @@ void bitmap_graphics::draw_rectangle(coord_t x1, coord_t y1, coord_t x2,
     for (uint16_t c = 0; c < cols; ++c) {
       pp[c] = p;
     }
-    pp += 80;
+    pp += stride;
   }
 }
 
