@@ -48,14 +48,13 @@ void window_element::unlock_repaint() {
 
 
 void window_element::repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
-  owner().repaint(frame_x1() + x1, frame_y1() + y1, frame_x1() + x2,
-    frame_y1() + y2);
+  request_repaint(x1, y1, x2, y2);
 }
 
 
 void window_element::add_element(element & e) {
   m_elements.insert(element_list_value(e.frame_z(), &e));
-  repaint(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2());
+  request_repaint(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2());
 }
 
 
@@ -73,7 +72,7 @@ void window_element::remove_element(element & e) {
   }
 #endif
 
-  repaint(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2());
+  request_repaint(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2());
 }
 
 

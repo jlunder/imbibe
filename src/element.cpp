@@ -123,7 +123,8 @@ void element::request_repaint(coord_t x1, coord_t y1, coord_t x2,
   if(m_visible && m_owner && (x1 < x2) && (y1 < y2)) {
     logf_element("element %p request_repaint %d, %d, %d, %d\n",
       this, x1, y1, x2, y2);
-    m_owner->repaint(x1 + m_x1, y1 + m_y1, x2 + m_x1, y2 + m_y1);
+    m_owner->repaint(m_x1 + max<coord_t>(x1, 0), m_y1 + max<coord_t>(y1, 0),
+      min<coord_t>(m_x1 + x2, m_x2), min<coord_t>(m_y1 + y2, m_y2));
   }
 }
 
