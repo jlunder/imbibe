@@ -1,19 +1,17 @@
 #include "imbibe.h"
 
-#include "bitmap.h"
-// #include "bitmap_graphics.h"
-#include "bitmap_g.h"
-// #include "key_manager.h"
-#include "key_mana.h"
-// #include "main_task.h"
-#include "main_tas.h"
+#include "key_manager.h"
+#include "main_task.h"
 
 
-#define logf_main_task(...) disable_logf("MAIN_TASK: " __VA_ARGS__)
+#define logf_main_task(...) logf("MAIN_TASK: " __VA_ARGS__)
+
+
+main_task main_task_instance;
 
 
 main_task::main_task()
-  : task(), m_state(st_loading), m_anim_time(0), m_win(), m_main() {
+  : task(), m_win(), m_main(), m_exit_requested(false) {
 }
 
 
@@ -24,8 +22,7 @@ main_task::~main_task() {
 void main_task::poll() {
   while(key_manager::key_event_available()) {
     uint16_t key = key_manager::read_key_event();
-    logf_main_task("pressed [this=%p, m_state=%d]: %x\n", this, (int)m_state,
-      key);
+    logf_main_task("key pressed: %X\n", key);
     if (m_win.has_focus()) {
       element * e = &m_win.focus();
       while (!e->handle_key(key) && e->has_owner()
@@ -50,20 +47,6 @@ void main_task::run() {
     m_main.show();
   }
   m_win.unlock_repaint();
-
-  switch (m_state) {
-  case st_loading:
-    logf_main_task("advancing to st_waiting\n");
-    m_state = st_waiting;
-    break;
-  case st_waiting:
-    break;
-  case st_done:
-    break;
-  default:
-    assert(!"invalid state");
-    break;
-  }
 }
 
 
@@ -83,9 +66,8 @@ void main_task::run_loop() {
   logf_main_task("imbibe 0.1 loaded\n");
 
   task_manager::idle();
-  logf_main_task("starting run [this=%p, m_state=%d]\n", this, (int)m_state);
 
-  while (!done()) {
+  while (!m_exit_requested) {
 #if defined(SIMULATE)
     step_simulator();
 #endif
@@ -118,4 +100,9 @@ void main_task::run_loop() {
   // don't teardown key_manager b/c not needed
   timer::teardown();
   logf_main_task("bye!\n");
+}
+
+
+void main_task::exit() {
+  main_task_instance.m_exit_requested = true;
 }

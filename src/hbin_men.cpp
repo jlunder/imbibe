@@ -3,8 +3,7 @@
 // #include "hbin_menu_handler.h"
 #include "hbin_men.h"
 
-// #include "key_manager.h"
-#include "key_mana.h"
+#include "key_manager.h"
 #include "hbin.h"
 // #include "hbin_element.h"
 #include "hbin_ele.h"
@@ -24,10 +23,10 @@ bool hbin_menu_handler::handle(int c)
 
   switch(c)
   {
-  case key_up:
+  case key_event::up:
     selection = (m_hbe.selection() + m_hb.num_links() - 1) % m_hb.num_links();
     break;
-  case key_down:
+  case key_event::down:
     selection = (m_hbe.selection() + m_hb.num_links() + 1) % m_hb.num_links();
     break;
   default:

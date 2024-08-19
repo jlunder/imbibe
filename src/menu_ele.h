@@ -7,9 +7,7 @@
 #include "element.h"
 
 
-class graphics;
 class menu;
-class window;
 
 
 class menu_element: public element

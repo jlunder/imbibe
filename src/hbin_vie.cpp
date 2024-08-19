@@ -3,8 +3,7 @@
 // #include "hbin_view_handler.h"
 #include "hbin_vie.h"
 
-// #include "key_manager.h"
-#include "key_mana.h"
+#include "key_manager.h"
 #include "hbin.h"
 // #include "hbin_element.h"
 #include "hbin_ele.h"
@@ -138,38 +137,38 @@ bool hbin_view_handler::handle_key(int c)
 {
   switch(c)
   {
-  case key_tab:
+  case key_event::tab:
     if(m_hb.num_links() != 0) {
       select_link((m_hbe.selection() + 1) % m_hb.num_links());
     }
     break;
-  case key_shift_tab:
+  case key_event::shift_tab:
     if(m_hb.num_links() != 0) {
       select_link((m_hbe.selection() + m_hb.num_links() - 1) % m_hb.num_links());
     }
     break;
-  case key_up:
+  case key_event::up:
     scroll_to(m_hbe.scroll_x(), m_hbe.scroll_y() - 1, false);
     break;
-  case key_down:
+  case key_event::down:
     scroll_to(m_hbe.scroll_x(), m_hbe.scroll_y() + 1, true);
     break;
-  case key_left:
+  case key_event::left:
     scroll_to(m_hbe.scroll_x() - 1, m_hbe.scroll_y(), false);
     break;
-  case key_right:
+  case key_event::right:
     scroll_to(m_hbe.scroll_x() + 1, m_hbe.scroll_y(), true);
     break;
-  case key_pgup:
+  case key_event::pgup:
     scroll_to(m_hbe.scroll_x(), m_hbe.scroll_y() - m_hbe.frame_height(), false);
     break;
-  case key_pgdown:
+  case key_event::pgdown:
     scroll_to(m_hbe.scroll_x(), m_hbe.scroll_y() + m_hbe.frame_height(), true);
     break;
-  case key_home:
+  case key_event::home:
     scroll_to(0, m_hbe.scroll_y(), true);
     break;
-  case key_end:
+  case key_event::end:
     scroll_to(m_hb.width() - m_hbe.frame_width(), m_hbe.scroll_y(), false);
     break;
   default:

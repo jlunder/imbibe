@@ -1,12 +1,9 @@
 #include "imbibe.h"
 
 #include "bitmap.h"
-// #include "bitmap_graphics.h"
-#include "bitmap_g.h"
-// #include "key_manager.h"
-#include "key_mana.h"
-// #include "render_test_task.h"
-#include "render_t.h"
+#include "graphics.h"
+#include "key_manager.h"
+#include "render_test_task.h"
 
 
 #define logf_render_test_task(...) logf("RENDER_TEST_TASK: " __VA_ARGS__)
@@ -23,7 +20,7 @@ uint8_t render_test_task::repaint_element::m_counter = 0;
 
 void render_test_task::repaint_element::paint(graphics & g) {
   g.draw_rectangle(0, 0, frame_width(), frame_height(),
-    pixel(aux_main_task::repaint_sequence[m_counter], m_fill));
+    termel::from(aux_main_task::repaint_sequence[m_counter], m_fill));
   ++m_counter;
   if (m_counter >= LENGTHOF(aux_main_task::repaint_sequence) - 1) {
     m_counter = 0;
@@ -44,11 +41,13 @@ void render_test_task::text_element::paint(graphics & g) {
 
 render_test_task::render_test_task()
   : task(), m_state(st_loading), m_win(), m_frame(),
-    m_anim_time(0), m_background(color(color::hi_yellow, color::green)),
-    m_clipper(), m_clip_background(color(color::hi_cyan, color::cyan)),
+    m_anim_time(0),
+    m_background(attribute::from(termviz::hi_yellow, termviz::green)),
+    m_clipper(),
+    m_clip_background(attribute::from(termviz::hi_cyan, termviz::cyan)),
     m_orbit1(),
-    m_orbit2(pixel('*', color(color::yellow, color::red)),
-      color(color::hi_white, color::red), "Bjelo worlb?") {
+    m_orbit2(termel::from('*', termviz::yellow, termviz::red),
+      attribute::from(termviz::hi_white, termviz::red), "Bjelo worlb?") {
   logf_render_test_task("m_frame = %p\n", &m_frame);
   logf_render_test_task("m_background = %p\n", &m_background);
   logf_render_test_task("m_clipper = %p\n", &m_clipper);
@@ -76,10 +75,11 @@ render_test_task::render_test_task()
   {
     m_orbit1.set_frame(0, 0, ow, oh, 1);
     m_orbit1.set_b(new bitmap(ow, oh));
-    bitmap_graphics g(m_orbit1.b());
+    graphics g(m_orbit1.b());
     g.draw_rectangle(0, 0, ow, oh,
-      pixel('+', color(color::cyan, color::blue)));
-    g.draw_text(2, 2, color(color::hi_white, color::blue), "Hello world!");
+      termel::from('+', termviz::cyan, termviz::blue));
+    g.draw_text(2, 2, attribute::from(termviz::hi_white, termviz::blue),
+      "Hello world!");
     m_orbit1.set_owner(m_clipper);
     m_orbit1.show();
   }
@@ -99,7 +99,7 @@ render_test_task::~render_test_task() {
 
 void render_test_task::poll() {
   while (key_manager::key_event_available()) {
-    if (key_manager::read_key_event() == key_escape) {
+    if (key_manager::read_key_event() == key_event::escape) {
       m_state = st_done;
     }
   }

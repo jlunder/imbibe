@@ -18,13 +18,6 @@
 #define assert_margin(x, mag) assert(((x) >= -((mag) / 4)) && ((x) <= (mag) / 4))
 
 
-typedef int16_t coord_t;
-
-
-#define COORD_MIN INT16_MIN
-#define COORD_MAX INT16_MAX
-
-
 #if !(defined(M_I86) && defined(__WATCOMC__))
 
 // This is to make the editor happy when it tries to parse our code thinking

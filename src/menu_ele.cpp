@@ -8,7 +8,6 @@
 #include "graphics.h"
 #include "menu.h"
 #include "window.h"
-#include "pixel.h"
 
 
 menu_element::menu_element(

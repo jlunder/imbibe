@@ -1,7 +1,6 @@
 #include "imbibe.h"
 
-//#include "bitmap_element.h"
-#include "bitmap_e.h"
+#include "bitmap_element.h"
 
 #include "bitmap.h"
 #include "element.h"
@@ -34,7 +33,7 @@ void bitmap_element::set_b(bitmap * n_b) {
 
 void bitmap_element::paint(graphics & g) {
   logf_bitmap_element("paint element %p, bitmap %p, corner %04X\n", this,
-    m_b, *(uint16_t*)m_b->data());
+    m_b, *m_b->data());
   if(m_b) {
     g.draw_bitmap(0, 0, *m_b);
   }

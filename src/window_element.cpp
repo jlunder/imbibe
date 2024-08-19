@@ -1,6 +1,6 @@
 #include "imbibe.h"
 
-#include "window_e.h"
+#include "window_element.h"
 
 
 #define logf_window_element(...) disable_logf("WINDOW_ELEMENT: " __VA_ARGS__)

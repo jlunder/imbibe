@@ -4,15 +4,12 @@
 
 #include "imbibe.h"
 
-// #include "bitmap_element.h"
-#include "bitmap_e.h"
-#include "color.h"
+#include "bitmap_element.h"
 #include "task.h"
-// #include "text_window.h"
-#include "text_win.h"
+#include "termviz.h"
+#include "text_window.h"
 #include "timer.h"
-// #include "window_element.h"
-#include "window_e.h"
+#include "window_element.h"
 
 
 class render_test_task: public task {
@@ -37,21 +34,21 @@ private:
 
   class repaint_element: public element {
   public:
-    repaint_element(color fill): m_fill(fill) { }
+    repaint_element(attribute_t fill): m_fill(fill) { }
     virtual void paint(graphics & g);
   private:
-    color m_fill;
+    attribute_t m_fill;
     static uint8_t m_counter;
   };
 
   class text_element: public element {
   public:
-    text_element(pixel fill, color text, char const * message):
+    text_element(termel_t fill, attribute_t text, char const * message):
       m_fill(fill), m_text(text), m_message(message) { }
     virtual void paint(graphics & g);
   private:
-    pixel m_fill;
-    color m_text;
+    termel_t m_fill;
+    attribute_t m_text;
     char const * m_message;
   };
 

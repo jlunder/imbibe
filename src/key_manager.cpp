@@ -2,8 +2,7 @@
 
 #include "stdlib.h"
 
-// #include "key_manager.h"
-#include "key_mana.h"
+#include "key_manager.h"
 
 
 #define logf_key_manager(...) disable_logf("KEY_MANAGER: " __VA_ARGS__)
@@ -39,8 +38,8 @@ bool key_manager::key_event_available() {
 }
 
 
-uint16_t key_manager::read_key_event() {
-  return aux_key_manager__read_key();
+key_event_t key_manager::read_key_event() {
+  return (key_event_t)aux_key_manager__read_key();
 }
 
 

@@ -8,7 +8,7 @@
 // Generic read-only data block
 class rodata {
 public:
-  static const uint16_t max_reclaimable = UINT8_MAX;
+  static uint16_t const max_reclaimable = UINT8_MAX;
 
   enum prealloc_t { prealloc };
   typedef void (*reclaim_func_t)(void __far * p);

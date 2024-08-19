@@ -61,9 +61,12 @@ private:
   static void save_mode();
   static void restore_mode();
   static void set_text_mode();
-  static void flip(uint16_t const * backbuffer, coord_t width,
+  static void flip(termel_t const * backbuffer, coord_t width,
     coord_t height, coord_t x1, coord_t y1, coord_t x2, coord_t y2);
 };
+
+
+extern text_window text_window_instance;
 
 
 #endif // __TEXT_WINDOW_H_INCLUDED

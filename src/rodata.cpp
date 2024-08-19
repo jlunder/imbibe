@@ -6,8 +6,8 @@
 struct rodata_tracking_t {
   rodata::reclaim_func_t reclaimer;
   union {
-    coord_t live_refs;
-    coord_t next_unrefd;
+    uint16_t live_refs;
+    uint16_t next_unrefd;
   };
 };
 

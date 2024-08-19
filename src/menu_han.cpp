@@ -3,8 +3,7 @@
 // #include "menu_handler.h"
 #include "menu_han.h"
 
-// #include "key_manager.h"
-#include "key_mana.h"
+#include "key_manager.h"
 
 #include "menu.h"
 // #include "menu_element.h"
@@ -22,10 +21,10 @@ bool menu_handler::handle(int c) {
   int selection;
 
   switch(c) {
-  case key_up:
+  case key_event::up:
     selection = (m_me.selection() + m_m.num_links() - 1) % m_m.num_links();
     break;
-  case key_down:
+  case key_event::down:
     selection = (m_me.selection() + m_m.num_links() + 1) % m_m.num_links();
     break;
   default:

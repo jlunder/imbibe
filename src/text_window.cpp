@@ -1,15 +1,13 @@
 #include "imbibe.h"
 
-// #include "text_window.h"
-#include "text_win.h"
+#include "text_window.h"
 
 #include <assert.h>
 #include <stddef.h>
 #include <string.h>
 
 #include "bitmap.h"
-// #include "bitmap_graphics.h"
-#include "bitmap_g.h"
+#include "graphics.h"
 #include "element.h"
 
 
@@ -29,6 +27,9 @@ extern void aux_text_window__restore_text_asm();
   "mov ax, 00003h" "int 010h" modify exact [ax] nomemory
 
 #endif
+
+
+text_window text_window_instance;
 
 
 text_window::text_window()
@@ -82,16 +83,16 @@ void text_window::repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
   if (m_lock_count == 0) {
 #ifndef NDEBUG
     // Make a hideous background to highlight unpainted areas
-    static uint16_t const ugly_px =
-      pixel('x', color(color::hi_cyan, color::hi_magenta));
+    static termel_t const ugly_px =
+      termel::from('x', termviz::hi_cyan, termviz::hi_magenta);
     for (coord_t y = y1; y < y2; ++y) {
-      uint16_t * row = m_backbuffer.data() + (y * m_backbuffer.width());
+      termel_t * row = m_backbuffer.data() + (y * m_backbuffer.width());
       for (coord_t x = x1; x < x2; ++x) {
         row[x] = ugly_px;
       }
     }
 #endif
-    bitmap_graphics g(m_backbuffer);
+    graphics g(m_backbuffer);
     graphics::subregion_state s;
     g.enter_subregion(s, 0, 0, x1, y1, x2, y2);
     if (!g.subregion_trivial()) {
@@ -207,22 +208,22 @@ void text_window::set_text_mode() {
 }
 
 
-void text_window::flip(uint16_t const * backbuffer, coord_t width,
+void text_window::flip(termel_t const * backbuffer, coord_t width,
     coord_t height, coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
   assert(x1 <= x2); assert(y1 <= y2); assert(x1 >= 0); assert(y1 >= 0);
   assert(x2 <= width); assert(y2 <= height);
 
-  uint16_t * screen_buffer = (uint16_t *)MK_FP(0xB800, (void *)0);
+  termel_t * screen_buffer = (termel_t *)MK_FP(0xB800, (void *)0);
 
   logf_text_window("flip region (%d,%d-%d,%d) to %p, corner %04X -> %04X\n",
     x1, y1, x2, y2, (void *)screen_buffer, *backbuffer, *screen_buffer);
 
   coord_t i;
-  coord_t bytes_per_line = (x2 - x1) * sizeof (uint16_t);
+  coord_t bytes_per_line = (x2 - x1) * sizeof (termel_t);
   coord_t lines = min(y2, height) - min(y1, height);
   uint8_t const * source_p = (uint8_t const *)(backbuffer + y1 * width + x1);
   uint8_t * dest_p = (uint8_t *)(screen_buffer + y1 * width + x1);
-  uint16_t stride = width * sizeof (uint16_t);
+  uint16_t stride = width * sizeof (termel_t);
 
   for(i = 0; i < lines; ++i) {
     memcpy(dest_p, source_p, bytes_per_line);

@@ -1,18 +1,16 @@
 #include "imbibe.h"
 
-// #define RENDER_TEST
+#define RENDER_TEST
 
 #include "inplace.h"
 
 #if defined(RENDER_TEST)
-// #include "render_test_task.h"
-#include "render_t.h"
+#include "render_test_task.h"
 #else
-// #include "main_task.h"
-#include "main_tas.h"
+#include "main_task.h"
 #endif
 
-#include "key_mana.h"
+#include "key_manager.h"
 
 
 #define logf_imbibe(...) disable_logf("IMBIBE: " __VA_ARGS__)

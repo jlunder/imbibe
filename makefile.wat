@@ -7,7 +7,7 @@ OBJ_DIR = $(PLATFORM)/$(VERSION)/
 INCLUDE_DIR = include/
 SRC_DIR = src/
 
-LINK_OPT_RELEASE = 
+LINK_OPT_RELEASE =
 LINK_OPT_DEBUG = d all
 LINK_OPT_PROFILE = d all
 LINK_OPT_16BIT = sys dos
@@ -66,29 +66,29 @@ clean_all: .SYMBOLIC
 # imbibe
 #
 
-imbibe_hhs = 
+imbibe_hhs =
 
 imbibe_objs = &
-  $(OBJ_DIR)bin_bitm.obj &
+  $(OBJ_DIR)bin_bitmap.obj &
   $(OBJ_DIR)bitmap.obj   &
-  $(OBJ_DIR)bitmap_e.obj &
-  $(OBJ_DIR)bitmap_g.obj &
+  $(OBJ_DIR)bitmap_element.obj &
+  $(OBJ_DIR)bitmap_graphics.obj &
   $(OBJ_DIR)cstream.obj  &
   $(OBJ_DIR)element.obj  &
   $(OBJ_DIR)hbin.obj     &
-  $(OBJ_DIR)hbin_ele.obj &
-  $(OBJ_DIR)hbin_men.obj &
-  $(OBJ_DIR)hbin_vie.obj &
+  $(OBJ_DIR)hbin_element.obj &
+  $(OBJ_DIR)hbin_menu.obj &
+  $(OBJ_DIR)hbin_view.obj &
   $(OBJ_DIR)imbibe.obj   &
   $(OBJ_DIR)key_disp.obj &
   $(OBJ_DIR)menu.obj     &
-  $(OBJ_DIR)menu_ele.obj &
-  $(OBJ_DIR)menu_han.obj &
-  $(OBJ_DIR)rectangl.obj &
+  $(OBJ_DIR)menu_element.obj &
+  $(OBJ_DIR)menu_handler.obj &
+  $(OBJ_DIR)rectangle_element.obj &
   $(OBJ_DIR)task.obj     &
-  $(OBJ_DIR)task_man.obj &
-  $(OBJ_DIR)text_win.obj &
-  $(OBJ_DIR)timed_ta.obj &
+  $(OBJ_DIR)task_manager.obj &
+  $(OBJ_DIR)text_window.obj &
+  $(OBJ_DIR)timed_task.obj &
   $(OBJ_DIR)timer.obj    &
   &
   $(OBJ_DIR)data.obj

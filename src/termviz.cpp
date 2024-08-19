@@ -1,0 +1,10 @@
+#include "imbibe.h"
+
+#include "termviz.h"
+
+
+uint8_t const termviz::fade_masks[termviz::fade_max] = {
+  0x00, 0x04, 0x44, 0x45, 0x55, 0x57, 0x77, 0x7F, 0xFF
+};
+
+
