@@ -1,6 +1,6 @@
 #include "imbibe.h"
 
-#define RENDER_TEST
+// #define RENDER_TEST
 
 #include "inplace.h"
 

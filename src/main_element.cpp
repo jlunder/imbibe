@@ -102,7 +102,7 @@ void main_element::animate_outro(uint32_t delta_ms) {
   m_anim_ms += delta_ms;
   uint16_t anim_t = (uint16_t)min<uint32_t>(
     t_max, (m_anim_ms * t_max + outro_ms / 2) / outro_ms);
-outro_ms
+
   if (anim_t >= t_max) {
     main_task::exit();
   }
