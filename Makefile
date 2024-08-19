@@ -1,4 +1,4 @@
-VERSION = RELEASE
+VERSION = DEBUG
 
 SIM_OBJ_DIR = build/simdebug/
 DEP_DIR = build/deps/
@@ -16,12 +16,14 @@ LINK_OPT = $(LINK_OPT_$(VERSION))
 
 LINK = wlink
 
-CC_OPT_RELEASE = -dNDEBUG -otexan
-CC_OPT_DEBUG = -d3i -od
-CC_OPT_PROFILE = -dNDEBUG -d1 -otexan
-CC_OPT = -fo=$(OBJ_DIR) $(CC_OPT_$(VERSION)) -2 -mc -bt=dos -fpc -w5 -ze
+CC_OPT_RELEASE = -dNDEBUG -otexan -mc
+CC_OPT_DEBUG = -d3i -od -ml
+CC_OPT_PROFILE = -dNDEBUG -d1 -otexan -mc
+CC_OPT = -fo=$(OBJ_DIR) $(CC_OPT_$(VERSION)) -2 -bt=dos -fpc -w5 -ze
 
 CC = wpp
+
+DOSBOX = dosbox-x
 
 IMBIBE_HEADERS = $(wildcard $(SRC_DIR)*.h)
 IMBIBE_SOURCES = $(wildcard $(SRC_DIR)*.cpp)
@@ -63,7 +65,7 @@ simbibe: $(IMBIBE_SIM_OBJS)
 
 imbibe: $(OBJ_DIR)imbibe.exe
 	cd workspace && \
-	  dosbox \
+	  $(DOSBOX) \
 	    -c "S:" \
 	    -c "`echo $< | tr '/' '\\' ` > RUN.LOG"
 
@@ -100,7 +102,7 @@ $(OBJ_DIR)%.exe: private LINK_LOG = $(@D)/l_$(patsubst %.exe,%.log,$(@F))
 # $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(IMBIBE_OBJS)
 # 	rm -f $@
 # 	cd workspace && \
-# 	  dosbox \
+# 	  $(DOSBOX) \
 # 	    -c "S:" \
 # 	    -c "$(LINK) @$< > $(LINK_LOG)" \
 # 	    -c "exit"
@@ -110,7 +112,7 @@ $(OBJ_DIR)%.exe: private UNITY_LOG = $(@D)/u_$(patsubst %.exe,%.log,$(@F))
 $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)u_imbibe.lnk $(OBJ_DIR)u_imbibe.cpp | $(OBJ_DIR)
 	rm -f $@
 	cd workspace && \
-	  dosbox \
+	  $(DOSBOX) \
 	    -c "S:" \
 	    -c "$(CC) $(CC_OPT) $(UNITY_SRC) > $(UNITY_LOG)" \
 	    -c "$(LINK) @$< > $(LINK_LOG)" \
@@ -123,7 +125,7 @@ $(OBJ_DIR)%.obj: private CC_LOG = $(patsubst %.OBJ,%.LOG,$(UPPER_TGT))
 $(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp $(SIM_OBJ_DIR)%.o | $(OBJ_DIR)
 	rm -f $@
 	cd workspace && \
-	  dosbox \
+	  $(DOSBOX) \
 	    -c "S:" \
 	    -c "$(CC) $(CC_OPT) $< > $(CC_LOG)" \
 	    -c "exit"
