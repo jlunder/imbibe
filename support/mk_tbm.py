@@ -225,7 +225,6 @@ def parse_sauce(data: bin):
 
 
 def read_input_image(args: Args, input_path: str):
-    assert len(args.input_path) == 1
     logger.info("Opening %s", input_path)
     try:
         with open(input_path, "rb") as f:
@@ -285,6 +284,7 @@ def write_output_image(args: Args, input_path: str, img: Image) -> bool | None:
 
 
 def main(args: Args):
+    assert len(args.input_path) == 1
     input_path = args.input_path[0]
     img = read_input_image(args, input_path)
     if img == None:
