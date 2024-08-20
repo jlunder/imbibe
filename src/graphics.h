@@ -6,13 +6,8 @@
 
 
 #include "bitmap.h"
+#include "tbm.h"
 #include "termviz.h"
-
-
-namespace aux_graphics {
-  struct clip_params;
-  struct bitmap_transform_params;
-}
 
 
 class graphics {

@@ -2,8 +2,9 @@
 #define __DATA_H_INCLUDED
 
 
-#define test_pkg_length 4
-extern uint8_t test_pkg_data[test_pkg_length];
+namespace inline_data {
+  extern uint8_t const data[];
+}
 
 
 #endif // __DATA_H_INCLUDED

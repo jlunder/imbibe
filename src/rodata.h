@@ -42,7 +42,7 @@ public:
     }
   }
 
-  void __far * data() { return MK_FP(m_seg, (void *)(uintptr_t)m_offset); }
+  void __far * data() const { return MK_FP(m_seg, (void *)(uintptr_t)m_offset); }
 
 private:
   __segment m_seg;
@@ -58,6 +58,22 @@ private:
       return p;
     }
     return MK_FP(FP_SEG(p) + (FP_OFF(p) >> 4), FP_OFF(p) & 0xF);
+  }
+};
+
+
+template<class T>
+class ro: private rodata {
+public:
+  explicit ro(T const * n_p) : rodata(reclaim, n_p) { }
+
+  T const * get() const { return (T const *)data(); }
+  T const & operator * () const { return *(T const *)data(); }
+  T const * operator -> () const { return (T const *)data(); }
+
+private:
+  static void reclaim(void * p) {
+    delete (T const *)p;
   }
 };
 

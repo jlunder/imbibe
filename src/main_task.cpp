@@ -7,7 +7,7 @@
 #define logf_main_task(...) logf("MAIN_TASK: " __VA_ARGS__)
 
 
-main_task main_task_instance;
+inplace<main_task> main_task_instance;
 
 
 main_task::main_task()
@@ -104,5 +104,6 @@ void main_task::run_loop() {
 
 
 void main_task::exit() {
-  main_task_instance.m_exit_requested = true;
+  logf_main_task("exit requested\n");
+  main_task_instance->m_exit_requested = true;
 }

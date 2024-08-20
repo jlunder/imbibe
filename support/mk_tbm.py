@@ -264,6 +264,7 @@ def read_input_image(args: Args, input_path: str):
     )
     return Image(flags=inf.flags, data=img_data)
 
+
 def write_output_image(args: Args, input_path: str, img: Image) -> bool | None:
     if args.output_path != None:
         output_path = args.output_path
@@ -278,9 +279,18 @@ def write_output_image(args: Args, input_path: str, img: Image) -> bool | None:
     with open(output_path, "wb") as f:
         assert (len(img.data.shape) == 3) and (img.data.shape[2] == 2)
         if args.output_subtype == OUT_PLAIN:
+            bytes = img.data.tobytes()
             f.write(b"TBMa")
-            f.write(struct.pack("<BBBB", img.data.shape[1], img.data.shape[0], img.flags, 0))
-            f.write(img.data.tobytes())
+            f.write(
+                struct.pack(
+                    "<LBBH",
+                    len(bytes) + 4,
+                    img.data.shape[1],
+                    img.data.shape[0],
+                    img.flags,
+                )
+            )
+            f.write(bytes)
 
 
 def main(args: Args):

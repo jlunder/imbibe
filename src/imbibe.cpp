@@ -16,20 +16,20 @@
 #define logf_imbibe(...) disable_logf("IMBIBE: " __VA_ARGS__)
 
 
-#if defined(RENDER_TEST)
-inplace<render_test_task> main_instance;
-#else
-inplace<main_task> main_instance;
-#endif
-
-
 int main(int argc, char * argv[]) {
   (void)argc;
   (void)argv;
-  main_instance.setup();
-  main_instance->start();
-  main_instance->run_loop();
-  main_instance.teardown();
+#if defined(RENDER_TEST)
+  render_task_instance.setup();
+  render_task_instance->start();
+  render_task_instance->run_loop();
+  render_task_instance.teardown();
+#else
+  main_task_instance.setup();
+  main_task_instance->start();
+  main_task_instance->run_loop();
+  main_task_instance.teardown();
+#endif
   return 0;
 }
 

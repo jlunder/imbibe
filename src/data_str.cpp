@@ -66,6 +66,6 @@ uint32_t data_stream::directory::length(imstring const & name)
 }
 
 
-data_stream::directory data_stream::dir(test_pkg_data, test_pkg_length);
+//data_stream::directory data_stream::dir(test_pkg_data, test_pkg_length);
 
 

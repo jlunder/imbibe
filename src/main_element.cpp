@@ -21,8 +21,7 @@ main_element::~main_element() {
 
 
 void main_element::animate(uint32_t delta_ms) {
-  m_anim_ms += delta_ms;
-
+  logf_main_element("animate: %lu ms\n", delta_ms);
   switch (m_state) {
   case st_intro:
     animate_intro(delta_ms);
@@ -110,12 +109,14 @@ void main_element::animate_outro(uint32_t delta_ms) {
 
 
 void main_element::enter_main_menu() {
+  logf_main_element("entering main_menu state\n");
   m_state = st_main_menu;
   m_anim_ms = 0;
 }
 
 
 void main_element::enter_outro() {
+  logf_main_element("entering outro state\n");
   m_state = st_outro;
   m_anim_ms = 0;
 }

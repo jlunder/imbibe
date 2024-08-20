@@ -5,6 +5,7 @@
 #include "imbibe.h"
 
 #include "bitmap_element.h"
+#include "inplace.h"
 #include "task.h"
 #include "termviz.h"
 #include "text_window.h"
@@ -64,6 +65,9 @@ private:
   bitmap_element m_orbit1;
   text_element m_orbit2;
 };
+
+
+extern inplace<render_test_task> render_task_instance;
 
 
 #endif // __RENDER_TEST_TASK_H_INCLUDED

@@ -4,6 +4,7 @@
 
 #include "imbibe.h"
 
+#include "inplace.h"
 #include "main_element.h"
 #include "task.h"
 #include "text_window.h"
@@ -32,7 +33,7 @@ private:
 };
 
 
-extern main_task main_task_instance;
+extern inplace<main_task> main_task_instance;
 
 
 #endif // __MAIN_TASK_H_INCLUDED

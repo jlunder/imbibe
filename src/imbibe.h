@@ -25,6 +25,8 @@
 
 #define __far
 
+#define _Packed __attribute__((packed))
+
 #define __based(o)
 #define __segment uintptr_t
 #define __segname(n)

@@ -66,7 +66,7 @@ def main(args: Args):
 
             f.write(expand(args.header))
             prefix = expand(args.line_prefix)
-            for i in range(0, len(data) + args.chunk_size - 1, args.chunk_size):
+            for i in range(0, len(data), args.chunk_size):
                 chunk = data[i : i + args.chunk_size]
                 f.write(
                     prefix

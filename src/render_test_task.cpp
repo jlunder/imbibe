@@ -15,6 +15,8 @@ namespace aux_main_task {
 }
 
 
+inplace<render_test_task> render_task_instance;
+
 uint8_t render_test_task::repaint_element::m_counter = 0;
 
 
