@@ -23,6 +23,8 @@ public:
   void setup();
   void teardown();
 
+  void present();
+
   bitmap & backbuffer() { return m_backbuffer; }
 
   virtual void lock_repaint();
@@ -56,7 +58,11 @@ private:
   coord_t m_repaint_y1;
   coord_t m_repaint_x2;
   coord_t m_repaint_y2;
-  coord_t m_repaint_z;
+  bool m_dirty;
+  coord_t m_dirty_bb_x1;
+  coord_t m_dirty_bb_y1;
+  coord_t m_dirty_bb_x2;
+  coord_t m_dirty_bb_y2;
 
   static void save_mode();
   static void restore_mode();

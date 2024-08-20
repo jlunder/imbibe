@@ -37,8 +37,6 @@ void main_task::poll() {
 
 
 void main_task::run() {
-  // logf_main_task("run(), state=%d\n", m_state);
-
   m_win.lock_repaint();
   m_main.animate(m_frame_timer.reset_ms());
   // Do this after animate because coming into this method, the animated
@@ -72,10 +70,8 @@ void main_task::run_loop() {
     step_simulator();
 #endif
 
-    uint32_t last_poll_ms = poll_timer.reset_ms();
-
     // idle() until it's time to run
-    while (last_poll_ms + poll_timer.delta_ms() < min_poll_interval_ms) {
+    while (!poll_timer.reset_if_elapsed(min_poll_interval_ms)) {
       task_manager::idle();
       idle_timer.reset_ms();
     }

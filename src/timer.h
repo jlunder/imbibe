@@ -24,6 +24,16 @@ public:
     return new_ms - m_last_ms;
   }
 
+  bool reset_if_elapsed(uint32_t period_ms) {
+    uint32_t new_ms = now();
+    if ((new_ms - m_last_ms) < period_ms) {
+      return false;
+    } else {
+      m_last_ms = new_ms;
+      return true;
+    }
+  }
+
   //in milliseconds
   static uint32_t now();
 

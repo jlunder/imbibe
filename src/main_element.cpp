@@ -21,7 +21,7 @@ main_element::~main_element() {
 
 
 void main_element::animate(uint32_t delta_ms) {
-  logf_main_element("animate: %lu ms\n", delta_ms);
+  logf_main_element("animate: %lu ms\n", (unsigned long)delta_ms);
   switch (m_state) {
   case st_intro:
     animate_intro(delta_ms);

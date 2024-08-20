@@ -11,7 +11,7 @@
 #include "element.h"
 
 
-#define logf_text_window(...) disable_logf("WINDOW_ELEMENT: " __VA_ARGS__)
+#define logf_text_window(...) logf("WINDOW_ELEMENT: " __VA_ARGS__)
 
 
 extern void aux_text_window__set_text_asm();
@@ -50,6 +50,15 @@ void text_window::setup() {
 
 void text_window::teardown() {
   restore_mode();
+}
+
+
+void text_window::present() {
+  if(m_dirty){
+    flip(m_backbuffer.data(), m_backbuffer.width(), m_backbuffer.height(),
+      m_dirty_bb_x1, m_dirty_bb_y1, m_dirty_bb_x2, m_dirty_bb_y2);
+    m_dirty = false;
+  }
 }
 
 
@@ -97,8 +106,6 @@ void text_window::repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
     g.enter_subregion(s, 0, 0, x1, y1, x2, y2);
     if (!g.subregion_trivial()) {
       paint_element(g, *m_element);
-      flip(m_backbuffer.data(), m_backbuffer.width(), m_backbuffer.height(),
-        x1, y1, x2, y2);
     }
     // graphics will be discarded, don't need to leave_subregion()
   } else {
@@ -173,6 +180,18 @@ void text_window::paint_element(graphics & g, element & e) {
     logf_text_window("text_window paint %p\n", &e);
     e.paint(g);
   }
+  if(m_dirty) {
+    m_dirty_bb_x1 = min(m_dirty_bb_x1, g.clip_x1());
+    m_dirty_bb_y1 = min(m_dirty_bb_y1, g.clip_y1());
+    m_dirty_bb_x2 = max(m_dirty_bb_x2, g.clip_x2());
+    m_dirty_bb_y2 = max(m_dirty_bb_y2, g.clip_y2());
+  } else {
+    m_dirty = true;
+    m_dirty_bb_x1 = g.clip_x1();
+    m_dirty_bb_y1 = g.clip_y1();
+    m_dirty_bb_x2 = g.clip_x2();
+    m_dirty_bb_y2 = g.clip_y2();
+  }
   g.leave_subregion(s);
 }
 
@@ -180,10 +199,10 @@ void text_window::paint_element(graphics & g, element & e) {
 void text_window::locked_repaint(coord_t x1, coord_t y1, coord_t x2,
     coord_t y2) {
   if(m_need_repaint) {
-    if(x1 < m_repaint_x1) m_repaint_x1 = x1;
-    if(y1 < m_repaint_y1) m_repaint_y1 = y1;
-    if(x2 > m_repaint_x2) m_repaint_x2 = x2;
-    if(y2 > m_repaint_y2) m_repaint_y2 = y2;
+    m_repaint_x1 = min(m_repaint_x1, x1);
+    m_repaint_y1 = min(m_repaint_y1, y1);
+    m_repaint_x2 = max(m_repaint_x2, x2);
+    m_repaint_y2 = max(m_repaint_y2, y2);
   } else {
     m_need_repaint = true;
     m_repaint_x1 = x1;

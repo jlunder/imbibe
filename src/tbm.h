@@ -26,14 +26,14 @@ public:
 };
 
 
-struct tbm_header {
+_Packed struct tbm_header {
   char magic[4]; // "TBMa"
   uint32_t data_size;
   uint8_t width;
   uint8_t height;
   uint16_t flags;
-  uint8_t data_start[0];
-} _Packed;
+  uint8_t data_start[];
+};
 
 
 class tbm {

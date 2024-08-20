@@ -111,6 +111,7 @@ $(OBJ_DIR)%.exe: private UNITY_SRC = $(@D)/u_$(patsubst %.exe,%.cpp,$(@F))
 $(OBJ_DIR)%.exe: private UNITY_LOG = $(@D)/u_$(patsubst %.exe,%.log,$(@F))
 $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)u_imbibe.lnk $(OBJ_DIR)u_imbibe.cpp | $(OBJ_DIR)
 	rm -f $@
+	rm -f $(OBJ_DIR)U_IMBIBE.OBJ
 	cd workspace && \
 	  $(DOSBOX) \
 	    -c "S:" \
