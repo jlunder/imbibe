@@ -41,10 +41,11 @@ public:
     blink         = 0x80, // ...otherwise
   };
 
-  static uint8_t const fade_max = 9;
+  static uint8_t const fade_steps = 16;
 
-  static uint8_t const fade_masks[fade_max];
-  static uint8_t const dissolve_masks[9];
+  static uint8_t const fade_masks[fade_steps];
+  static uint8_t const fade_seqs[fade_steps][16];
+  static uint8_t const dissolve_masks[9][2][4];
 };
 
 
@@ -83,7 +84,7 @@ public:
   static termel_t from(char n_ch, color_t n_fg, color_t n_bg, bool n_blink) {
     return n_ch | ((termel_t)attribute::from(n_fg, n_bg, n_blink) << 8);
   }
-  static termel_t from_char(char n_ch) { return (termel_t)n_ch; }
+  static termel_t from_ch(char n_ch) { return (termel_t)n_ch; }
   static termel_t from_attribute(attribute_t n_attr) {
     return (termel_t)n_attr << 8;
   }
@@ -93,15 +94,19 @@ public:
   static termel_t from_attribute(color_t n_fg, color_t n_bg, bool n_blink) {
     return (termel_t)attribute::from(n_fg, n_bg, n_blink) << 8;
   }
-  static termel_t with_char(termel_t te, char n_ch)
+  static termel_t with_ch(termel_t te, char n_ch)
     { return (te & 0xFF00) | (termel_t)n_ch; }
   static termel_t with_attribute(termel_t te, color_t n_fg, color_t n_bg) {
-    return (te & 0xFF00) | from_attribute(n_fg, n_bg);
+    return (te & 0x00FF) | from_attribute(n_fg, n_bg);
   }
   static termel_t with_attribute(termel_t te, color_t n_fg, color_t n_bg,
       bool n_blink) {
-    return (te & 0xFF00) | from_attribute(n_fg, n_bg, n_blink);
+    return (te & 0x00FF) | from_attribute(n_fg, n_bg, n_blink);
   }
+  static char ch(termel_t te) { return te & 0xFF; }
+  static color_t foreground(termel_t te) { return (te >> 8) & 0x0F; }
+  static color_t background(termel_t te) { return (te >> 12) & 0x07; }
+  static bool blink(termel_t te) { return (te >> 15) & 0x01; }
 };
 
 

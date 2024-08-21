@@ -18,21 +18,20 @@ public:
   virtual bool handle_key(uint16_t key);
   virtual void paint(graphics & g);
 
-  void animate_intro(uint32_t delta_ms);
-  void animate_main_menu(uint32_t delta_ms);
-  void animate_outro(uint32_t delta_ms);
-
-  void enter_main_menu();
-  void enter_outro();
-
 private:
   enum state_t {
+    st_init,
     st_intro,
     st_main_menu,
     st_outro
   };
 
   state_t m_state;
+  union {
+    struct { // intro
+      uint8_t fade;
+    };
+  } m_state_cache;
   uint32_t m_anim_ms;
 
   window_element m_frame;
@@ -40,11 +39,13 @@ private:
 
   bitmap * m_logo;
 
-  // intro_element
-  // outro_element
-  // main_menu_element
-  // viewer_element
-  //
+  void animate_intro(uint32_t delta_ms);
+  void animate_main_menu(uint32_t delta_ms);
+  void animate_outro(uint32_t delta_ms);
+
+  void enter_intro();
+  void enter_main_menu();
+  void enter_outro();
 };
 
 

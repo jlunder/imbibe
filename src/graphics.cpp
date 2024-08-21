@@ -249,13 +249,18 @@ void graphics::draw_bitmap_fade(coord_t x, coord_t y, bitmap const & b, uint8_t 
     return;
   }
 
-  assert(fade <= termviz::fade_max);
-  termel_t fade_mask =
-    termel::from(termviz::fade_masks[fade], (attribute_t)0xFF);
+  assert(fade <= termviz::fade_steps);
+  // termel_t fade_mask =
+  //   termel::from((char)0xFF, termviz::fade_masks[fade]);
+
+  color_t const * fade_lut = termviz::fade_seqs[fade];
 
   for (coord_t i = 0; i < p.lines; ++i) {
     for (coord_t j = 0; j < p.pixels_per_line; ++j) {
-       p.dest_p[j] = p.source_p[j] & fade_mask;
+      // p.dest_p[j] = p.source_p[j] & fade_mask;
+      termel_t te = p.source_p[j];
+      p.dest_p[j] = termel::with_attribute(te,
+        fade_lut[termel::foreground(te)], fade_lut[termel::background(te)]);
     }
     p.next_line();
   }
@@ -268,7 +273,7 @@ void graphics::draw_bitmap_xfade(coord_t x, coord_t y, bitmap const & b, uint8_t
     return;
   }
 
-  assert(fade <= termviz::fade_max);
+  assert(fade <= termviz::fade_steps);
   termel_t fade_mask = ((termel_t)fade_masks[fade] << 8) + 0xFF;
 
   for (coord_t i = 0; i < p.lines; ++i) {
