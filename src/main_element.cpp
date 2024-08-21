@@ -1,27 +1,31 @@
 #include "imbibe.h"
 
 #include "main_element.h"
-#include "main_task.h"
 
+#include "data.h"
 #include "key_manager.h"
+#include "main_task.h"
+#include "tbm.h"
 
 
 #define logf_main_element(...) logf("MAIN_ELEMENT: " __VA_ARGS__)
 
 
 main_element::main_element()
-  : window_element(), m_frame(), m_scroll() {
+  : window_element(), m_frame(), m_scroll(), m_logo() {
   add_element(m_frame);
   add_element(m_scroll);
+  m_logo = tbm::to_bitmap((tbm_header const *)inline_data::data);
 }
 
 
 main_element::~main_element() {
+  delete m_logo;
 }
 
 
 void main_element::animate(uint32_t delta_ms) {
-  logf_main_element("animate: %lu ms\n", (unsigned long)delta_ms);
+  // logf_main_element("animate: %lu ms\n", (unsigned long)delta_ms);
   switch (m_state) {
   case st_intro:
     animate_intro(delta_ms);
@@ -65,11 +69,19 @@ void main_element::animate(uint32_t delta_ms) {
 
 
 bool main_element::handle_key(uint16_t key) {
+  logf_main_element("handle_key: %X\n", key);
   if (key == key_event::escape) {
     main_task::exit();
     return true;
   }
   return false;
+}
+
+
+void main_element::paint(graphics & g) {
+  logf_main_element("paint\n");
+  g.draw_bitmap((frame_width() - m_logo->width()) / 2,
+    (frame_height() - m_logo->height()) / 2, *m_logo);
 }
 
 
@@ -82,7 +94,7 @@ void main_element::animate_intro(uint32_t delta_ms) {
     t_max, (m_anim_ms * t_max + intro_ms / 2) / intro_ms);
 
   if (anim_t >= t_max) {
-    enter_main_menu();
+    //enter_main_menu();
   }
 }
 

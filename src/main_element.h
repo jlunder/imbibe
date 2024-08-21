@@ -16,6 +16,7 @@ public:
 public:
   virtual void animate(uint32_t delta_ms);
   virtual bool handle_key(uint16_t key);
+  virtual void paint(graphics & g);
 
   void animate_intro(uint32_t delta_ms);
   void animate_main_menu(uint32_t delta_ms);
@@ -36,6 +37,8 @@ private:
 
   window_element m_frame;
   window_element m_scroll;
+
+  bitmap * m_logo;
 
   // intro_element
   // outro_element

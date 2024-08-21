@@ -28,7 +28,7 @@ public:
   coord_t frame_width() const { return m_x2 - m_x1; }
   coord_t frame_height() const { return m_y2 - m_y1; }
   bool has_owner() const { return (bool)m_owner; }
-  window & owner() { return *m_owner; }
+  window & owner() { assert(m_owner != NULL); return *m_owner; }
   bool visible() const { return m_visible; }
   void set_frame_pos(coord_t x1, coord_t y1);
   void set_frame_size(coord_t width, coord_t height);

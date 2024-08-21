@@ -39,7 +39,12 @@ bool key_manager::key_event_available() {
 
 
 key_event_t key_manager::read_key_event() {
-  return (key_event_t)aux_key_manager__read_key();
+  uint16_t k = aux_key_manager__read_key();
+  if ((k & 0xFF) != 0) {
+    return (key_event_t)(k & 0xFF);
+  } else {
+    return (key_event_t)(0x100 | (k >> 8));
+  }
 }
 
 

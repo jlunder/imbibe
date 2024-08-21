@@ -37,14 +37,15 @@ void main_task::poll() {
 
 
 void main_task::run() {
-  m_win.lock_repaint();
+  //m_win.lock_repaint();
   m_main.animate(m_frame_timer.reset_ms());
   // Do this after animate because coming into this method, the animated
   // positions may not have been set up yet
   if(!m_main.visible()) {
     m_main.show();
   }
-  m_win.unlock_repaint();
+  //m_win.unlock_repaint();
+  m_win.present();
 }
 
 
@@ -61,6 +62,10 @@ void main_task::run_loop() {
 
   timer::setup();
   m_win.setup();
+  m_main.set_frame(0, 0, m_win.backbuffer().width(), m_win.backbuffer().height());
+  m_main.set_owner(m_win);
+  m_win.set_focus(m_main);
+
   logf_main_task("imbibe 0.1 loaded\n");
 
   task_manager::idle();

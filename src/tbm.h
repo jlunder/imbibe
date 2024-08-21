@@ -26,7 +26,7 @@ public:
 };
 
 
-_Packed struct tbm_header {
+_Packed struct __packed__ tbm_header {
   char magic[4]; // "TBMa"
   uint32_t data_size;
   uint8_t width;

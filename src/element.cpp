@@ -108,10 +108,11 @@ void element::set_owner(window & n_owner) {
 
 
 void element::show() {
-  if (!m_visible && m_owner) {
+  bool was_visible = m_visible;
+  m_visible = true;
+  if (!was_visible && m_owner) {
     m_owner->add_element(*this);
   }
-  m_visible = true;
 }
 
 

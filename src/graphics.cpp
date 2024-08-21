@@ -91,7 +91,7 @@ namespace aux_graphics {
 
   bool bitmap_transform_params::compute_transform(graphics & g,
       coord_t x, coord_t y, bitmap const & b) {
-    if (!clip_params::compute_clip(g, x, y, x + b.width(), x + b.height())) {
+    if (!clip_params::compute_clip(g, x, y, x + b.width(), y + b.height())) {
       return false;
     }
 

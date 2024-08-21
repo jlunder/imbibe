@@ -45,8 +45,8 @@ struct key_seq_entry {
 };
 
 key_seq_entry const sim_seq[] = {
-  {100, 2000, 0x1B},
-  { 10,  200,    0},
+  {100, 2000, 0x011B},
+  { 10,  200,      0},
 };
 uint32_t sim_seq_i = 0;
 uint32_t sim_seq_i_step = 0;

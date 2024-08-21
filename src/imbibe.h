@@ -25,7 +25,8 @@
 
 #define __far
 
-#define _Packed __attribute__((packed))
+#define _Packed
+#define __packed__ __attribute__((packed))
 
 #define __based(o)
 #define __segment uintptr_t
@@ -63,6 +64,8 @@ extern void step_simulator();
 #include <i86.h>
 #include <conio.h>
 #include <dos.h>
+
+#define __packed__
 
 #endif
 

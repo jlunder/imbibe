@@ -6,7 +6,7 @@
 #include "vector.h"
 
 
-#define logf_task_manager disable_logf
+#define logf_task_manager(...) disable_logf("TASK_MANAGER" __VA_ARGS__)
 
 
 namespace aux_task_manager {
