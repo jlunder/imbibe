@@ -14,22 +14,24 @@ class task;
 class action
 {
 public:
+  typedef void (*reclaim_func_t)(action __far * p);
+
   virtual ~action() {}
   virtual void operator()() {}
-  virtual reclaim<action> & reclaimer() const { return s_default_reclaim; }
+  virtual reclaim_func_t reclaimer() const { return default_reclaim; }
 
 private:
-  static delete_reclaim<action> s_default_reclaim;
+  static void default_reclaim(action __far * p);
 };
 
 
 class reusable_action : public action
 {
 public:
-  virtual reclaim<action> & reclaimer() const { return s_do_nothing_reclaim; }
+  virtual reclaim_func_t reclaimer() const { return do_nothing_reclaim; }
 
 private:
-  static do_nothing_reclaim<action> s_do_nothing_reclaim;
+  static void do_nothing_reclaim(action __far * p);
 };
 
 

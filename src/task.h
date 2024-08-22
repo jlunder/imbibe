@@ -11,11 +11,13 @@
 class task
 {
 public:
+  typedef void (*reclaim_func_t)(task __far * p);
+
   virtual ~task() {}
   virtual void poll() {}
   virtual void run() {}
   virtual void idle() {}
-  virtual reclaim<task> & reclaimer() const { return s_do_nothing_reclaim; }
+  virtual reclaim_func_t reclaimer() const { return do_nothing_reclaim; }
 
   void start(bool run_immediately = true) {
     task_manager::add_task(*this);
@@ -30,7 +32,7 @@ public:
   void stop() { task_manager::remove_task(*this); }
 
 private:
-  static do_nothing_reclaim<task> s_do_nothing_reclaim;
+  static void do_nothing_reclaim(task __far * p);
 };
 
 

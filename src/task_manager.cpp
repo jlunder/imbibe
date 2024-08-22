@@ -24,7 +24,8 @@ namespace aux_task_manager {
     if (e != task_list.end()) {
       logf_task_manager("erasing %d from end\n", (int)(task_list.end() - e));
       task_list.erase(e, task_list.end());
-      t->reclaimer()(t);
+      task::reclaim_func_t rec = t->reclaimer();
+      rec(t);
       return true;
     } else {
       return false;
@@ -33,16 +34,22 @@ namespace aux_task_manager {
 }
 
 
-delete_reclaim<action> action::s_default_reclaim;
-
-do_nothing_reclaim<action> reusable_action::s_do_nothing_reclaim;
-
 bool task_manager::s_busy = false;
 task_manager::task_p_list task_manager::s_tasks;
 task_manager::task_p_list task_manager::s_tasks_to_poll;
 task_manager::task_p_list task_manager::s_tasks_to_run;
 task_manager::task_p_list task_manager::s_tasks_to_idle;
 task_manager::action_p_list task_manager::s_deferred_actions;
+
+
+void action::default_reclaim(action __far * p) {
+  delete p;
+}
+
+
+void reusable_action::do_nothing_reclaim(action __far * p) {
+  (void)p;
+}
 
 
 void task_manager::add_task(task & t)
@@ -148,7 +155,8 @@ bool task_manager::run()
         ++i) {
       logf_task_manager("running deferred action %p\n", *i);
       (**i)();
-      (*i)->reclaimer()(*i);
+      action::reclaim_func_t rec = (*i)->reclaimer();
+      rec(*i);
     }
     s_deferred_actions.clear();
   }

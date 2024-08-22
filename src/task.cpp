@@ -3,5 +3,7 @@
 #include "task.h"
 
 
-do_nothing_reclaim<task> task::s_do_nothing_reclaim;
+void task::do_nothing_reclaim(task __far * p) {
+  (void)p;
+}
 
