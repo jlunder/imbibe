@@ -1,6 +1,6 @@
 #include "imbibe.h"
 
-#include "key_manager.h"
+#include "keyboard.h"
 #include "main_task.h"
 
 
@@ -20,8 +20,8 @@ main_task::~main_task() {
 
 
 void main_task::poll() {
-  while(key_manager::key_event_available()) {
-    uint16_t key = key_manager::read_key_event();
+  while(keyboard::key_event_available()) {
+    uint16_t key = keyboard::read_key_event();
     logf_main_task("key pressed: %X\n", key);
     if (m_win.has_focus()) {
       element * e = &m_win.focus();
@@ -98,7 +98,7 @@ void main_task::run_loop() {
 
   logf_main_task("shutting down\n");
   m_win.teardown();
-  // don't teardown key_manager b/c not needed
+  // don't teardown keyboard b/c not needed
   timer::teardown();
   logf_main_task("bye!\n");
 }

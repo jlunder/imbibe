@@ -2,7 +2,7 @@
 
 #include "bitmap.h"
 #include "graphics.h"
-#include "key_manager.h"
+#include "keyboard.h"
 #include "render_test_task.h"
 
 
@@ -44,12 +44,12 @@ void render_test_task::text_element::paint(graphics & g) {
 render_test_task::render_test_task()
   : task(), m_state(st_loading), m_win(), m_frame(),
     m_anim_time(0),
-    m_background(attribute::from(termviz::hi_yellow, termviz::green)),
+    m_background(attribute::from(color::hi_yellow, color::green)),
     m_clipper(),
-    m_clip_background(attribute::from(termviz::hi_cyan, termviz::cyan)),
+    m_clip_background(attribute::from(color::hi_cyan, color::cyan)),
     m_orbit1(),
-    m_orbit2(termel::from('*', termviz::yellow, termviz::red),
-      attribute::from(termviz::hi_white, termviz::red), "Bjelo worlb?") {
+    m_orbit2(termel::from('*', color::yellow, color::red),
+      attribute::from(color::hi_white, color::red), "Bjelo worlb?") {
   logf_render_test_task("m_frame = %p\n", &m_frame);
   logf_render_test_task("m_background = %p\n", &m_background);
   logf_render_test_task("m_clipper = %p\n", &m_clipper);
@@ -79,8 +79,8 @@ render_test_task::render_test_task()
     m_orbit1.set_b(new bitmap(ow, oh));
     graphics g(m_orbit1.b());
     g.draw_rectangle(0, 0, ow, oh,
-      termel::from('+', termviz::cyan, termviz::blue));
-    g.draw_text(2, 2, attribute::from(termviz::hi_white, termviz::blue),
+      termel::from('+', color::cyan, color::blue));
+    g.draw_text(2, 2, attribute::from(color::hi_white, color::blue),
       "Hello world!");
     m_orbit1.set_owner(m_clipper);
     m_orbit1.show();
@@ -100,8 +100,8 @@ render_test_task::~render_test_task() {
 
 
 void render_test_task::poll() {
-  while (key_manager::key_event_available()) {
-    if (key_manager::read_key_event() == key_event::escape) {
+  while (keyboard::key_event_available()) {
+    if (keyboard::read_key_event() == key_code::escape) {
       m_state = st_done;
     }
   }
@@ -255,7 +255,7 @@ void render_test_task::run_loop() {
 
   logf_render_test_task("shutting down\n");
   m_win.teardown();
-  // don't teardown key_manager b/c not needed
+  // don't teardown keyboard b/c not needed
   timer::teardown();
   logf_render_test_task("bye!\n");
 }

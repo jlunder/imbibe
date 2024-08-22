@@ -8,10 +8,10 @@
 #include "vector.h"
 
 
-typedef uint16_t key_event_t;
+typedef uint16_t key_code_t;
 
 
-class key_event {
+class key_code {
 public:
   enum {
     enter = 0x0d,
@@ -89,11 +89,11 @@ public:
 };
 
 
-class key_manager
+class keyboard
 {
 public:
   static bool key_event_available();
-  static key_event_t read_key_event();
+  static key_code_t read_key_event();
 };
 
 

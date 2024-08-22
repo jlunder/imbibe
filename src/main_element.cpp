@@ -3,7 +3,7 @@
 #include "main_element.h"
 
 #include "data.h"
-#include "key_manager.h"
+#include "keyboard.h"
 #include "main_task.h"
 #include "tbm.h"
 
@@ -74,7 +74,7 @@ void main_element::animate(uint32_t delta_ms) {
 
 bool main_element::handle_key(uint16_t key) {
   logf_main_element("handle_key: %X\n", key);
-  if (key == key_event::escape) {
+  if (key == key_code::escape) {
     main_task::exit();
     return true;
   }
@@ -88,9 +88,9 @@ void main_element::paint(graphics & g) {
   case st_intro: {
       window_element::paint(g);
       g.draw_rectangle(0, 0, frame_width(), frame_height(),
-        termel::from(' ', termviz::black, termviz::black));
+        termel::from(' ', color::black, color::black));
       g.draw_rectangle(0, 0, m_state_cache.fade * frame_width() / (termviz::fade_steps - 1), 2,
-        termel::from(' ', termviz::black, termviz::white));
+        termel::from(' ', color::black, color::white));
       g.draw_bitmap_fade((frame_width() - m_logo->width()) / 2,
         (frame_height() - m_logo->height()) / 2, *m_logo,
         m_state_cache.fade);

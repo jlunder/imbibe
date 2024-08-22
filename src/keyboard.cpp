@@ -2,7 +2,7 @@
 
 #include "stdlib.h"
 
-#include "key_manager.h"
+#include "keyboard.h"
 
 
 #define logf_key_manager(...) disable_logf("KEY_MANAGER: " __VA_ARGS__)
@@ -33,17 +33,17 @@ extern uint16_t aux_key_manager__read_key();
 #endif
 
 
-bool key_manager::key_event_available() {
+bool keyboard::key_event_available() {
     return aux_key_manager__key_avail();
 }
 
 
-key_event_t key_manager::read_key_event() {
+key_code_t keyboard::read_key_event() {
   uint16_t k = aux_key_manager__read_key();
   if ((k & 0xFF) != 0) {
-    return (key_event_t)(k & 0xFF);
+    return (key_code_t)(k & 0xFF);
   } else {
-    return (key_event_t)(0x100 | (k >> 8));
+    return (key_code_t)(0x100 | (k >> 8));
   }
 }
 

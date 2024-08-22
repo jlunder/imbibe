@@ -93,7 +93,7 @@ void text_window::repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
 #ifndef NDEBUG
     // Make a hideous background to highlight unpainted areas
     static termel_t const ugly_px =
-      termel::from('x', termviz::hi_cyan, termviz::hi_magenta);
+      termel::from('x', color::hi_cyan, color::hi_magenta);
     for (coord_t y = y1; y < y2; ++y) {
       termel_t * row = m_backbuffer.data() + (y * m_backbuffer.width());
       for (coord_t x = x1; x < x2; ++x) {

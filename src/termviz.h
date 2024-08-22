@@ -15,7 +15,7 @@ typedef uint16_t termel_t;
 #define COORD_MAX INT16_MAX
 
 
-class termviz {
+class color {
 public:
   enum
   {
@@ -40,7 +40,11 @@ public:
     bg_intensity  = 0x80, // If we're doing ICE color
     blink         = 0x80, // ...otherwise
   };
+};
 
+
+class termviz {
+public:
   static uint8_t const fade_steps = 16;
 
   static uint8_t const fade_masks[fade_steps];
