@@ -107,10 +107,12 @@ public:
       bool n_blink) {
     return (te & 0x00FF) | from_attribute(n_fg, n_bg, n_blink);
   }
-  static char ch(termel_t te) { return te & 0xFF; }
-  static color_t foreground(termel_t te) { return (te >> 8) & 0x0F; }
-  static color_t background(termel_t te) { return (te >> 12) & 0x07; }
-  static bool blink(termel_t te) { return (te >> 15) & 0x01; }
+  static char ch(termel_t te) { return (char)(te & 0xFF); }
+  static color_t foreground(termel_t te)
+    { return (color_t)((te >> 8) & 0x0F); }
+  static color_t background(termel_t te)
+    { return (color_t)((te >> 12) & 0x07); }
+  static bool blink(termel_t te) { return (bool)((te >> 15) & 0x01); }
 };
 
 

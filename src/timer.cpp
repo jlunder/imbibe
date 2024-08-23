@@ -3,49 +3,49 @@
 #include "timer.h"
 
 
-extern void aux_timer__enter_crit();
-extern void aux_timer__leave_crit();
-extern void aux_timer__ackint();
-extern void aux_timer__outb(uint16_t port, uint8_t value);
-extern void aux_timer__outwb(uint16_t port, uint16_t value);
-extern uint16_t aux_timer__inb(uint16_t port);
-extern uint16_t aux_timer__inwb(uint16_t port);
+extern void asm_timer_enter_crit();
+extern void asm_timer_leave_crit();
+extern void asm_timer_ackint();
+extern void asm_timer_outb(uint16_t port, uint8_t value);
+extern void asm_timer_outwb(uint16_t port, uint16_t value);
+extern uint16_t asm_timer_inb(uint16_t port);
+extern uint16_t asm_timer_inwb(uint16_t port);
 
 #if !defined(SIMULATE)
 
-#pragma aux aux_timer__enter_crit=\
+#pragma aux asm_timer_enter_crit=\
   "pushf"\
   "cli"\
   modify exact [] nomemory;
 
-#pragma aux aux_timer__leave_crit=\
+#pragma aux asm_timer_leave_crit=\
   "popf"\
   modify exact [] nomemory;
 
-#pragma aux aux_timer__ackint=\
+#pragma aux asm_timer_ackint=\
   "mov al, 20h"\
   "out 20h, al"\
   modify exact [al] nomemory;
 
-#pragma aux aux_timer__outb=\
+#pragma aux asm_timer_outb=\
   "out dx, al"\
   parm [dx] [al]\
   modify exact [] nomemory;
 
-#pragma aux aux_timer__outwb=\
+#pragma aux asm_timer_outwb=\
   "out dx, al"\
   "mov al, ah"\
   "out dx, al"\
   parm [dx] [ax]\
   modify exact [ax] nomemory;
 
-#pragma aux aux_timer__inb=\
+#pragma aux asm_timer_inb=\
   "in al, dx"\
   parm [dx]\
   value [al]\
   modify exact [al] nomemory;
 
-#pragma aux aux_timer__inwb=\
+#pragma aux asm_timer_inwb=\
   "in al, dx"\
   "mov ah, al"\
   "in al, dx"\
@@ -53,6 +53,33 @@ extern uint16_t aux_timer__inwb(uint16_t port);
   parm [dx]\
   value [ax]\
   modify exact [ax] nomemory;
+
+#else
+
+inline void asm_timer_enter_crit() { }
+inline void asm_timer_leave_crit() { }
+inline void asm_timer_ackint() { }
+
+inline void asm_timer_outb(uint16_t port, uint8_t value) {
+  (void)port;
+  (void)value;
+}
+
+inline void asm_timer_outwb(uint16_t port, uint16_t value) {
+  (void)port;
+  (void)value;
+}
+
+inline uint16_t asm_timer_inb(uint16_t port) {
+  (void)port;
+  return 0;
+}
+
+inline uint16_t asm_timer_inwb(uint16_t port) {
+  (void)port;
+  return 0;
+}
+
 
 #endif
 
@@ -89,9 +116,9 @@ volatile uint32_t hw_timer::timer_count;
 
 uint32_t timer::now() {
   uint32_t result;
-  aux_timer__enter_crit();
+  asm_timer_enter_crit();
   result = hw_timer::timer_count;
-  aux_timer__leave_crit();
+  asm_timer_leave_crit();
   return result;
 }
 
@@ -111,8 +138,8 @@ void hw_timer::start_timer() {
   pit_tick_count = 0;
   timer_count = 0;
 
-  aux_timer__enter_crit();
-//  aux_timer__outb(PIT_CONTROL, PIT_PERIOD);
+  asm_timer_enter_crit();
+//  asm_timer_outb(PIT_CONTROL, PIT_PERIOD);
 //  pit_tick_bios_inc = INWB(PIT_DATA);
   pit_tick_bios_inc = 0;
   if(pit_tick_bios_inc == 0) {
@@ -121,23 +148,23 @@ void hw_timer::start_timer() {
   pit_bios_handler = _dos_getvect(PIT_INTERRUPT);
   if(pit_tick_inc < pit_tick_bios_inc) {
     _dos_setvect(PIT_INTERRUPT, pit_handler_bios_slower);
-    aux_timer__outb(PIT_CONTROL, PIT_PERIOD);
-    aux_timer__outwb(PIT_DATA, (uint16_t)pit_tick_inc);
+    asm_timer_outb(PIT_CONTROL, PIT_PERIOD);
+    asm_timer_outwb(PIT_DATA, (uint16_t)pit_tick_inc);
   } else {
     _dos_setvect(PIT_INTERRUPT, pit_handler_bios_faster);
   }
-  aux_timer__leave_crit();
+  asm_timer_leave_crit();
 }
 
 
 void hw_timer::stop_timer() {
-  aux_timer__enter_crit();
+  asm_timer_enter_crit();
   if(pit_tick_inc < pit_tick_bios_inc) {
-    aux_timer__outb(PIT_CONTROL, PIT_PERIOD);
-    aux_timer__outwb(PIT_DATA, (uint16_t)pit_tick_bios_inc);
+    asm_timer_outb(PIT_CONTROL, PIT_PERIOD);
+    asm_timer_outwb(PIT_DATA, (uint16_t)pit_tick_bios_inc);
   }
   _dos_setvect(PIT_INTERRUPT, pit_bios_handler);
-  aux_timer__leave_crit();
+  asm_timer_leave_crit();
 }
 
 
@@ -148,7 +175,7 @@ void (__interrupt hw_timer::pit_handler_bios_slower)() {
     pit_tick_count -= PIT_BIOS_PERIOD;
     _chain_intr(pit_bios_handler);
   }
-  else aux_timer__ackint();
+  else asm_timer_ackint();
 }
 
 

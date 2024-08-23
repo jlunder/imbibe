@@ -113,7 +113,7 @@ void main_element::paint(graphics & g) {
 
 void main_element::animate_intro(uint32_t delta_ms) {
   static uint32_t const intro_ms = 1000;
-  static uint32_t const t_max = 1024;
+  static uint16_t const t_max = 1024;
 
   m_anim_ms += delta_ms;
   // uint16_t anim_t = (uint16_t)min<uint32_t>(
@@ -129,7 +129,7 @@ void main_element::animate_intro(uint32_t delta_ms) {
   }
   logf_main_element("anim_t: %lu\n", (unsigned long)anim_t);
 
-  uint8_t fade = (termviz::fade_steps * anim_t) / t_max;
+  uint8_t fade = (uint8_t)((termviz::fade_steps * anim_t) / t_max);
 
   if (fade != m_state_cache.fade) {
     request_repaint();

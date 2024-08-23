@@ -64,10 +64,7 @@ private:
   coord_t m_dirty_bb_x2;
   coord_t m_dirty_bb_y2;
 
-  static void save_mode();
-  static void restore_mode();
-  static void set_text_mode();
-  static void flip(termel_t const * backbuffer, coord_t width,
+  static void present_copy(termel_t const * backbuffer, coord_t width,
     coord_t height, coord_t x1, coord_t y1, coord_t x2, coord_t y2);
 };
 

@@ -14,17 +14,98 @@
 #define logf_text_window(...) logf("WINDOW_ELEMENT: " __VA_ARGS__)
 
 
-extern void aux_text_window__set_text_asm();
-extern void aux_text_window__restore_text_asm();
+namespace aux_text_window {
+
+  enum {
+    cursor_visible = 0x00,
+    cursor_invisible = 0x20,
+  };
+
+  extern uint8_t get_video_mode();
+  extern void set_video_mode(uint8_t mode);
+  extern void set_cursor_style(uint8_t visible, uint8_t start_row,
+    uint8_t end_row);
+
+}
 
 
 #if !defined(SIMULATE)
 
-#pragma aux aux_text_window__set_text_asm = \
-  "mov ax, 00003h" "int 010h" modify exact [ax] nomemory
+/*
+uint8_t cols;
+uint8_t mode;
+uint8_t page;
+uint8_t pos_row;
+uint8_t pos_col;
+extern "C" void bios_get_video_details();
+#pragma aux bios_get_video_details = \
+  "   mov ah, 00Fh              " \
+  "   push    bp                " \
+  "   int     10h               " \
+  "   pop     bp                " \
+  "   mov     cols, ah          " \
+  "   mov     mode, al          " \
+  "   mov     page, bh          " \
+  "   mov     ah, 003h          " \
+  "   push    bp                " \
+  "   int     010h              " \
+  "   pop     bp                " \
+  "   mov     pos_row, dh       " \
+  "   mov     pos_col, dl       " \
+  modify [ax bx cx dx];
+bios_get_video_details();
+return mode;
+*/
 
-#pragma aux aux_text_window__restore_text_asm = \
-  "mov ax, 00003h" "int 010h" modify exact [ax] nomemory
+extern void asm_bios_set_video_mode(uint8_t mode);
+#pragma aux asm_bios_set_video_mode = \
+  "   push    bp                " \
+  "   mov ah, 000h              " \
+  "   int     10h               " \
+  "   pop     bp                " \
+  parm [al] \
+  modify [ax] nomemory;
+
+extern void asm_bios_set_cursor_style(uint8_t start_opts, uint8_t end);
+#pragma aux asm_bios_set_cursor_style = \
+  "   push    bp                " \
+  "   mov ah, 001h              " \
+  "   int     10h               " \
+  "   pop     bp                " \
+  parm [ch] [cl] \
+  modify [ax] nomemory;
+
+inline uint8_t aux_text_window::get_video_mode() {
+  return 3;
+}
+
+inline void aux_text_window::set_video_mode(uint8_t mode) {
+  assert(mode == 3);
+  asm_bios_set_video_mode(mode);
+}
+
+inline void aux_text_window::set_cursor_style(uint8_t visible,
+    uint8_t start_row, uint8_t end_row) {
+  assert((visible == cursor_visible) || (visible == cursor_invisible));
+  assert(start_row <= end_row); assert(end_row <= 7);
+  asm_bios_set_cursor_style(visible | start_row, end_row);
+}
+
+#else
+
+inline uint8_t aux_text_window::get_video_mode() {
+  return 0x03;
+}
+
+inline void aux_text_window::set_video_mode(uint8_t mode) {
+  assert(mode == 3);
+}
+
+inline void aux_text_window::set_cursor_style(uint8_t visible,
+    uint8_t start_row, uint8_t end_row) {
+  assert((visible == cursor_visible) || (visible == cursor_invisible));
+  assert(start_row <= end_row); assert(end_row <= 7);
+}
 
 #endif
 
@@ -43,20 +124,21 @@ text_window::~text_window() {
 
 
 void text_window::setup() {
-  save_mode();
-  set_text_mode();
+  aux_text_window::set_video_mode(3);
+  aux_text_window::set_cursor_style(aux_text_window::cursor_invisible, 0, 7);
 }
 
 
 void text_window::teardown() {
-  restore_mode();
+  aux_text_window::set_video_mode(3);
 }
 
 
 void text_window::present() {
   if(m_dirty){
-    flip(m_backbuffer.data(), m_backbuffer.width(), m_backbuffer.height(),
-      m_dirty_bb_x1, m_dirty_bb_y1, m_dirty_bb_x2, m_dirty_bb_y2);
+    present_copy(m_backbuffer.data(), m_backbuffer.width(),
+      m_backbuffer.height(), m_dirty_bb_x1, m_dirty_bb_y1, m_dirty_bb_x2,
+      m_dirty_bb_y2);
     m_dirty = false;
   }
 }
@@ -213,28 +295,15 @@ void text_window::locked_repaint(coord_t x1, coord_t y1, coord_t x2,
 }
 
 
-void text_window::save_mode() {
-}
-
-
-void text_window::restore_mode() {
-  aux_text_window__restore_text_asm();
-}
-
-
-void text_window::set_text_mode() {
-  aux_text_window__set_text_asm();
-}
-
-
-void text_window::flip(termel_t const * backbuffer, coord_t width,
+void text_window::present_copy(termel_t const * backbuffer, coord_t width,
     coord_t height, coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
   assert(x1 <= x2); assert(y1 <= y2); assert(x1 >= 0); assert(y1 >= 0);
   assert(x2 <= width); assert(y2 <= height);
 
   termel_t * screen_buffer = (termel_t *)MK_FP(0xB800, (void *)0);
 
-  logf_text_window("flip region (%d,%d-%d,%d) to %p, corner %04X -> %04X\n",
+  logf_text_window(
+    "present_copy region (%d,%d-%d,%d) to %p, corner %04X -> %04X\n",
     x1, y1, x2, y2, (void *)screen_buffer, *backbuffer, *screen_buffer);
 
   coord_t i;
