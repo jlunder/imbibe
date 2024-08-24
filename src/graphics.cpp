@@ -36,10 +36,10 @@ namespace aux_graphics {
     source_x2 = x2 - x1;
     source_y2 = y2 - y1;
 
-    if((dest_y + source_y2) > g.clip_y2()) {
+    if ((dest_y + source_y2) > g.clip_y2()) {
       source_y2 = g.clip_y2() - dest_y;
     }
-    if(dest_y < g.clip_y1()) {
+    if (dest_y < g.clip_y1()) {
       source_y1 = g.clip_y1() - dest_y;
       dest_y = g.clip_y1();
     }
@@ -47,10 +47,10 @@ namespace aux_graphics {
       return false;
     }
 
-    if((dest_x + source_x2) > g.clip_x2()) {
+    if ((dest_x + source_x2) > g.clip_x2()) {
       source_x2 = g.clip_x2() - dest_x;
     }
-    if(dest_x < g.clip_x1()) {
+    if (dest_x < g.clip_x1()) {
       source_x1 = g.clip_x1() - dest_x;
       dest_x = g.clip_x1();
     }
@@ -211,17 +211,17 @@ void graphics::draw_text(coord_t x, coord_t y, attribute_t attr,
   x += origin_x();
   y += origin_y();
 
-  if((y < clip_y2()) && (y >= clip_y1())) {
-    if((x < clip_x2()) && (x + s_len > clip_x1())) {
-      if(x < clip_x1()) {
+  if ((y < clip_y2()) && (y >= clip_y1())) {
+    if ((x < clip_x2()) && (x + s_len > clip_x1())) {
+      if (x < clip_x1()) {
         s += clip_x1() - x;
         s_len -= clip_x1() - x;
         x = clip_x1();
       }
-      if(x + s_len > clip_x2()) {
+      if (x + s_len > clip_x2()) {
         s_len = clip_x2() - x;
       }
-      for(i = 0; i < s_len; ++i) {
+      for (i = 0; i < s_len; ++i) {
         m_b.at(x + i, y) = termel::from(*s, attr);
         ++s;
       }

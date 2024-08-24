@@ -11,7 +11,7 @@
 void element::set_frame_pos(coord_t x1, coord_t y1) {
   assert_margin(x1, COORD_MAX); assert_margin(y1, COORD_MAX);
 
-  if((x1 == m_x1) && (y1 == m_y1)) {
+  if ((x1 == m_x1) && (y1 == m_y1)) {
     return;
   }
 
@@ -34,7 +34,7 @@ void element::set_frame_size(coord_t width, coord_t height) {
   assert_margin(width, COORD_MAX); assert_margin(height, COORD_MAX);
   assert(width >= 0); assert(height >= 0);
 
-  if((width == frame_width()) && (height == frame_height())) {
+  if ((width == frame_width()) && (height == frame_height())) {
     return;
   }
 
@@ -43,7 +43,7 @@ void element::set_frame_size(coord_t width, coord_t height) {
   m_x2 = m_x1 + width;
   m_y2 = m_y1 + height;
   assert_margin(m_x2, COORD_MAX); assert_margin(m_y2, COORD_MAX);
-  if(m_visible && m_owner) {
+  if (m_visible && m_owner) {
     m_owner->element_frame_changed(*this, m_x1, m_y2, old_x2, old_y2, m_z);
   }
 }

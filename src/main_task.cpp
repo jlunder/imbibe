@@ -20,7 +20,7 @@ main_task::~main_task() {
 
 
 void main_task::poll() {
-  while(keyboard::key_event_available()) {
+  while (keyboard::key_event_available()) {
     uint16_t key = keyboard::read_key_event();
     logf_main_task("key pressed: %X\n", key);
     if (m_win.has_focus()) {
@@ -41,7 +41,7 @@ void main_task::run() {
   m_main.animate(m_frame_timer.reset_ms());
   // Do this after animate because coming into this method, the animated
   // positions may not have been set up yet
-  if(!m_main.visible()) {
+  if (!m_main.visible()) {
     m_main.show();
   }
   //m_win.unlock_repaint();
@@ -73,25 +73,31 @@ void main_task::run_loop() {
 
   while (!m_exit_requested) {
 #if defined(SIMULATE)
+    // logf_main_task("main loop: step_simulator\n");
     step_simulator();
 #endif
 
+    // logf_main_task("main loop: idle\n");
     // idle() until it's time to run
     while (!poll_timer.reset_if_elapsed(min_poll_interval_ms)) {
       task_manager::idle();
       idle_timer.reset_ms();
     }
 
+    // logf_main_task("main loop: poll\n");
     // run() until we're done or we've exhausted our budget
     bool any_tasks = task_manager::poll();
+    // logf_main_task("main loop: run\n");
     while (any_tasks && (poll_timer.delta_ms() < max_run_ms)) {
       any_tasks = task_manager::run();
     }
 
+    // logf_main_task("main loop: check for starvation\n");
     // idle() if it's been a really long time since we last did
     uint32_t ms_since_idle = idle_timer.delta_ms();
     // logf_main_task("ms_since_idle: %d\n", ms_since_idle);
     if (ms_since_idle >= max_idle_interval_ms) {
+      logf_main_task("main loop: starvation idle\n");
       task_manager::idle();
       idle_timer.reset_ms();
     }
@@ -99,7 +105,6 @@ void main_task::run_loop() {
 
   logf_main_task("shutting down\n");
   m_win.teardown();
-  // don't teardown keyboard b/c not needed
   timer::teardown();
   logf_main_task("bye!\n");
 }

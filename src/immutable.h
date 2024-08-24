@@ -5,6 +5,9 @@
 #include "imbibe.h"
 
 
+#define logf_immutable(...) logf("IMMUTABLE: " __VA_ARGS__)
+
+
 class immutable {
 public:
   static uint16_t const max_reclaimable = UINT8_MAX;
@@ -14,7 +17,7 @@ public:
 
   immutable(prealloc_t policy, void const * p) {
     (void)policy;
-    if(p) {
+    if (p) {
       p = normalize(p);
       m_seg = FP_SEG(p);
       assert(m_seg != 0);
@@ -28,8 +31,7 @@ public:
   }
 
   immutable(reclaim_func_t f, void const * p) {
-    assert(p == normalize(p));
-    if(p) {
+    if (p) {
       p = normalize(p);
       m_seg = FP_SEG(p);
       assert(m_seg != 0);
@@ -99,10 +101,12 @@ private:
   void unref();
 
   static void const * normalize(void const * p) {
-    if((uint16_t)FP_OFF(p) <= UINT8_MAX) {
+    if ((uint16_t)FP_OFF(p) <= UINT8_MAX) {
       return p;
     }
-    return MK_FP(FP_SEG(p) + (FP_OFF(p) >> 4), FP_OFF(p) & 0xF);
+    void const * norm_p = MK_FP(FP_SEG(p) + (FP_OFF(p) >> 4), FP_OFF(p) & 0xF);
+    logf_immutable("normalized %p to %p\n", p, norm_p);
+    return norm_p;
   }
 };
 
@@ -126,9 +130,9 @@ public:
     : immutable(custom_reclaim, n_p) {
   }
 
-  T __far const * get() const { return (T const *)data(); }
-  T __far const & operator * () const { return *(T const *)data(); }
-  T __far const * operator -> () const { return (T const *)data(); }
+  T const __far * get() const { return (T const *)data(); }
+  T const __far & operator * () const { return *(T const *)data(); }
+  T const __far * operator -> () const { return (T const *)data(); }
   operator bool () const { return immutable::operator bool(); }
 
   bool operator == (im_ptr const & other) {

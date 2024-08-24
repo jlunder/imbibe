@@ -66,11 +66,11 @@ namespace aux_vector {
 
   template<class T>
   inline void move(T * src, T * dest, uint_fast16_t n) {
-    if((src == dest) || (n == 0)) {
+    if ((src == dest) || (n == 0)) {
       // do nothing
     } else if (n == 1) {
       move<T>(src, dest);
-    } else if((dest < src) || (src + n <= dest)) {
+    } else if ((dest < src) || (src + n <= dest)) {
       for (uint_fast16_t i = 0; i < n; ++i) {
         new (&dest[i]) T(src[i]);
         src[i].~T();
@@ -120,7 +120,7 @@ public:
     : m_size((size_type)(last - first)) {
     assert(last - first >= 0);
     assert(last - first <= c_size_max);
-    if(first == last) {
+    if (first == last) {
       m_capacity = 0;
       m_data = NULL;
     } else {
@@ -132,7 +132,7 @@ public:
 
   ~vector() {
     assert((m_size == 0) || m_data);
-    if(m_data != NULL) {
+    if (m_data != NULL) {
       aux_vector::destroy<T>(m_data, m_size);
       aux_vector::free<T>(m_data);
     }
@@ -226,13 +226,13 @@ public:
     size_type i = it - m_data;
     assert(i <= m_size);
     size_type m = m_size - i;
-    if(m_capacity >= m_size + n) {
+    if (m_capacity >= m_size + n) {
       aux_vector::move<T>(it, it + n, m);
       aux_vector::copy_construct(x, it, n);
     } else {
       size_type n_capacity = round_up(m_size + n);
       T * n_data = aux_vector::allocate<T>(n_capacity);
-      if(m_data) {
+      if (m_data) {
         aux_vector::move<T>(m_data, n_data, i);
         aux_vector::copy_construct(x, n_data + i, n);
         aux_vector::move<T>(it, n_data + i + n, m);
@@ -255,13 +255,13 @@ public:
     size_type i = it - m_data;
     assert(i <= m_size);
     size_type m = m_size - i;
-    if(m_capacity >= m_size + n) {
+    if (m_capacity >= m_size + n) {
       aux_vector::move<T>(it, it + n, m);
       aux_vector::copy_construct(first, it, n);
     } else {
       size_type n_capacity = round_up(m_size + n);
       T * n_data = aux_vector::allocate<T>(n_capacity);
-      if(m_data) {
+      if (m_data) {
         aux_vector::move<T>(m_data, n_data, i);
         aux_vector::copy_construct(first, n_data + i, n);
         aux_vector::move<T>(m_data + i, n_data + i + n, m);

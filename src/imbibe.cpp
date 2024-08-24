@@ -46,8 +46,8 @@ struct key_seq_entry {
 };
 
 key_seq_entry const sim_seq[] = {
-  {100, 2000, 0x011B},
-  { 10,  200,      0},
+  {1000, 20000, 0x001B},
+  {  100, 2000,      0},
 };
 uint32_t sim_seq_i = 0;
 uint32_t sim_seq_i_step = 0;
@@ -61,7 +61,7 @@ void (*pit_int_handler)() = pit_tick_counter_int_handler;
 void step_simulator() {
   assert(sim_seq_i < LENGTHOF(sim_seq));
   ++sim_seq_i_step;
-  if((sim_seq_i_step >= sim_seq[sim_seq_i].key)
+  if ((sim_seq_i_step >= sim_seq[sim_seq_i].key)
       && (sim_seq[sim_seq_i].key == 0)) {
     assert(sim_seq_i + 1 < LENGTHOF(sim_seq));
     ++sim_seq_i;
@@ -70,8 +70,8 @@ void step_simulator() {
   }
   uint32_t target_ms = (uint64_t)sim_seq_i_step * sim_seq[sim_seq_i].ms
     / sim_seq[sim_seq_i].steps;
-  while(sim_seq_i_ms < target_ms) {
-    if(pit_int_handler != pit_tick_counter_int_handler) {
+  while (sim_seq_i_ms < target_ms) {
+    if (pit_int_handler != pit_tick_counter_int_handler) {
       pit_int_handler();
     }
     ++sim_seq_i_ms;

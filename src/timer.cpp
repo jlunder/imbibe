@@ -142,11 +142,11 @@ void hw_timer::start_timer() {
 //  asm_timer_outb(PIT_CONTROL, PIT_PERIOD);
 //  pit_tick_bios_inc = INWB(PIT_DATA);
   pit_tick_bios_inc = 0;
-  if(pit_tick_bios_inc == 0) {
+  if (pit_tick_bios_inc == 0) {
     pit_tick_bios_inc = 0x10000;
   }
   pit_bios_handler = _dos_getvect(PIT_INTERRUPT);
-  if(pit_tick_inc < pit_tick_bios_inc) {
+  if (pit_tick_inc < pit_tick_bios_inc) {
     _dos_setvect(PIT_INTERRUPT, pit_handler_bios_slower);
     asm_timer_outb(PIT_CONTROL, PIT_PERIOD);
     asm_timer_outwb(PIT_DATA, (uint16_t)pit_tick_inc);
@@ -159,7 +159,7 @@ void hw_timer::start_timer() {
 
 void hw_timer::stop_timer() {
   asm_timer_enter_crit();
-  if(pit_tick_inc < pit_tick_bios_inc) {
+  if (pit_tick_inc < pit_tick_bios_inc) {
     asm_timer_outb(PIT_CONTROL, PIT_PERIOD);
     asm_timer_outwb(PIT_DATA, (uint16_t)pit_tick_bios_inc);
   }
@@ -171,7 +171,7 @@ void hw_timer::stop_timer() {
 void (__interrupt hw_timer::pit_handler_bios_slower)() {
   ++timer_count;
   pit_tick_count += pit_tick_inc;
-  if(pit_tick_count >= PIT_BIOS_PERIOD) {
+  if (pit_tick_count >= PIT_BIOS_PERIOD) {
     pit_tick_count -= PIT_BIOS_PERIOD;
     _chain_intr(pit_bios_handler);
   }
@@ -181,7 +181,7 @@ void (__interrupt hw_timer::pit_handler_bios_slower)() {
 
 void (__interrupt hw_timer::pit_handler_bios_faster)() {
   pit_tick_count += PIT_BIOS_PERIOD;
-  if(pit_tick_count >= pit_tick_inc) {
+  if (pit_tick_count >= pit_tick_inc) {
     ++timer_count;
   }
   pit_tick_count -= pit_tick_inc;

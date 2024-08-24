@@ -5,16 +5,6 @@
 #include "imbibe.h"
 
 
-typedef int16_t coord_t;
-typedef uint8_t color_t;
-typedef uint8_t attribute_t;
-typedef uint16_t termel_t;
-
-
-#define COORD_MIN INT16_MIN
-#define COORD_MAX INT16_MAX
-
-
 class color {
 public:
   enum

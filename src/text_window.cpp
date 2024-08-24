@@ -135,7 +135,7 @@ void text_window::teardown() {
 
 
 void text_window::present() {
-  if(m_dirty){
+  if (m_dirty){
     present_copy(m_backbuffer.data(), m_backbuffer.width(),
       m_backbuffer.height(), m_dirty_bb_x1, m_dirty_bb_y1, m_dirty_bb_x2,
       m_dirty_bb_y2);
@@ -153,9 +153,9 @@ void text_window::lock_repaint() {
 void text_window::unlock_repaint() {
   assert(m_lock_count > 0);
   --m_lock_count;
-  if(!m_lock_count)
+  if (!m_lock_count)
   {
-    if(m_need_repaint) {
+    if (m_need_repaint) {
       repaint(m_repaint_x1, m_repaint_y1, m_repaint_x2, m_repaint_y2);
       m_need_repaint = false;
     }
@@ -258,11 +258,11 @@ void text_window::paint_element(graphics & g, element & e) {
 
   g.enter_subregion(s, e.frame_x1(), e.frame_y1(), e.frame_x1(),
     e.frame_y1(), e.frame_x2(), e.frame_y2());
-  if(!g.subregion_trivial()) {
+  if (!g.subregion_trivial()) {
     logf_text_window("text_window paint %p\n", &e);
     e.paint(g);
   }
-  if(m_dirty) {
+  if (m_dirty) {
     m_dirty_bb_x1 = min(m_dirty_bb_x1, g.clip_x1());
     m_dirty_bb_y1 = min(m_dirty_bb_y1, g.clip_y1());
     m_dirty_bb_x2 = max(m_dirty_bb_x2, g.clip_x2());
@@ -280,7 +280,7 @@ void text_window::paint_element(graphics & g, element & e) {
 
 void text_window::locked_repaint(coord_t x1, coord_t y1, coord_t x2,
     coord_t y2) {
-  if(m_need_repaint) {
+  if (m_need_repaint) {
     m_repaint_x1 = min(m_repaint_x1, x1);
     m_repaint_y1 = min(m_repaint_y1, y1);
     m_repaint_x2 = max(m_repaint_x2, x2);
@@ -313,7 +313,7 @@ void text_window::present_copy(termel_t const * backbuffer, coord_t width,
   uint8_t * dest_p = (uint8_t *)(screen_buffer + y1 * width + x1);
   uint16_t stride = width * sizeof (termel_t);
 
-  for(i = 0; i < lines; ++i) {
+  for (i = 0; i < lines; ++i) {
     memcpy(dest_p, source_p, bytes_per_line);
     dest_p += stride;
     source_p += stride;

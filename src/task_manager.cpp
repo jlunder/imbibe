@@ -75,7 +75,7 @@ void task_manager::remove_task(task & t)
 {
   assert(!s_busy);
   logf_task_manager("removing task %p\n", &t);
-  if(aux_task_manager::remove_task_from(s_tasks, &t)) {
+  if (aux_task_manager::remove_task_from(s_tasks, &t)) {
     aux_task_manager::remove_task_from(s_tasks_to_poll, &t);
     aux_task_manager::remove_task_from(s_tasks_to_run, &t);
     aux_task_manager::remove_task_from(s_tasks_to_idle, &t);

@@ -23,6 +23,17 @@ main_element::main_element()
     m_menu_background() {
     // , m_submenu(), m_submenu_header(), m_submenu_footer(),
     // m_submenu_background() {
+}
+
+
+main_element::~main_element() {
+}
+
+
+void main_element::layout() {
+  coord_t screen_width = frame_width();
+  coord_t screen_height = frame_height();
+
   m_logo_background.set_owner(*this);
   m_logo.set_owner(*this);
   m_cover.set_owner(*this);
@@ -39,16 +50,6 @@ main_element::main_element()
   // m_submenu_footer.set_owner(m_submenu);
   m_logo.set_b(im_ptr<bitmap>(
     tbm::to_bitmap((tbm_header const *)inline_data::data)));
-}
-
-
-main_element::~main_element() {
-}
-
-
-void main_element::layout() {
-  coord_t screen_width = frame_width();
-  coord_t screen_height = frame_height();
 
   m_menu.set_frame(0, 0, screen_width, screen_height, 0);
   m_menu_background.set_frame(0, 0, screen_width, screen_height, 0);
@@ -76,7 +77,7 @@ void main_element::layout() {
 
 
 void main_element::animate(uint32_t delta_ms) {
-  if(m_state == st_init) {
+  if (m_state == st_init) {
     enter_intro();
   } else if ((m_state == st_intro) && (m_anim_timer.done())) {
     enter_main_menu();
@@ -86,27 +87,30 @@ void main_element::animate(uint32_t delta_ms) {
   // }
 
   // m_animator.animate(delta_ms);
-  m_logo_fade.update(delta_ms);
-  m_cover_scroll.update(delta_ms);
-  m_anim_timer.update(delta_ms);
+  assert(delta_ms < (uint32_t)(ANIM_TIME_MAX / 8));
+  m_logo_fade.update((anim_time_t)delta_ms);
+  m_cover_scroll.update((anim_time_t)delta_ms);
+  m_anim_timer.update((anim_time_t)delta_ms);
 
   coord_t screen_height = frame_height();
   coord_t cover_height = m_cover.frame_height();
 
   bool logo_visible = m_cover_scroll.value() > 0;
-  m_logo_background.set_visible(logo_visible);
-  m_logo.set_visible(logo_visible);
-
   bool cover_visible = (m_cover_scroll.value() < screen_height)
     && (m_cover_scroll.value() + cover_height > 0);
-  m_cover.set_visible(cover_visible);
-  m_cover.set_frame_pos(0, m_cover_scroll.value());
-
   bool menu_visible =
     m_cover_scroll.value() < (screen_height - cover_height);
+
+  lock_repaint();
+
+  m_logo_background.set_visible(logo_visible);
+  m_logo.set_visible(logo_visible);
+  m_cover.set_visible(cover_visible);
   m_menu.set_visible(menu_visible);
 
+  m_cover.set_frame_pos(0, m_cover_scroll.value());
 
+  unlock_repaint();
 
   // bool logo_visible = m_prop_cover_scroll > 0;
   // m_logo_background.set_visible(logo_visible);
@@ -157,9 +161,9 @@ void main_element::enter_intro() {
   //   tweens::linear<uint8_t>(&m_prop_fade, 0, termviz::fade_steps));
   // m_animator.play(k_cover_scroll, 250, 2000,
   //   tweens::linear<coord_t>(&m_prop_cover_scroll, screen_height, -cover_height));
-  m_logo_fade.reset(0, termviz::fade_steps - 1, 0, 250);
-  m_cover_scroll.reset(screen_height, -cover_height, 2000, 250);
-  m_anim_timer.reset(2250);
+  m_logo_fade.reset(0, termviz::fade_steps - 1, 0, 1000);
+  m_cover_scroll.reset(screen_height, -cover_height, 10000, 1000);
+  m_anim_timer.reset(11000);
 
 }
 
@@ -171,6 +175,7 @@ void main_element::enter_main_menu() {
   m_prop_fade = 0;
   m_prop_submenu_slide = frame_width();
   m_prop_cover_scroll = -m_cover.frame_height();
+
   // m_animator.clear_all();
 }
 

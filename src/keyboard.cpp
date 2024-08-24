@@ -13,12 +13,10 @@
 
 bool keyboard::key_event_available() {
   extern bool bios_key_event_available();
-  // AX = 0 after call if key buffer is empty
   #pragma aux bios_key_event_available = \
     "   mov     ah, 011h          " \
-    "   push    bp                " \
     "   int     016h              " \
-    "   pop     bp                " \
+    "   mov     al, 0             " \
     "   jz      @1                " \
     "   mov     al, 1             " \
     "@1:                          " \
@@ -33,9 +31,7 @@ key_code_t keyboard::read_key_event() {
   extern uint16_t bios_read_key_event();
   #pragma aux bios_read_key_event = \
     "   mov     ah, 010h          " \
-    "   push    bp                " \
     "   int     016h              " \
-    "   pop     bp                " \
     modify nomemory [ax] \
     value [ax];
 

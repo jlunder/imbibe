@@ -18,6 +18,21 @@
 #define assert_margin(x, mag) assert(((x) >= -((mag) / 4)) && ((x) <= (mag) / 4))
 
 
+typedef int16_t coord_t;
+typedef uint8_t color_t;
+typedef uint8_t attribute_t;
+typedef uint16_t termel_t;
+typedef int16_t anim_time_t;
+typedef int32_t large_anim_time_t;
+
+
+#define COORD_MIN INT16_MIN
+#define COORD_MAX INT16_MAX
+#define ANIM_TIME_MAX INT16_MAX
+#define ANIM_TIME_MIN INT16_MIN
+#define LARGE_ANIM_TIME_MAX INT32_MAX
+#define LARGE_ANIM_TIME_MIN INT32_MIN
+
 #if !(defined(M_I86) && defined(__WATCOMC__))
 
 // This is to make the editor happy when it tries to parse our code thinking
@@ -73,7 +88,7 @@ extern void step_simulator();
 #define LENGTHOF(a) (sizeof (a) / sizeof (a[0]))
 
 #define logf(...) cprintf(__VA_ARGS__)
-#define disable_logf(...) do {} while(false)
+#define disable_logf(...) do {} while (false)
 
 template<class T>
 inline T min(T x, T y) { return (x < y) ? x : y; }

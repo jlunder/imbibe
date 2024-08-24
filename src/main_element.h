@@ -4,7 +4,6 @@
 
 #include "imbibe.h"
 
-#include "animator.h"
 #include "bitmap_element.h"
 #include "rectangle_element.h"
 #include "tweens.h"
@@ -28,10 +27,6 @@ private:
     st_main_menu,
     st_outro
   };
-
-  static const animator::key_t k_logo_fade = 1;
-  static const animator::key_t k_cover_scroll = 2;
-  static const animator::key_t k_submenu_slide = 3;
 
   state_t m_state;
 

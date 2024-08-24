@@ -20,7 +20,7 @@ public:
 
   void start(bool run_immediately = true) {
     task_manager::add_task(*this);
-    if(run_immediately) {
+    if (run_immediately) {
       task_manager::request_run_task(*this);
     }
   }

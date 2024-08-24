@@ -146,8 +146,8 @@ void render_test_task::animate(uint32_t delta_ms) {
   assert(delta_ms < total_ms);
 
   m_anim_time += delta_ms;
-  if(m_anim_time >= total_ms) {
-    if(m_anim_time < total_ms * 2) {
+  if (m_anim_time >= total_ms) {
+    if (m_anim_time < total_ms * 2) {
       m_anim_time -= total_ms;
     } else {
       m_anim_time = 0;
@@ -157,7 +157,7 @@ void render_test_task::animate(uint32_t delta_ms) {
   uint16_t seq = 0;
   uint32_t seq_time = m_anim_time;
   static int16_t const t_shift = 8;
-  while(seq_time > seq_ms) {
+  while (seq_time > seq_ms) {
     ++seq;
     seq_time -= seq_ms;
   }
@@ -207,7 +207,7 @@ void render_test_task::animate(uint32_t delta_ms) {
 
   // Do this at the end because coming into this method, the animated
   // positions may not have been set up yet
-  if(!m_frame.visible()) {
+  if (!m_frame.visible()) {
     m_frame.show();
   }
 }
