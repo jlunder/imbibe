@@ -107,22 +107,23 @@ void element::set_owner(window & n_owner) {
 }
 
 
-void element::show() {
-  bool was_visible = m_visible;
-  m_visible = true;
-  if (!was_visible && m_owner) {
-    m_owner->add_element(*this);
+void element::set_visible(bool n_visible) {
+  if (m_visible == n_visible) {
+    return;
+  }
+
+  if (n_visible) {
+    m_visible = true;
+    if (m_owner) {
+      m_owner->add_element(*this);
+    }
+  } else {
+    if (m_owner) {
+      m_owner->remove_element(*this);
+    }
+    m_visible = false;
   }
 }
-
-
-void element::hide() {
-  if (m_visible && m_owner) {
-    m_owner->remove_element(*this);
-  }
-  m_visible = false;
-}
-
 
 void element::request_repaint() {
   if (m_visible && m_owner) {
@@ -143,6 +144,10 @@ void element::request_repaint(coord_t x1, coord_t y1, coord_t x2,
     m_owner->repaint(m_x1 + max<coord_t>(x1, 0), m_y1 + max<coord_t>(y1, 0),
       min<coord_t>(m_x1 + x2, m_x2), min<coord_t>(m_y1 + y2, m_y2));
   }
+}
+
+
+void element::layout() {
 }
 
 

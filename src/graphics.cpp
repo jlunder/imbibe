@@ -176,12 +176,12 @@ void graphics::draw_rectangle(coord_t x1, coord_t y1, coord_t x2,
 
   coord_t cx1 = max<coord_t>(origin_x() + x1, clip_x1());
   coord_t cx2 = min<coord_t>(origin_x() + x2, clip_x2());
-  if (x1 >= x2) {
+  if (cx1 >= cx2) {
     return;
   }
   coord_t cy1 = max<coord_t>(origin_y() + y1, clip_y1());
   coord_t cy2 = min<coord_t>(origin_y() + y2, clip_y2());
-  if (y1 >= y2) {
+  if (cy1 >= cy2) {
     return;
   }
 

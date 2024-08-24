@@ -64,6 +64,7 @@ void main_task::run_loop() {
   m_win.setup();
   m_main.set_frame(0, 0, m_win.backbuffer().width(), m_win.backbuffer().height());
   m_main.set_owner(m_win);
+  m_main.layout();
   m_win.set_focus(m_main);
 
   logf_main_task("imbibe 0.1 loaded\n");

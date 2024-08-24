@@ -10,6 +10,14 @@ window_element::~window_element() {
 }
 
 
+void window_element::layout() {
+  for (element_list_iterator i = m_elements.begin(); i != m_elements.end();
+      ++i) {
+    i->ref->layout();
+  }
+}
+
+
 void window_element::animate(uint32_t delta_ms) {
   for (element_list_iterator i = m_elements.begin(); i != m_elements.end();
       ++i) {
@@ -69,6 +77,7 @@ void window_element::repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
 
 
 void window_element::add_element(element & e) {
+  assert(&e.owner() == this); assert(e.visible());
   m_elements.insert(element_list_value(e.frame_z(), &e));
   request_repaint(m_offset_x + e.frame_x1(), m_offset_y + e.frame_y1(),
     m_offset_x + e.frame_x2(), m_offset_y + e.frame_y2());
@@ -76,6 +85,7 @@ void window_element::add_element(element & e) {
 
 
 void window_element::remove_element(element & e) {
+  assert(&e.owner() == this); assert(e.visible());
   coord_t z = e.frame_z();
   element_list_iterator i = m_elements.lower_bound(z);
   while((i->key == z) && (i->ref != &e)) {

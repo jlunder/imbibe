@@ -38,11 +38,13 @@ public:
   }
   void set_frame(coord_t x1, coord_t y1, coord_t x2, coord_t y2, coord_t z);
   void set_owner(window & n_owner);
-  void show();
-  void hide();
+  void set_visible(bool n_visible);
+  void show() { set_visible(true); }
+  void hide() { set_visible(false); }
   void request_repaint();
   void request_repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2);
 
+  virtual void layout();
   virtual void animate(uint32_t delta_ms);
   virtual bool handle_key(uint16_t key);
   virtual void paint(graphics & g) = 0;

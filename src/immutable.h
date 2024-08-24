@@ -72,6 +72,21 @@ public:
     return *this;
   }
 
+  bool operator == (immutable const & other) {
+#if defined(SIMULATE)
+    return (m_index && (m_index == other.m_index))
+      || ((m_seg == other.m_seg) && (m_offset == other.m_offset));
+#else
+    assert(sizeof (immutable) == sizeof (uint32_t));
+    return *(uint32_t *)this == *(uint32_t *)&other;
+#endif
+  }
+
+  bool operator == (void * other) {
+    assert(other == NULL);
+    return !operator bool();
+  }
+
   void __far * data() const { return MK_FP(m_seg, (void *)(uintptr_t)m_offset); }
 
 private:
@@ -111,10 +126,18 @@ public:
     : immutable(custom_reclaim, n_p) {
   }
 
-  T const * get() const { return (T const *)data(); }
-  T const & operator * () const { return *(T const *)data(); }
-  T const * operator -> () const { return (T const *)data(); }
+  T __far const * get() const { return (T const *)data(); }
+  T __far const & operator * () const { return *(T const *)data(); }
+  T __far const * operator -> () const { return (T const *)data(); }
   operator bool () const { return immutable::operator bool(); }
+
+  bool operator == (im_ptr const & other) {
+    return immutable::operator==(other);
+  }
+
+  bool operator == (void * other) {
+    return immutable::operator==(other);
+  }
 
 private:
   static void reclaim(void * p) {

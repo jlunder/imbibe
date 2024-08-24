@@ -12,6 +12,7 @@ class window_element: public element, public window {
 public:
   virtual ~window_element();
 
+  virtual void layout();
   virtual void animate(uint32_t delta_ms);
   virtual bool handle_key(uint16_t key);
   virtual void paint(graphics & g);

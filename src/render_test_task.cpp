@@ -76,12 +76,14 @@ render_test_task::render_test_task()
   coord_t oh = 5;
   {
     m_orbit1.set_frame(0, 0, ow, oh, 1);
-    m_orbit1.set_b(new bitmap(ow, oh));
-    graphics g(m_orbit1.b());
+    bitmap * b = new bitmap(ow, oh);
+    graphics g(*b);
     g.draw_rectangle(0, 0, ow, oh,
       termel::from('+', color::cyan, color::blue));
     g.draw_text(2, 2, attribute::from(color::hi_white, color::blue),
       "Hello world!");
+    m_orbit1.set_b(im_ptr<bitmap>(b));
+    b = NULL;
     m_orbit1.set_owner(m_clipper);
     m_orbit1.show();
   }
