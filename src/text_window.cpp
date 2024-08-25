@@ -11,7 +11,7 @@
 #include "element.h"
 
 
-#define logf_text_window(...) logf("WINDOW_ELEMENT: " __VA_ARGS__)
+#define logf_text_window(...) disable_logf("TEXT_WINDOW: " __VA_ARGS__)
 
 
 namespace aux_text_window {
@@ -116,10 +116,6 @@ text_window text_window_instance;
 text_window::text_window()
   : window(), m_element(NULL), m_focus(NULL), m_backbuffer(80, 25),
     m_lock_count(0), m_need_repaint(false) {
-}
-
-
-text_window::~text_window() {
 }
 
 

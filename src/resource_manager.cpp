@@ -9,7 +9,7 @@
 #include "tbm.h"
 
 
-#define logf_resource_manager(...) logf("RESOURCE_MANAGER: " __VA_ARGS__)
+#define logf_resource_manager(...) disable_logf("RESOURCE_MANAGER: " __VA_ARGS__)
 
 
 namespace resource_manager {
@@ -166,7 +166,7 @@ im_ptr<bitmap> resource_manager::fetch_tbm(imstring const & name) {
     index_entry & entry = s_index[index];
     assert(entry.data);
     if (!entry.resource) {
-      logf_resource_manager("  !entry.resource");
+      logf_resource_manager("  !entry.resource\n");
       reclaim_header * header = (reclaim_header *)::malloc(
         sizeof (reclaim_header) + sizeof (bitmap));
       logf_resource_manager("  header = %p, .name = %s, .index = %u\n",
@@ -265,6 +265,7 @@ void resource_manager::load_data_at_hash(imstring const & name, uint16_t hash, u
 
   int handle = -1;
   char const * op = "open";
+  (void)op;
   char path_buf[RESOURCE_NAME_LEN_MAX + 10];
   snprintf(path_buf, sizeof path_buf, "testdata/%s", name.c_str());
   unsigned err = _dos_open(path_buf, O_RDONLY, &handle);
@@ -327,7 +328,10 @@ void resource_manager::reclaim_loaded_data(void __far * data) {
   assert(name);
   uint16_t index = header->index;
   index_entry & entry = s_index[index];
-  assert((void *)entry.resource == (void *)(header + 1));
+  logf_resource_manager(
+    "reclaim_loaded_data %p: header=%p, entry.resource=%p, .name=%s\n",
+    data, header, entry.resource, entry.name.c_str());
+  assert((void *)entry.resource == data);
   assert(entry.name == imstring(name));
 
   ((bitmap *)(header + 1))->~bitmap();

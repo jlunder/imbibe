@@ -5,7 +5,7 @@
 #include "imbibe.h"
 
 
-#define logf_immutable(...) logf("IMMUTABLE: " __VA_ARGS__)
+#define logf_immutable(...) disable_logf("IMMUTABLE: " __VA_ARGS__)
 
 
 class immutable {
@@ -20,11 +20,11 @@ public:
   immutable(prealloc_t policy, void const * p) {
     (void)policy;
     if (p) {
-      p = normalize(p);
-      m_seg = FP_SEG(p);
+      void const * norm_p = normalize(p);
+      m_seg = FP_SEG(norm_p);
       assert(m_seg != 0);
       m_index = 0;
-      m_offset = (uint8_t)FP_OFF(p);
+      m_offset = (uint8_t)FP_OFF(norm_p);
     } else {
       m_seg = 0;
       m_index = 0;
@@ -34,11 +34,11 @@ public:
 
   immutable(reclaim_func_t f, void const * p) {
     if (p) {
-      p = normalize(p);
-      m_seg = FP_SEG(p);
+      void const * norm_p = normalize(p);
+      m_seg = FP_SEG(norm_p);
       assert(m_seg != 0);
-      m_offset = (uint8_t)FP_OFF(p);
-      init(f);
+      m_offset = (uint8_t)FP_OFF(norm_p);
+      init(f, p);
     } else {
       m_seg = 0;
       m_index = 0;
@@ -98,7 +98,7 @@ private:
   uint8_t m_index;
   uint8_t m_offset;
 
-  void init(reclaim_func_t f);
+  void init(reclaim_func_t f, void const * orig_p);
   void ref();
   void unref();
 

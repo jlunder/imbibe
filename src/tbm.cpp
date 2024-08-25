@@ -7,6 +7,7 @@
 
 
 void tbm::to_bitmap(bitmap & b, tbm_header const * header, uint16_t size) {
+  (void)size;
   assert(size >= sizeof (*header));
   assert(header->width > 0 && header->height > 0);
   assert(header->magic[0] == 'T'); assert(header->magic[1] == 'B');

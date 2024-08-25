@@ -10,7 +10,11 @@
 
 class window_element: public element, public window {
 public:
-  virtual ~window_element();
+  virtual ~window_element() {
+#ifndef NDEBUG
+    assert(m_lock_count == 0);
+#endif
+  }
 
   virtual void layout();
   virtual void animate(uint32_t delta_ms);

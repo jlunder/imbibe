@@ -5,6 +5,7 @@
 
 struct immutable_tracking_t {
   immutable::reclaim_func_t reclaimer;
+  __segment orig_seg;
   union {
     uint16_t live_refs;
     uint16_t next_unrefd;
@@ -15,15 +16,16 @@ struct immutable_tracking_t {
 immutable_tracking_t immutable_index[immutable::max_reclaimable + 1];
 
 
-void immutable::init(reclaim_func_t f)
+void immutable::init(reclaim_func_t f, void const * orig_p)
 {
   if (!f) {
     m_index = 0;
     return;
   }
 
-  assert(immutable_index[0].reclaimer == NULL);
-  if (immutable_index[0].next_unrefd == 0) {
+  immutable_tracking_t & zero_tracking = immutable_index[0];
+  assert(zero_tracking.reclaimer == NULL);
+  if (zero_tracking.next_unrefd == 0) {
     uint16_t last_link = 0;
     // Maybe uninitialized? Rebuild the chain.
     for (uint16_t i = 1; i < LENGTHOF(immutable_index); ++i) {
@@ -35,12 +37,15 @@ void immutable::init(reclaim_func_t f)
     }
   }
   // If we still don't have a next_unrefd, we need a bigger index
-  assert(immutable_index[0].next_unrefd != 0);
-  assert(immutable_index[0].next_unrefd < max_reclaimable);
-  m_index = (uint8_t)immutable_index[0].next_unrefd;
-  immutable_index[0].next_unrefd = immutable_index[m_index].next_unrefd;
-  immutable_index[m_index].live_refs = 1;
-  immutable_index[m_index].reclaimer = f;
+  assert(zero_tracking.next_unrefd != 0);
+  assert(zero_tracking.next_unrefd < max_reclaimable);
+  m_index = (uint8_t)zero_tracking.next_unrefd;
+
+  immutable_tracking_t & tracking = immutable_index[m_index];
+  zero_tracking.next_unrefd = tracking.next_unrefd;
+  tracking.live_refs = 1;
+  tracking.reclaimer = f;
+  tracking.orig_seg = FP_SEG(orig_p);
 }
 
 
@@ -57,18 +62,25 @@ void immutable::ref() {
 void immutable::unref() {
   assert(m_index > 0);
   assert(m_index < max_reclaimable);
-  assert(immutable_index[m_index].reclaimer != NULL);
-  assert(immutable_index[m_index].live_refs > 0);
 
-  if (immutable_index[m_index].live_refs > 1) {
-    --immutable_index[m_index].live_refs;
+  immutable_tracking_t & tracking = immutable_index[m_index];
+  assert(tracking.reclaimer != NULL);
+  assert(tracking.live_refs > 0);
+
+  if (tracking.live_refs > 1) {
+    --tracking.live_refs;
   } else {
     // Reclaim the data
-    immutable_index[m_index].reclaimer(data());
+    void * p = data();
+    assert(FP_SEG(p) - tracking.orig_seg < 0x1000);
+    void * orig_p = MK_FP(tracking.orig_seg,
+      FP_OFF(p) + ((FP_SEG(p) - tracking.orig_seg) << 4));
+    logf_immutable("de-normalized %p to %p\n", p, orig_p);
+    tracking.reclaimer(orig_p);
 
     // Add the index entry back into the unrefd chain
-    immutable_index[m_index].reclaimer = NULL;
-    immutable_index[m_index].next_unrefd = immutable_index[0].next_unrefd;
+    tracking.reclaimer = NULL;
+    tracking.next_unrefd = immutable_index[0].next_unrefd;
     immutable_index[0].next_unrefd = m_index;
   }
 }

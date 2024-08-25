@@ -6,13 +6,6 @@
 #define logf_window_element(...) disable_logf("WINDOW_ELEMENT: " __VA_ARGS__)
 
 
-window_element::~window_element() {
-#ifndef NDEBUG
-  assert(m_lock_count == 0);
-#endif
-}
-
-
 void window_element::layout() {
   for (element_list_iterator i = m_elements.begin(); i != m_elements.end();
       ++i) {

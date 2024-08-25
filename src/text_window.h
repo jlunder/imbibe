@@ -18,7 +18,6 @@ class text_window: public window
 {
 public:
   text_window();
-  virtual ~text_window();
 
   void setup();
   void teardown();
