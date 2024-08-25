@@ -9,7 +9,10 @@
 
 
 #include <assert.h>
+#include <fcntl.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
 #include <malloc.h>
@@ -60,11 +63,30 @@ extern uint16_t dummy_screen[16384];
 
 #include <stdio.h>
 
+#include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+
 #define cprintf(...) fprintf(stderr, __VA_ARGS__)
+
+
+inline void failsafe_textmode() { }
 
 extern void _dos_setvect(int, void (*)());
 extern void (*_dos_getvect(int))();
 extern void _chain_intr(void (*)());
+
+extern unsigned _dos_open(const char * path, unsigned mode, int * handle);
+extern unsigned _dos_close(int handle);
+extern unsigned _dos_read(int handle, void * buf, unsigned count,
+  unsigned * bytes);
+extern unsigned _dos_lseek(int handle, long offset, int whence,
+    unsigned long __far * where);
+
+extern unsigned _dos_allocmem(unsigned size, unsigned * seg);
+extern unsigned _dos_freemem(unsigned seg);
+
 
 inline void * operator new (size_t size, void * p) { (void)size; return p; }
 
@@ -80,6 +102,15 @@ extern void step_simulator();
 #include <conio.h>
 #include <dos.h>
 
+extern void failsafe_textmode();
+
+#pragma aux failsafe_textmode = \
+  "mov ax, 03h" "int 010h" modify [ax] nomemory
+
+// seemingly missing from dos.h??
+extern unsigned _dos_lseek(int handle, long offset, int whence,
+    unsigned long __far * where);
+
 #define __packed__
 
 #endif
@@ -89,6 +120,9 @@ extern void step_simulator();
 
 #define logf(...) cprintf(__VA_ARGS__)
 #define disable_logf(...) do {} while (false)
+
+#define abortf(...) do { failsafe_textmode(); cprintf("fatal error: "); \
+  cprintf(__VA_ARGS__); abort(); } while(false)
 
 template<class T>
 inline T min(T x, T y) { return (x < y) ? x : y; }

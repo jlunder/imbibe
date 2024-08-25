@@ -13,13 +13,13 @@ namespace aux_vector {
   inline T * allocate(uint_fast16_t n) {
     assert(n > 0);
     T * p = (T *)::malloc(n * sizeof (T));
-    assert(p != NULL);
+    assert(p);
     return p;
   }
 
   template<class T>
   inline void free(T * p) {
-    assert(p != NULL);
+    assert(p);
     ::free(p);
   }
 
@@ -132,7 +132,7 @@ public:
 
   ~vector() {
     assert((m_size == 0) || m_data);
-    if (m_data != NULL) {
+    if (m_data) {
       aux_vector::destroy<T>(m_data, m_size);
       aux_vector::free<T>(m_data);
     }
@@ -147,9 +147,12 @@ public:
       return;
     }
     T * n_data = aux_vector::allocate<T>(n);
-    aux_vector::copy_construct<T>(m_data, n_data, m_size);
-    aux_vector::destroy<T>(m_data, m_size);
-    aux_vector::free<T>(m_data);
+    assert(m_data || ((m_size == 0) && (m_capacity == 0)));
+    if (m_data) {
+      aux_vector::copy_construct<T>(m_data, n_data, m_size);
+      aux_vector::destroy<T>(m_data, m_size);
+      aux_vector::free<T>(m_data);
+    }
     m_data = n_data;
     m_capacity = n;
   }
@@ -206,6 +209,7 @@ public:
     clear();
     reserve(n);
     aux_vector::copy_construct<T>(first, m_data, n);
+    m_size = n;
   }
 
   void assign(size_type n, T const & x) {
@@ -213,6 +217,7 @@ public:
     clear();
     reserve(n);
     aux_vector::copy_construct<T>(x, m_data, n);
+    m_size = n;
   }
 
   iterator insert(iterator it, T const & x) {

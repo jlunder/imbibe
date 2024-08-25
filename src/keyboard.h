@@ -89,12 +89,10 @@ public:
 };
 
 
-class keyboard
-{
-public:
-  static bool key_event_available();
-  static key_code_t read_key_event();
-};
+namespace keyboard {
+  extern bool key_event_available();
+  extern key_code_t read_key_event();
+}
 
 
 #endif // __KEY_MANAGER_H_INCLUDED

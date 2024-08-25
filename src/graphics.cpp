@@ -222,7 +222,7 @@ void graphics::draw_text(coord_t x, coord_t y, attribute_t attr,
         s_len = clip_x2() - x;
       }
       for (i = 0; i < s_len; ++i) {
-        m_b.at(x + i, y) = termel::from(*s, attr);
+        m_b.set_at(x + i, y, termel::from(*s, attr));
         ++s;
       }
     }

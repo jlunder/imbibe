@@ -38,7 +38,7 @@ _Packed struct __packed__ tbm_header {
 
 class tbm {
 public:
-  static bitmap * to_bitmap(tbm_header const * header);
+  static void to_bitmap(bitmap & b, tbm_header const * header, uint16_t size);
 };
 
 

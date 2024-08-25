@@ -4,14 +4,11 @@
 
 #include "imbibe.h"
 
-#include "vector.h"
-
 
 class task;
 
 
-class action
-{
+class action {
 public:
   typedef void (*reclaim_func_t)(action __far * p);
 
@@ -24,8 +21,7 @@ private:
 };
 
 
-class reusable_action : public action
-{
+class reusable_action : public action {
 public:
   virtual reclaim_func_t reclaimer() const { return do_nothing_reclaim; }
 
@@ -34,28 +30,15 @@ private:
 };
 
 
-class task_manager
-{
-public:
-  static void add_task(task & t);
-  static void remove_task(task & t);
-  static void request_run_task(task & t);
-  static void defer_action(action * action);
-  static bool poll();
-  static bool run();
-  static void idle();
-
-private:
-  typedef vector<task *> task_p_list;
-  typedef vector<action *> action_p_list;
-
-  static bool s_busy;
-  static task_p_list s_tasks;
-  static task_p_list s_tasks_to_poll;
-  static task_p_list s_tasks_to_run;
-  static task_p_list s_tasks_to_idle;
-  static action_p_list s_deferred_actions;
-};
+namespace task_manager {
+  extern void add_task(task & t);
+  extern void remove_task(task & t);
+  extern void request_run_task(task & t);
+  extern void defer_action(action * action);
+  extern bool poll();
+  extern bool run();
+  extern void idle();
+}
 
 
 #endif // __TASK_MANAGER_H_INCLUDED

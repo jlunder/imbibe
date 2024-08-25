@@ -15,6 +15,8 @@ public:
   enum prealloc_t { prealloc };
   typedef void (*reclaim_func_t)(void __far * p);
 
+  immutable(): m_seg(0), m_index(0), m_offset(0) { }
+
   immutable(prealloc_t policy, void const * p) {
     (void)policy;
     if (p) {
@@ -122,7 +124,8 @@ public:
 
   static im_ptr null() { im_ptr(prealloc, NULL); }
 
-  explicit im_ptr(T const * n_p) : immutable(n_p ? reclaim : NULL, n_p) { }
+  explicit im_ptr(): immutable() { }
+  explicit im_ptr(T const * n_p): immutable(n_p ? reclaim : NULL, n_p) { }
   explicit im_ptr(immutable::prealloc_t policy, T const * n_p)
     : immutable(n_p ? reclaim : NULL, n_p) {
   }

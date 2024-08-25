@@ -2,6 +2,8 @@
 
 #include "keyboard.h"
 #include "main_task.h"
+#include "resource_manager.h"
+#include "timer.h"
 
 
 #define logf_main_task(...) logf("MAIN_TASK: " __VA_ARGS__)
@@ -60,7 +62,6 @@ void main_task::run_loop() {
   timer idle_timer;
   timer poll_timer;
 
-  timer::setup();
   m_win.setup();
   m_main.set_frame(0, 0, m_win.backbuffer().width(), m_win.backbuffer().height());
   m_main.set_owner(m_win);
@@ -105,7 +106,6 @@ void main_task::run_loop() {
 
   logf_main_task("shutting down\n");
   m_win.teardown();
-  timer::teardown();
   logf_main_task("bye!\n");
 }
 

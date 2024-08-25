@@ -6,7 +6,7 @@
 #include "vector.h"
 
 
-#define logf_task_manager(...) disable_logf("TASK_MANAGER" __VA_ARGS__)
+#define logf_task_manager(...) disable_logf("TASK_MANAGER: " __VA_ARGS__)
 
 
 namespace aux_task_manager {
@@ -34,12 +34,17 @@ namespace aux_task_manager {
 }
 
 
-bool task_manager::s_busy = false;
-task_manager::task_p_list task_manager::s_tasks;
-task_manager::task_p_list task_manager::s_tasks_to_poll;
-task_manager::task_p_list task_manager::s_tasks_to_run;
-task_manager::task_p_list task_manager::s_tasks_to_idle;
-task_manager::action_p_list task_manager::s_deferred_actions;
+namespace task_manager {
+  typedef vector<task *> task_p_list;
+  typedef vector<action *> action_p_list;
+
+  bool s_busy = false;
+  task_p_list s_tasks;
+  task_p_list s_tasks_to_poll;
+  task_p_list s_tasks_to_run;
+  task_p_list s_tasks_to_idle;
+  action_p_list s_deferred_actions;
+}
 
 
 void action::default_reclaim(action __far * p) {

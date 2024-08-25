@@ -2,10 +2,10 @@
 
 #include "main_element.h"
 
-#include "data.h"
 #include "immutable.h"
 #include "keyboard.h"
 #include "main_task.h"
+#include "resource_manager.h"
 #include "tbm.h"
 #include "termviz.h"
 #include "tweens.h"
@@ -48,8 +48,8 @@ void main_element::layout() {
   // m_submenu_background.set_owner(m_submenu);
   // m_submenu_header.set_owner(m_submenu);
   // m_submenu_footer.set_owner(m_submenu);
-  m_logo.set_b(im_ptr<bitmap>(
-    tbm::to_bitmap((tbm_header const *)inline_data::data)));
+
+  m_logo.set_b(resource_manager::fetch_tbm("logo.tbm"));
 
   m_menu.set_frame(0, 0, screen_width, screen_height, 0);
   m_menu_background.set_frame(0, 0, screen_width, screen_height, 0);
