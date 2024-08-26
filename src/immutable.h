@@ -5,7 +5,7 @@
 #include "imbibe.h"
 
 
-#define logf_immutable(...) logf("IMMUTABLE: " __VA_ARGS__)
+#define logf_immutable(...) disable_logf("IMMUTABLE: " __VA_ARGS__)
 
 
 class immutable {

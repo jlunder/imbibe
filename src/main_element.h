@@ -6,6 +6,7 @@
 
 #include "bitmap_element.h"
 #include "rectangle_element.h"
+#include "tbm_element.h"
 #include "tweens.h"
 #include "window_element.h"
 
@@ -42,12 +43,12 @@ private:
   window_element m_frame;
 
   bitmap_element m_logo_background;
-  bitmap_element m_logo;
+  tbm_element m_logo;
   bitmap_element m_cover;
 
   window_element m_menu;
-  bitmap_element m_menu_header;
-  bitmap_element m_menu_footer;
+  tbm_element m_menu_header;
+  tbm_element m_menu_footer;
   rectangle_element m_menu_background;
 
   // window_element m_submenu;

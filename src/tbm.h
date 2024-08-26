@@ -50,6 +50,8 @@ namespace tbm {
   static const size_t s_tbm_area_max = 1u << 14;
 
   bool validate(unpacker const & tbm_data);
+  void dimensions(unpacker const & tbm_data, coord_t & width,
+    coord_t & height);
   void to_bitmap(unpacker const & tbm_data, bitmap & b);
 };
 

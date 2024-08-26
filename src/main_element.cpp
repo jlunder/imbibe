@@ -38,6 +38,21 @@ void main_element::layout() {
   coord_t screen_width = frame_width();
   coord_t screen_height = frame_height();
 
+  unpacker const & logo_data = resource_manager::fetch_tbm("logo.tbm");
+  coord_t logo_width;
+  coord_t logo_height;
+  tbm::dimensions(logo_data, logo_width, logo_height);
+  coord_t logo_x = (screen_width - logo_width) / 2;
+  coord_t logo_y = (screen_height - logo_height) / 2;
+  unpacker const & menu_header_data = resource_manager::fetch_tbm("menu-top.tbm");
+  coord_t menu_header_width;
+  coord_t menu_header_height;
+  tbm::dimensions(menu_header_data, menu_header_width, menu_header_height);
+  unpacker const & menu_footer_data = resource_manager::fetch_tbm("menu-bot.tbm");
+  coord_t menu_footer_width;
+  coord_t menu_footer_height;
+  tbm::dimensions(menu_footer_data, menu_footer_width, menu_footer_height);
+
   m_logo_background.set_owner(*this);
   // captured screen received above
   m_logo.set_owner(*this);
@@ -48,30 +63,26 @@ void main_element::layout() {
   m_menu_background.set_brush(termel::from('.', color::black, color::white));
   m_menu_background.show();
   m_menu_header.set_owner(m_menu);
-  m_menu_header.set_b(resource_manager::fetch_bitmap("menu-top.tbm"));
+  m_menu_header.set_tbm(menu_header_data);
   m_menu_header.show();
   m_menu_footer.set_owner(m_menu);
-  m_menu_footer.set_b(resource_manager::fetch_bitmap("menu-bot.tbm"));
+  m_menu_footer.set_tbm(menu_footer_data);
   m_menu_footer.show();
   // m_submenu.set_owner(*this);
   // m_submenu_background.set_owner(m_submenu);
   // m_submenu_header.set_owner(m_submenu);
   // m_submenu_footer.set_owner(m_submenu);
 
-  m_logo.set_b(resource_manager::fetch_bitmap("logo.tbm"));
+  m_logo.set_tbm(logo_data);
 
   m_menu.set_frame(0, 0, screen_width, screen_height, 0);
   m_menu_background.set_frame(0, 0, screen_width, screen_height, 0);
   m_menu_header.set_frame(0, 0, screen_width,
-    screen_height - m_menu_header.b().height(), 1);
-  m_menu_footer.set_frame(0, screen_height - m_menu_footer.b().height(),
+    screen_height - menu_header_height, 1);
+  m_menu_footer.set_frame(0, screen_height - menu_footer_height,
     screen_width, screen_height, 2);
 
   m_logo_background.set_frame(0, 0, screen_width, screen_height, 1);
-  coord_t logo_width = m_logo.b().width();
-  coord_t logo_height = m_logo.b().height();
-  coord_t logo_x = (screen_width - logo_width) / 2;
-  coord_t logo_y = (screen_height - logo_height) / 2;
   m_logo.set_frame(logo_x, logo_y, logo_x + logo_width, logo_y + logo_height,
     2);
   m_cover.set_frame(0, 0, screen_width, m_cover.b().height(), 3);

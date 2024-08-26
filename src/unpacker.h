@@ -7,6 +7,7 @@
 
 class unpacker {
 public:
+  unpacker(): m_base(0), m_end(0), m_cur(0), m_seg(0) { }
   explicit unpacker(void const __far * n_ptr, uint16_t n_size)
     : m_base((uint8_t const __near *)FP_OFF(n_ptr)),
       m_end((uint8_t const __near *)(FP_OFF(n_ptr) + n_size)),

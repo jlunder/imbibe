@@ -100,12 +100,22 @@ bool tbm::validate(unpacker const & tbm_data) {
 }
 
 
-void tbm::to_bitmap(unpacker const & tbm_data, bitmap & b) {
+void tbm::dimensions(unpacker const & tbm_data, coord_t & width,
+    coord_t & height) {
   assert(validate(tbm_data));
   unpacker tbm(tbm_data);
   tbm.skip<iff_header>();
   tbm_header const & tbm_h = tbm.unpack<tbm_header>();
-  b.assign(tbm_h.width, tbm_h.height);
+  width = tbm_h.width;
+  height = tbm_h.height;
+}
+
+
+void tbm::to_bitmap(unpacker const & tbm_data, bitmap & b) {
+  coord_t width;
+  coord_t height;
+  dimensions(tbm_data, width, height);
+  b.assign(width, height);
   graphics g(b);
   g.draw_tbm(0, 0, tbm_data);
 }
