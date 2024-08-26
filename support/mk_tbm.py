@@ -346,7 +346,7 @@ def write_output_image(args: Args, input_path: str, img: Image) -> bool | None:
             )
             lines = []
             pos = 2 * img.data.shape[0]
-            max_skip = 5
+            max_skip = 255
             rle_bytes = bytes()
             for i in range(img.data.shape[0]):
                 data = []
@@ -409,6 +409,7 @@ def write_output_image(args: Args, input_path: str, img: Image) -> bool | None:
             )
         )
         f.write(data_bytes)
+        return True
 
 
 def main(args: Args):
