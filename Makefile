@@ -32,6 +32,12 @@ IMBIBE_OBJS = $(patsubst $(SRC_DIR)%.cpp,$(OBJ_DIR)%.obj,$(IMBIBE_SOURCES))
 IMBIBE_SIM_OBJS = $(patsubst $(SRC_DIR)%.cpp,$(SIM_OBJ_DIR)%.o,$(IMBIBE_SOURCES))
 IMBIBE_DEPS = $(patsubst $(SRC_DIR)%.cpp,$(DEP_DIR)%.d,$(IMBIBE_SOURCES))
 
+IMBIBE_RESOURCES = \
+	testdata/menu-top.tbm \
+	testdata/menu-bot.tbm \
+	testdata/cover.tbm \
+	testdata/logo.tbm
+
 .PHONY: all clean deps dirs imbibe
 .DEFAULT_GOAL: all
 
@@ -60,14 +66,17 @@ all: imbibe
 clean:
 	rm -rf build
 
-simbibe: $(IMBIBE_SIM_OBJS)
-	g++ -std=gnu++98 -g -o $@ $^
+simbibe: $(IMBIBE_SIM_OBJS) $(IMBIBE_RESOURCES)
+	g++ -std=gnu++98 -g -o $@ $(IMBIBE_SIM_OBJS)
 
-imbibe: $(OBJ_DIR)imbibe.exe
+imbibe: $(OBJ_DIR)imbibe.exe $(IMBIBE_RESOURCES)
 	cd workspace && \
 	  $(DOSBOX) \
 	    -c "S:" \
 	    -c "`echo $< | tr '/' '\\' ` > RUN.LOG"
+
+%.tbm: %.bin support/mk_tbm.py Makefile
+	support/mk_tbm.py -v --type=rle -o $@ -k ,0,0 $<
 
 $(OBJ_DIR)imbibe.lnk: Makefile | $(OBJ_DIR)
 	echo NAME $(OBJ_DIR)imbibe.exe > $@ && \
