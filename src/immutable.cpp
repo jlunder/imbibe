@@ -71,12 +71,9 @@ void immutable::unref() {
     --tracking.live_refs;
   } else {
     // Reclaim the data
-    void * p = data();
-    assert(FP_SEG(p) - tracking.orig_seg < 0x1000);
-    void * orig_p = MK_FP(tracking.orig_seg,
-      FP_OFF(p) + ((FP_SEG(p) - tracking.orig_seg) << 4));
-    logf_immutable("de-normalized %p to %p\n", p, orig_p);
-    tracking.reclaimer(orig_p);
+    void const * norm_p = data();
+    void const * p = denormalize(tracking.orig_seg, norm_p);
+    tracking.reclaimer((void *)p);
 
     // Add the index entry back into the unrefd chain
     tracking.reclaimer = NULL;
@@ -84,3 +81,5 @@ void immutable::unref() {
     immutable_index[0].next_unrefd = m_index;
   }
 }
+
+

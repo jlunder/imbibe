@@ -18,6 +18,10 @@
 #include <malloc.h>
 
 
+#define fourcc(arr) ((uint32_t)arr[0] | ((uint32_t)arr[1] << 8) \
+  | ((uint32_t)arr[2] << 16) | ((uint32_t)arr[3] << 24))
+
+
 #define assert_margin(x, mag) assert(((x) >= -((mag) / 4)) && ((x) <= (mag) / 4))
 
 
@@ -41,6 +45,7 @@ typedef int32_t large_anim_time_t;
 // This is to make the editor happy when it tries to parse our code thinking
 // we have some kind of normal compiler
 
+#define __near
 #define __far
 
 #define _Packed
@@ -52,10 +57,18 @@ typedef int32_t large_anim_time_t;
 // __segname gets the named segment -- probably "_CODE", "_CONST", "_DATA"
 #define __self
 
-#define FP_SEG(p) ((uintptr_t)(p))
-#define FP_OFF(p) 0
+/*
+#define FP_SEG(p) (((uintptr_t)(p) & ~0xFFF) >> 4)
+#define FP_OFF(p) ((uintptr_t)(p) & 0xFFF)
 #define MK_FP(s, o) \
-  ((uintptr_t)s == 0xB800 ? (void *)dummy_screen : (void *)(s))
+  ((uintptr_t)s == 0xB800 ? (void *)dummy_screen \
+    : (void *)(((uintptr_t)(s) << 4) + (uintptr_t)(o)))
+*/
+#define FP_SEG(p) ((uintptr_t)(p) & ~0xFLLU)
+#define FP_OFF(p) ((uintptr_t)(p) & 0xFLLU)
+#define MK_FP(s, o) \
+  ((uintptr_t)(s) == 0xB800 ? (void *)dummy_screen \
+    : (void *)((uintptr_t)(s) + (uintptr_t)(o)))
 
 extern uint16_t dummy_screen[16384];
 

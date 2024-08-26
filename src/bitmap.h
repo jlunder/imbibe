@@ -36,7 +36,10 @@ public:
     m_data[y * m_width + x] = n_t;
   }
 
-  bitmap & assign(coord_t n_width, coord_t n_height, termel_t const * n_data);
+  bitmap & assign(coord_t n_width, coord_t n_height);
+  bitmap & assign(coord_t n_width, coord_t n_height, termel_t fill_brush);
+  bitmap & assign(coord_t n_width, coord_t n_height,
+    termel_t const * n_data);
   bitmap & assign(bitmap const & n_bitmap);
 
   bitmap & operator = (bitmap const & other) { return assign(other); }

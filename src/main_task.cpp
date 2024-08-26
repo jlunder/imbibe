@@ -62,7 +62,10 @@ void main_task::run_loop() {
   timer idle_timer;
   timer poll_timer;
 
-  m_win.setup();
+  bitmap * capture = new bitmap();
+  m_win.setup(capture);
+  m_main.set_captured_screen(im_ptr<bitmap>(capture));
+  capture = NULL;
   m_main.set_frame(0, 0, m_win.backbuffer().width(), m_win.backbuffer().height());
   m_main.set_owner(m_win);
   m_main.layout();

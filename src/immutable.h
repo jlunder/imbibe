@@ -5,7 +5,7 @@
 #include "imbibe.h"
 
 
-#define logf_immutable(...) disable_logf("IMMUTABLE: " __VA_ARGS__)
+#define logf_immutable(...) logf("IMMUTABLE: " __VA_ARGS__)
 
 
 class immutable {
@@ -24,6 +24,7 @@ public:
       m_seg = FP_SEG(norm_p);
       assert(m_seg != 0);
       m_index = 0;
+      assert(FP_OFF(norm_p) < 0x10);
       m_offset = (uint8_t)FP_OFF(norm_p);
     } else {
       m_seg = 0;
@@ -37,7 +38,9 @@ public:
       void const * norm_p = normalize(p);
       m_seg = FP_SEG(norm_p);
       assert(m_seg != 0);
+      assert(FP_OFF(norm_p) < 0x10);
       m_offset = (uint8_t)FP_OFF(norm_p);
+      assert(denormalize(FP_SEG(p), MK_FP(m_seg, m_offset)) == p);
       init(f, p);
     } else {
       m_seg = 0;
@@ -91,7 +94,7 @@ public:
     return !operator bool();
   }
 
-  void __far * data() const { return MK_FP(m_seg, (void *)(uintptr_t)m_offset); }
+  void const __far * data() const { return MK_FP(m_seg, (void *)(uintptr_t)m_offset); }
 
 private:
   __segment m_seg;
@@ -103,12 +106,30 @@ private:
   void unref();
 
   static void const * normalize(void const * p) {
+#if defined(SIMULATE)
+    void const * norm_p = p;
+#else
     if ((uint16_t)FP_OFF(p) <= UINT8_MAX) {
       return p;
     }
     void const * norm_p = MK_FP(FP_SEG(p) + (FP_OFF(p) >> 4), FP_OFF(p) & 0xF);
+#endif
     logf_immutable("normalized %p to %p\n", p, norm_p);
+    assert(FP_SEG(norm_p) - FP_SEG(p) < 0x8000);
     return norm_p;
+  }
+
+  static void const * denormalize(__segment orig_seg, void const * norm_p) {
+#if defined(SIMULATE)
+    void const * p = norm_p;
+#else
+    void const * p = MK_FP(orig_seg,
+      FP_OFF(norm_p) + ((FP_SEG(norm_p) - orig_seg) << 4));
+#endif
+    logf_immutable("denormalized %p to %p\n", norm_p, p);
+    assert(FP_SEG(p) == orig_seg);
+    assert(FP_SEG(norm_p) - orig_seg < 0x8000);
+    return p;
   }
 };
 

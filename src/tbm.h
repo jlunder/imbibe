@@ -6,6 +6,7 @@
 
 
 class bitmap;
+class unpacker;
 
 
 class tbm_flags {
@@ -21,24 +22,35 @@ public:
     fmt_plain = 0x0000,
     // fmt_plain_qc = 0x0100,
     // fmt_mask_key = 0x0400,
-    // fmt_mask_rle = 0x0500,
+    fmt_mask_rle = 0x0500,
   };
 };
 
 
-_Packed struct __packed__ tbm_header {
+_Packed struct __packed__ iff_header {
   char magic[4]; // "TBMa"
   uint32_t data_size;
-  uint8_t width;
-  uint8_t height;
-  uint16_t flags;
-  uint8_t data_start[];
 };
 
 
-class tbm {
-public:
-  static void to_bitmap(bitmap & b, tbm_header const * header, uint16_t size);
+_Packed struct __packed__ tbm_header {
+  uint8_t width;
+  uint8_t height;
+  uint16_t flags;
+};
+
+
+_Packed struct __packed__ tbm_span {
+  uint8_t skip;
+  uint8_t termel_count;
+};
+
+
+namespace tbm {
+  static const size_t s_tbm_area_max = 1u << 14;
+
+  bool validate(unpacker const & tbm_data);
+  void to_bitmap(unpacker const & tbm_data, bitmap & b);
 };
 
 

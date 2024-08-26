@@ -5,9 +5,8 @@
 #include "imbibe.h"
 
 
-#include "bitmap.h"
-#include "tbm.h"
-#include "termviz.h"
+class bitmap;
+class unpacker;
 
 
 class graphics {
@@ -41,6 +40,8 @@ public:
   void draw_text(coord_t x, coord_t y, attribute_t attr, char const * s);
   void draw_bitmap(coord_t x, coord_t y, bitmap const & b);
   void draw_bitmap_fade(coord_t x, coord_t y, bitmap const & b, uint8_t fade);
+  void draw_tbm(coord_t x, coord_t y, unpacker const & tbm_data);
+  void draw_tbm_fade(coord_t x, coord_t y, unpacker const & tbm_data, uint8_t fade);
 
   bitmap & b() { return m_b; }
   bitmap const & b() const { return m_b; }

@@ -16,7 +16,6 @@
 
 main_element::main_element()
   : window_element(), m_state(st_init),
-    // m_animator(),
     m_prop_fade(0),
     m_prop_submenu_slide(0), m_prop_cover_scroll(0), m_logo_background(),
     m_logo(), m_cover(), m_menu(), m_menu_header(), m_menu_footer(),
@@ -30,36 +29,42 @@ main_element::~main_element() {
 }
 
 
+void main_element::set_captured_screen(im_ptr<bitmap> captured_screen) {
+  m_logo_background.set_b(captured_screen);
+}
+
+
 void main_element::layout() {
   coord_t screen_width = frame_width();
   coord_t screen_height = frame_height();
 
   m_logo_background.set_owner(*this);
+  // captured screen received above
   m_logo.set_owner(*this);
   m_cover.set_owner(*this);
-  m_cover.set_brush(termel:: from('.', color::black, color::white));
+  m_cover.set_b(resource_manager::fetch_bitmap("cover.tbm"));
   m_menu.set_owner(*this);
   m_menu_background.set_owner(m_menu);
+  m_menu_background.set_brush(termel::from('.', color::black, color::white));
+  m_menu_background.show();
   m_menu_header.set_owner(m_menu);
-  m_menu_header.set_brush(termel:: from('H', color::white, color::red));
+  m_menu_header.set_b(resource_manager::fetch_bitmap("menu-top.tbm"));
+  m_menu_header.show();
   m_menu_footer.set_owner(m_menu);
-  m_menu_footer.set_brush(termel:: from('F', color::white, color::red));
+  m_menu_footer.set_b(resource_manager::fetch_bitmap("menu-bot.tbm"));
+  m_menu_footer.show();
   // m_submenu.set_owner(*this);
   // m_submenu_background.set_owner(m_submenu);
   // m_submenu_header.set_owner(m_submenu);
   // m_submenu_footer.set_owner(m_submenu);
 
-  m_logo.set_b(resource_manager::fetch_tbm("logo.tbm"));
+  m_logo.set_b(resource_manager::fetch_bitmap("logo.tbm"));
 
   m_menu.set_frame(0, 0, screen_width, screen_height, 0);
   m_menu_background.set_frame(0, 0, screen_width, screen_height, 0);
-  // m_menu_header.set_frame(0, 0, screen_width,
-  //   screen_height - m_menu_header.b().height(), 1);
   m_menu_header.set_frame(0, 0, screen_width,
-    screen_height - 7, 1);
-  // m_menu_footer.set_frame(0, screen_height - m_menu_footer.b().height(),
-  //   screen_width, screen_height, 2);
-  m_menu_footer.set_frame(0, screen_height - 7,
+    screen_height - m_menu_header.b().height(), 1);
+  m_menu_footer.set_frame(0, screen_height - m_menu_footer.b().height(),
     screen_width, screen_height, 2);
 
   m_logo_background.set_frame(0, 0, screen_width, screen_height, 1);
@@ -69,7 +74,7 @@ void main_element::layout() {
   coord_t logo_y = (screen_height - logo_height) / 2;
   m_logo.set_frame(logo_x, logo_y, logo_x + logo_width, logo_y + logo_height,
     2);
-  m_cover.set_frame(0, 0, screen_width, screen_height * 4, 3);
+  m_cover.set_frame(0, 0, screen_width, m_cover.b().height(), 3);
 
   // propagate to children once we have set their dimensions from ours
   window_element::layout();
@@ -99,12 +104,13 @@ void main_element::animate(uint32_t delta_ms) {
   bool cover_visible = (m_cover_scroll.value() < screen_height)
     && (m_cover_scroll.value() + cover_height > 0);
   bool menu_visible =
-    m_cover_scroll.value() < (screen_height - cover_height);
+    (m_cover_scroll.value() + cover_height) < screen_height;
 
   lock_repaint();
 
   m_logo_background.set_visible(logo_visible);
   m_logo.set_visible(logo_visible);
+  m_logo.set_fade(m_logo_fade.value());
   m_cover.set_visible(cover_visible);
   m_menu.set_visible(menu_visible);
 
@@ -161,8 +167,8 @@ void main_element::enter_intro() {
   //   tweens::linear<uint8_t>(&m_prop_fade, 0, termviz::fade_steps));
   // m_animator.play(k_cover_scroll, 250, 2000,
   //   tweens::linear<coord_t>(&m_prop_cover_scroll, screen_height, -cover_height));
-  m_logo_fade.reset(0, termviz::fade_steps - 1, 0, 1000);
-  m_cover_scroll.reset(screen_height, -cover_height, 10000, 1000);
+  m_logo_fade.reset(0, termviz::fade_steps - 1, 1000);
+  m_cover_scroll.reset(screen_height, -cover_height, 5000, 2000);
   m_anim_timer.reset(11000);
 
 }

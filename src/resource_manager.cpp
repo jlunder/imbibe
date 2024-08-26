@@ -7,6 +7,7 @@
 #include "builtin_data.h"
 #include "map.h"
 #include "tbm.h"
+#include "unpacker.h"
 
 
 #define logf_resource_manager(...) disable_logf("RESOURCE_MANAGER: " __VA_ARGS__)
@@ -156,7 +157,7 @@ bool resource_manager::fetch_ready(imstring const & name) {
 }
 
 
-im_ptr<bitmap> resource_manager::fetch_tbm(imstring const & name) {
+im_ptr<bitmap> resource_manager::fetch_bitmap(imstring const & name) {
   logf_resource_manager("resource_manager::fetch_tbm\n");
   assert(name.length() <= RESOURCE_NAME_LEN_MAX);
   loaded_resources_map::iterator i = s_loaded_resources.find(name);
@@ -178,8 +179,8 @@ im_ptr<bitmap> resource_manager::fetch_tbm(imstring const & name) {
       new(entry.resource) bitmap;
       logf_resource_manager("  converting data at %p (%u bytes)\n",
         entry.data, (unsigned)entry.size);
-      tbm::to_bitmap(*(bitmap *)entry.resource,
-        (tbm_header const *)entry.data, entry.size);
+      tbm::to_bitmap(unpacker(entry.data, entry.size),
+        *(bitmap *)entry.resource);
       logf_resource_manager("  conversion complete: %d x %d\n",
         (int)((bitmap *)entry.resource)->width(),
         (int)((bitmap *)entry.resource)->height());
@@ -191,6 +192,17 @@ im_ptr<bitmap> resource_manager::fetch_tbm(imstring const & name) {
     assert(i != s_loaded_resources.end());
   }
   return i->ref;
+}
+
+
+unpacker resource_manager::fetch_tbm(imstring const & name) {
+  logf_resource_manager("resource_manager::fetch_tbm\n");
+  assert(name.length() <= RESOURCE_NAME_LEN_MAX);
+
+  logf_resource_manager("  i == s_loaded_resources.end()\n");
+  uint16_t index = find_or_load_data(name);
+  index_entry & entry = s_index[index];
+  return unpacker(entry.data, entry.size);
 }
 
 

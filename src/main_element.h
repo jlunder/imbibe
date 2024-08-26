@@ -15,7 +15,8 @@ public:
   main_element();
   virtual ~main_element();
 
-public:
+  void set_captured_screen(im_ptr<bitmap> captured_screen);
+
   virtual void layout();
   virtual void animate(uint32_t delta_ms);
   virtual bool handle_key(uint16_t key);
@@ -30,12 +31,9 @@ private:
 
   state_t m_state;
 
-  // animator m_animator;
-
   linear_tween<uint8_t> m_logo_fade;
   linear_tween<coord_t> m_cover_scroll;
   timer_tween m_anim_timer;
-  // tweens::quadratic<coord_t> m_submenu_slide;
 
   uint8_t m_prop_fade;
   coord_t m_prop_submenu_slide;
@@ -43,16 +41,13 @@ private:
 
   window_element m_frame;
 
-  rectangle_element m_logo_background;
+  bitmap_element m_logo_background;
   bitmap_element m_logo;
-  // bitmap_element m_cover;
-  rectangle_element m_cover;
+  bitmap_element m_cover;
 
   window_element m_menu;
-  // bitmap_element m_menu_header;
-  rectangle_element m_menu_header;
-  // bitmap_element m_menu_footer;
-  rectangle_element m_menu_footer;
+  bitmap_element m_menu_header;
+  bitmap_element m_menu_footer;
   rectangle_element m_menu_background;
 
   // window_element m_submenu;

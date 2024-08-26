@@ -3,34 +3,111 @@
 #include "tbm.h"
 
 #include "bitmap.h"
-#include "termviz.h"
+#include "graphics.h"
+#include "unpacker.h"
 
 
-void tbm::to_bitmap(bitmap & b, tbm_header const * header, uint16_t size) {
-  (void)size;
-  assert(size >= sizeof (*header));
-  assert(header->width > 0 && header->height > 0);
-  assert(header->magic[0] == 'T'); assert(header->magic[1] == 'B');
-  assert(header->magic[2] == 'M'); assert(header->magic[3] == 'a');
+#define logf_tbm(...) logf("TBM: " __VA_ARGS__)
 
-  size_t data_size =
-    (size_t)header->width * header->height * sizeof (termel_t);
-  assert(header->data_size == data_size + 4);
-  assert(size - sizeof (*header) >= data_size);
 
-  switch(header->flags & tbm_flags::flags_format) {
-  case tbm_flags::fmt_plain:
-    b.assign(header->width, header->height,
-      (termel_t const *)header->data_start);
-    break;
-  default:
-    assert(!"Unrecognized TBM format");
-    b = bitmap(header->width, header->height);
-    for (size_t i = 0; i < header->width * header->height; ++i) {
-      (b.data())[i] = termel::from('B', color::black, color::yellow, true);
-    }
-    break;
+bool tbm::validate(unpacker const & tbm_data) {
+  unpacker tbm(tbm_data);
+  if (!tbm.fits_untyped(sizeof (iff_header) + sizeof (tbm_header))) {
+    logf_tbm("too-small TBM, unpacking %p", tbm.peek_untyped());
+    return false;
   }
+
+  {
+    iff_header const & iff_h = tbm.unpack<iff_header>();
+    if (fourcc(iff_h.magic) != fourcc("TBMa")) {
+      logf_tbm("bad TBM fourcc, unpacking %p", tbm.base());
+      return false;
+    }
+    tbm = unpacker(tbm.peek_untyped(),
+      (uint16_t)min<uint32_t>(iff_h.data_size, tbm.remain()));
+  }
+
+  tbm_header tbm_h = tbm.unpack<tbm_header>();
+  uint16_t plane_size = (uint16_t)tbm_h.width * tbm_h.height;
+  if ((tbm_h.width == 0) || (tbm_h.height == 0)
+      || (plane_size > s_tbm_area_max)) {
+    logf_tbm("suspicious TBM dimensions %u x %u, unpacking %p",
+      tbm_h.width, tbm_h.height, tbm.base());
+    return false;
+  }
+
+  if ((tbm_h.flags & tbm_flags::flags_format) == tbm_flags::fmt_plain) {
+    if (!tbm.fits_array<termel_t>(plane_size)) {
+      logf_tbm("TBM data %u too small for %u x %u, unpacking %p",
+        tbm.remain(), tbm_h.width, tbm_h.height, tbm.base());
+      return false;
+    }
+  } else if (
+      (tbm_h.flags & tbm_flags::flags_format) == tbm_flags::fmt_mask_rle) {
+    if (!tbm.fits_array<uint16_t>(tbm_h.height)) {
+      logf_tbm("TBM line index truncated, unpacking %p",
+        tbm.base());
+      return false;
+    }
+    uint16_t lines_origin = tbm.pos();
+    uint16_t const * lines = tbm.unpack_array<uint16_t>(tbm_h.height);
+    for (uint16_t i = 0; i < tbm_h.height; ++i) {
+      if (lines[i] == 0) {
+        continue;
+      }
+      if (lines[i] >= (tbm.size() - lines_origin)) {
+        logf_tbm("TBM line %u outside data (at %u), unpacking %p",
+          i, lines[i], tbm.base());
+        return false;
+      }
+      tbm.seek_to(lines[i] + lines_origin);
+      uint16_t x = 0;
+      for (;;) {
+        if (!tbm.fits<tbm_span>()) {
+          logf_tbm("TBM line %u span (at %u) truncated, unpacking %p",
+            i, lines[i], tbm.base());
+          return false;
+        }
+        tbm_span span = tbm.unpack<tbm_span>();
+        if ((span.skip == 0) && (span.termel_count == 0)) {
+          // end marker
+          break;
+        }
+        if ((span.skip > tbm_h.width) || (x > tbm_h.width - span.skip)) {
+          logf_tbm("TBM line %u skip (at %u) leaves image, unpacking %p",
+            i, (unsigned)(tbm.pos() - sizeof (tbm_span)), tbm.base());
+          return false;
+        }
+        x += span.skip;
+        if ((span.termel_count > tbm_h.width)
+            || (x > tbm_h.width - span.termel_count)) {
+          logf_tbm("TBM line %u data (at %u) leaves image, unpacking %p",
+            i, (unsigned)(tbm.pos() - sizeof (tbm_span)), tbm.base());
+          return false;
+        }
+        if (!tbm.fits_array<termel_t>(span.termel_count)) {
+          logf_tbm("TBM line %u data (at %u) truncated, unpacking %p",
+            i, (unsigned)(tbm.pos() - sizeof (tbm_span)), tbm.base());
+          return false;
+        }
+        tbm.unpack_array<termel_t>(span.termel_count);
+        x += span.termel_count;
+      }
+    }
+  }
+
+  return true;
+}
+
+
+void tbm::to_bitmap(unpacker const & tbm_data, bitmap & b) {
+  assert(validate(tbm_data));
+  unpacker tbm(tbm_data);
+  tbm.skip<iff_header>();
+  tbm_header const & tbm_h = tbm.unpack<tbm_header>();
+  b.assign(tbm_h.width, tbm_h.height);
+  graphics g(b);
+  g.draw_tbm(0, 0, tbm_data);
 }
 
 

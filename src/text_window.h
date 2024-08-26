@@ -19,7 +19,7 @@ class text_window: public window
 public:
   text_window();
 
-  void setup();
+  void setup(bitmap * capture_screen = NULL);
   void teardown();
 
   void present();

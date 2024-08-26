@@ -2,11 +2,16 @@
 
 #include "graphics.h"
 
+#include "bitmap.h"
+#include "tbm.h"
+#include "unpacker.h"
+
 
 #define logf_graphics(...) disable_logf("GRAPHICS: " __VA_ARGS__)
 
 
 namespace aux_graphics {
+
   struct clip_params {
     coord_t dest_x;
     coord_t dest_y;
@@ -18,7 +23,6 @@ namespace aux_graphics {
     bool compute_clip(graphics const & g, coord_t x1, coord_t y1, coord_t x2,
       coord_t y2);
   };
-
 
   bool clip_params::compute_clip(graphics const & g, coord_t x1, coord_t y1,
       coord_t x2, coord_t y2) {
@@ -70,9 +74,8 @@ namespace aux_graphics {
     return true;
   }
 
-
   struct bitmap_transform_params: public clip_params {
-    coord_t pixels_per_line;
+    coord_t termels_per_line;
     coord_t lines;
     termel_t const * source_p;
     termel_t * dest_p;
@@ -80,7 +83,15 @@ namespace aux_graphics {
     uint16_t dest_stride;
 
     bool compute_transform(graphics & g, coord_t x, coord_t y,
-      bitmap const & b);
+      coord_t width, coord_t height, termel_t const __far * data);
+
+    template<class TLineOp>
+    void transform(TLineOp const & op) {
+      for (coord_t i = 0; i < lines; ++i) {
+        op.transfer_line(dest_p, source_p, termels_per_line);
+        next_line();
+      }
+    }
 
     void next_line() {
       dest_p += dest_stride;
@@ -88,21 +99,132 @@ namespace aux_graphics {
     }
   };
 
+  class copy_line_op {
+  public:
+    void transfer_line(termel_t __far * dest, termel_t const __far * src,
+        uint16_t count) const {
+      memcpy(dest, src, count * sizeof (termel_t));
+    }
+  };
+
+  class fade_line_op {
+  public:
+    explicit fade_line_op(uint8_t n_fade) {
+      assert(n_fade <= termviz::fade_steps);
+      m_fade_lut = termviz::fade_seqs[n_fade];
+    }
+
+    void transfer_line(termel_t __far * dest, termel_t const __far * src,
+        uint16_t count) const {
+      for (uint16_t j = 0; j < count; ++j) {
+        termel_t te = src[j];
+        dest[j] = termel::with_attribute(te,
+          m_fade_lut[termel::foreground(te)],
+          m_fade_lut[termel::background(te)]);
+      }
+    }
+
+  private:
+    color_t const * m_fade_lut;
+  };
 
   bool bitmap_transform_params::compute_transform(graphics & g,
-      coord_t x, coord_t y, bitmap const & b) {
-    if (!clip_params::compute_clip(g, x, y, x + b.width(), y + b.height())) {
+      coord_t x, coord_t y, coord_t width, coord_t height,
+      termel_t const __far * data) {
+    if (!clip_params::compute_clip(g, x, y, x + width, y + height)) {
       return false;
     }
 
-    pixels_per_line = (source_x2 - source_x1);
+    termels_per_line = (source_x2 - source_x1);
     lines = source_y2 - source_y1;
-    source_p = b.data() + source_y1 * b.width() + source_x1;
+    source_p = data + source_y1 * width + source_x1;
     dest_p = g.b().data() + dest_y * g.b().width() + dest_x;
-    source_stride = b.width();
+    source_stride = width;
     dest_stride = g.b().width();
 
     return true;
+  }
+
+  bool prepare_plain_tbm_transform_params(graphics & g, unpacker & tbm,
+       coord_t x, coord_t y, coord_t width, coord_t height,
+       bitmap_transform_params & p) {
+    uint16_t plane_size = width * height;
+    if (!p.compute_transform(g, x, y, width, height,
+        tbm.unpack_array<termel_t>(plane_size))) {
+      return false;
+    }
+
+    return true;
+  }
+
+  template<class TLineOp>
+  void draw_tbm(graphics & g, coord_t x, coord_t y,
+      unpacker const & tbm_data, TLineOp op) {
+    unpacker tbm(tbm_data);
+    iff_header const & iff_h = tbm.unpack<iff_header>();
+    tbm = unpacker(tbm.peek_untyped(),
+      (uint16_t)min<uint32_t>(tbm.remain(), iff_h.data_size));
+    tbm_header tbm_h = tbm.unpack<tbm_header>();
+
+    if ((tbm_h.flags & tbm_flags::flags_format) == tbm_flags::fmt_plain) {
+      bitmap_transform_params p;
+      if (prepare_plain_tbm_transform_params(g, tbm, x, y, tbm_h.width,
+          tbm_h.height, p)) {
+        p.transform(op);
+      }
+    } else if (
+        (tbm_h.flags & tbm_flags::flags_format) == tbm_flags::fmt_mask_rle) {
+      aux_graphics::clip_params p;
+      if (!p.compute_clip(g, x, y, x + tbm_h.width, y + tbm_h.height)) {
+        return;
+      }
+      assert(p.source_y1 < tbm_h.height); assert(p.source_y2 <= tbm_h.height);
+      draw_mask_rle_tbm(g, p, tbm, op);
+    }
+  }
+
+  template<class TLineOp>
+  void draw_mask_rle_tbm(graphics & g, aux_graphics::clip_params const & p,
+      unpacker const & tbm_data, TLineOp op) {
+    unpacker tbm(tbm_data);
+    uint16_t lines_origin = tbm.pos();
+    uint16_t const * lines = tbm.unpack_array<uint16_t>(p.source_y1);
+    termel_t * dest_p = g.b().data() + p.dest_y * g.b().width() + p.dest_x;
+    uint16_t dest_stride = g.b().width();
+    for (coord_t i = p.source_y1; i < p.source_y2; ++i) {
+      if (lines[i] == 0) {
+        continue;
+      }
+      tbm.seek_to(lines[i] + lines_origin);
+      uint16_t span_start = 0;
+      for (;;) {
+        tbm_span span = tbm.unpack<tbm_span>();
+        if ((span.skip == 0) && (span.termel_count == 0)) {
+          break;
+        }
+        span_start += span.skip;
+        if (span_start >= p.source_x2) {
+          break;
+        }
+        termel_t const __far * span_data =
+          tbm.unpack_array<termel_t>(span.termel_count);
+        uint16_t span_end = span_start + span.termel_count;
+        if (span_start < p.source_x1) {
+          span_data += p.source_x1 - span_start;
+          span_start = p.source_x1;
+        }
+        if (span_end >= p.source_x2) {
+          span_end = p.source_x2;
+        }
+        op.transfer_line(dest_p + span_start - p.source_x1, span_data,
+          span_end - span_start);
+        if (span_end >= p.source_x2) {
+          break;
+        }
+        span_start = span_end;
+      }
+      dest_p += dest_stride;
+    }
   }
 }
 
@@ -232,56 +354,29 @@ void graphics::draw_text(coord_t x, coord_t y, attribute_t attr,
 
 void graphics::draw_bitmap(coord_t x, coord_t y, bitmap const & b) {
   aux_graphics::bitmap_transform_params p;
-  if (!p.compute_transform(*this, x, y, b)) {
-    return;
-  }
-
-  for (coord_t i = 0; i < p.lines; ++i) {
-    memcpy(p.dest_p, p.source_p, p.pixels_per_line * sizeof (termel_t));
-    p.next_line();
+  if (p.compute_transform(*this, x, y, b.width(), b.height(), b.data())) {
+    p.transform(aux_graphics::copy_line_op());
   }
 }
 
 
 void graphics::draw_bitmap_fade(coord_t x, coord_t y, bitmap const & b, uint8_t fade) {
   aux_graphics::bitmap_transform_params p;
-  if (!p.compute_transform(*this, x, y, b)) {
-    return;
-  }
-
-  assert(fade <= termviz::fade_steps);
-  // termel_t fade_mask =
-  //   termel::from((char)0xFF, termviz::fade_masks[fade]);
-
-  color_t const * fade_lut = termviz::fade_seqs[fade];
-
-  for (coord_t i = 0; i < p.lines; ++i) {
-    for (coord_t j = 0; j < p.pixels_per_line; ++j) {
-      // p.dest_p[j] = p.source_p[j] & fade_mask;
-      termel_t te = p.source_p[j];
-      p.dest_p[j] = termel::with_attribute(te,
-        fade_lut[termel::foreground(te)], fade_lut[termel::background(te)]);
-    }
-    p.next_line();
+  if (p.compute_transform(*this, x, y, b.width(), b.height(), b.data())) {
+    p.transform(aux_graphics::fade_line_op(fade));
   }
 }
 
-/*
-void graphics::draw_bitmap_xfade(coord_t x, coord_t y, bitmap const & b, uint8_t fade) {
-  aux_graphics::bitmap_transform_params p;
-  if (!p.compute_transform(*this, x, y, b)) {
-    return;
-  }
 
-  assert(fade <= termviz::fade_steps);
-  termel_t fade_mask = ((termel_t)fade_masks[fade] << 8) + 0xFF;
-
-  for (coord_t i = 0; i < p.lines; ++i) {
-    for (coord_t j = 0; j < p.pixels_per_line; ++j) {
-       p.dest_p[j] = p.source_p[j] & fade_mask;
-    }
-    p.next_line();
-  }
+void graphics::draw_tbm(coord_t x, coord_t y, unpacker const & tbm_data) {
+  aux_graphics::draw_tbm(*this, x, y, tbm_data,
+    aux_graphics::copy_line_op());
 }
 
-*/
+
+void graphics::draw_tbm_fade(coord_t x, coord_t y, unpacker const & tbm_data,
+    uint8_t fade) {
+  aux_graphics::draw_tbm(*this, x, y, tbm_data,
+    aux_graphics::fade_line_op(fade));
+}
+

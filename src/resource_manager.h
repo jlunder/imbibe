@@ -7,6 +7,7 @@
 #include "bitmap.h"
 #include "immutable.h"
 #include "imstring.h"
+#include "unpacker.h"
 
 #define RESOURCE_NAME_LEN_MAX 63
 
@@ -17,7 +18,8 @@ namespace resource_manager {
 
   extern bool begin_fetch_tbm(imstring const & name);
   extern bool fetch_ready(imstring const & name);
-  extern im_ptr<bitmap> fetch_tbm(imstring const & name);
+  extern im_ptr<bitmap> fetch_bitmap(imstring const & name);
+  extern unpacker fetch_tbm(imstring const & name);
   void flush(imstring const & name);
   void flush_all();
 }
