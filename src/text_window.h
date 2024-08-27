@@ -34,14 +34,6 @@ public:
   virtual void element_frame_changed(element & e, coord_t old_x1,
     coord_t old_y1, coord_t old_x2, coord_t old_y2, coord_t old_z);
 
-  virtual bool is_element();
-  virtual element & as_element();
-
-  virtual void set_focus(element & e);
-  virtual void clear_focus();
-  virtual bool has_focus();
-  virtual element & focus();
-
 private:
   void paint_element(graphics & g, element & e);
   void locked_repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2);
@@ -49,7 +41,6 @@ private:
     coord_t z);
 
   element * m_element;
-  element * m_focus;
   bitmap m_backbuffer;
   int8_t m_lock_count;
   bool m_need_repaint;

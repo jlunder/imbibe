@@ -103,8 +103,6 @@ extern unsigned _dos_freemem(unsigned seg);
 
 inline void * operator new (size_t size, void * p) { (void)size; return p; }
 
-extern void step_simulator();
-
 #define SIMULATE
 
 #else
@@ -129,10 +127,16 @@ extern unsigned _dos_lseek(int handle, long offset, int whence,
 #endif
 
 
+extern void step_simulator_loop();
+extern void step_simulator_idle();
+extern void step_simulator_poll();
+
+
 #define LENGTHOF(a) (sizeof (a) / sizeof (a[0]))
 
 #define logf(...) cprintf(__VA_ARGS__)
 #define disable_logf(...) do {} while (false)
+#define logf_simulator(...) logf(__VA_ARGS__)
 
 #define abortf(...) do { failsafe_textmode(); cprintf("fatal error: "); \
   cprintf(__VA_ARGS__); abort(); } while(false)

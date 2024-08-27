@@ -131,36 +131,6 @@ void window_element::element_frame_changed(element & e, coord_t old_x1,
 }
 
 
-bool window_element::is_element() {
-  return true;
-}
-
-
-element & window_element::as_element() {
-  return *this;
-}
-
-
-void window_element::set_focus(element & e) {
-  owner().set_focus(e);
-}
-
-
-void window_element::clear_focus() {
-  owner().clear_focus();
-}
-
-
-bool window_element::has_focus() {
-  return owner().has_focus();
-}
-
-
-element & window_element::focus() {
-  return owner().focus();
-}
-
-
 void window_element::set_offset_pos(coord_t offset_x, coord_t offset_y) {
   assert_margin(offset_x, COORD_MAX); assert_margin(offset_y, COORD_MAX);
 

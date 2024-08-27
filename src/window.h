@@ -19,14 +19,6 @@ public:
   virtual void remove_element(element & e) = 0;
   virtual void element_frame_changed(element & e, coord_t old_x1,
     coord_t old_y1, coord_t old_x2, coord_t old_y2, coord_t old_z) = 0;
-
-  virtual bool is_element() = 0;
-  virtual element & as_element() = 0;
-
-  virtual void set_focus(element & e) = 0;
-  virtual void clear_focus() = 0;
-  virtual bool has_focus() = 0;
-  virtual element & focus() = 0;
 };
 
 

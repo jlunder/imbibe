@@ -148,7 +148,7 @@ public:
   explicit im_ptr(): immutable() { }
   explicit im_ptr(T const * n_p): immutable(n_p ? reclaim : NULL, n_p) { }
   explicit im_ptr(immutable::prealloc_t policy, T const * n_p)
-    : immutable(n_p ? reclaim : NULL, n_p) {
+    : immutable(policy, n_p) {
   }
   explicit im_ptr(immutable::reclaim_func_t custom_reclaim, T const * n_p)
     : immutable(custom_reclaim, n_p) {

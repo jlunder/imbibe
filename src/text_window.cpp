@@ -138,7 +138,7 @@ text_window text_window_instance;
 
 
 text_window::text_window()
-  : window(), m_element(NULL), m_focus(NULL),
+  : window(), m_element(NULL),
     m_backbuffer(aux_text_window::s_screen_width,
       aux_text_window::s_screen_height),
     m_lock_count(0), m_need_repaint(false) {
@@ -178,8 +178,7 @@ void text_window::lock_repaint() {
 void text_window::unlock_repaint() {
   assert(m_lock_count > 0);
   --m_lock_count;
-  if (!m_lock_count)
-  {
+  if (!m_lock_count) {
     if (m_need_repaint) {
       repaint(m_repaint_x1, m_repaint_y1, m_repaint_x2, m_repaint_y2);
       m_need_repaint = false;
@@ -242,37 +241,6 @@ void text_window::element_frame_changed(element & e, coord_t old_x1,
   assert(&e == m_element);
   repaint(min(old_x1, e.frame_x1()), min(old_y1, e.frame_y1()),
     max(old_x2, e.frame_x2()), max(old_y2, e.frame_y2()));
-}
-
-
-bool text_window::is_element() {
-  return false;
-}
-
-
-element & text_window::as_element() {
-  assert(!"not valid");
-  return *(element *)NULL;
-}
-
-
-void text_window::set_focus(element & e) {
-  m_focus = &e;
-}
-
-
-void text_window::clear_focus() {
-  m_focus = NULL;
-}
-
-
-bool text_window::has_focus() {
-  return !!m_focus;
-}
-
-
-element & text_window::focus() {
-  return *m_focus;
 }
 
 

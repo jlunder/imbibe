@@ -4,12 +4,7 @@
 
 #include "inplace.h"
 
-#if defined(RENDER_TEST)
-#include "render_test_task.h"
-#else
-#include "main_task.h"
-#endif
-
+#include "application.h"
 #include "keyboard.h"
 #include "imstring.h"
 #include "resource_manager.h"
@@ -100,17 +95,9 @@ int main(int argc, char * argv[]) {
   imstring::setup();
   timer::setup();
   resource_manager::setup();
-#if defined(RENDER_TEST)
-  render_task_instance.setup();
-  render_task_instance->start();
-  render_task_instance->run_loop();
-  render_task_instance.teardown();
-#else
-  main_task_instance.setup();
-  main_task_instance->start();
-  main_task_instance->run_loop();
-  main_task_instance.teardown();
-#endif
+  application::setup();
+  application::run_loop();
+  application::teardown();
 
 #ifdef NDEBUG
   resource_manager::teardown_exiting();
@@ -152,7 +139,7 @@ void pit_tick_counter_int_handler() { ++pit_tick_counter; }
 void (*pit_int_handler)() = pit_tick_counter_int_handler;
 
 
-void step_simulator() {
+void step_simulator_loop() {
   assert(sim_seq_i < LENGTHOF(sim_seq));
   ++sim_seq_i_step;
   if ((sim_seq_i_step >= sim_seq[sim_seq_i].key)
@@ -172,6 +159,14 @@ void step_simulator() {
   }
   logf_imbibe("sim_step [%u:%u, %u ms]\n",
     sim_seq_i, sim_seq_i_step, sim_seq_i_ms);
+}
+
+
+extern void step_simulator_idle() {
+}
+
+
+extern void step_simulator_poll() {
 }
 
 
@@ -284,6 +279,24 @@ unsigned _dos_freemem(unsigned seg) {
   (void)seg;
   assert(!"TODO");
   return 1;
+}
+
+
+#else
+
+
+void step_simulator_loop() {
+  logf_simulator("SIM: loop @ %010ms\n", timer::now());
+}
+
+
+void step_simulator_idle() {
+  logf_simulator("SIM: idle @ %010ms\n", timer::now());
+}
+
+
+void step_simulator_poll() {
+  logf_simulator("SIM: poll @ %010ms\n", timer::now());
 }
 
 
