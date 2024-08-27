@@ -4,13 +4,15 @@
 
 #include "imbibe.h"
 
+#include "screen_element.h"
 #include "tbm_element.h"
-#include "window_element.h"
 
 
-class intro_element: public window_element {
+class intro_element: public screen_element {
 public:
-
+  virtual void poll();
+  virtual bool handle_key(uint16_t key);
+  virtual void animate(uint32_t delta_ms);
 };
 
 

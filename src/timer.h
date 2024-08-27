@@ -38,6 +38,7 @@ public:
       m_last_ms = new_ms - (uint32_t)result.rem;
       return (uint32_t)result.quot;
     } else if (delta_ms >= min_period_ms) {
+      m_last_ms += min_period_ms;
       return 1;
     } else {
       return 0;
@@ -54,6 +55,7 @@ public:
       m_last_ms = new_ms - (uint32_t)result.rem;
       return delta_ms - (uint32_t)result.rem;
     } else if (delta_ms >= min_period_ms) {
+      m_last_ms += min_period_ms;
       return min_period_ms;
     } else {
       return 0;

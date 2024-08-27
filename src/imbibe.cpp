@@ -118,86 +118,94 @@ int main(int argc, char * argv[]) {
 #if defined(SIMULATE)
 
 
-uint16_t dummy_screen[16384];
+namespace sim {
 
-struct key_seq_entry {
-  uint32_t steps;
-  uint32_t ms;
-  uint16_t key;
-};
+  uint16_t dummy_screen[16384];
 
-key_seq_entry const sim_seq[] = {
-  {1000, 20000, 0x001B},
-  {  100, 2000,      0},
-};
-uint32_t sim_seq_i = 0;
-uint32_t sim_seq_i_step = 0;
-uint32_t sim_seq_i_ms = 0;
+  struct key_seq_entry {
+    uint32_t ms;
+    uint16_t key;
+  };
 
-uint32_t pit_tick_counter = 0;
-void pit_tick_counter_int_handler() { ++pit_tick_counter; }
-void (*pit_int_handler)() = pit_tick_counter_int_handler;
+  struct loop_seq_entry {
+    uint32_t ms;
+    uint32_t ms_per_loop;
+    uint32_t ms_per_idle;
+    uint32_t idle_per_loop;
+  };
+
+  key_seq_entry const key_seq[] = {
+    {   500, key_code::escape },
+    {  2000, key_code::control_q },
+    {     0, 0 },
+  };
+
+  loop_seq_entry const loop_seq[] = {
+    {     1, 10, 1, 0 },
+    {     0, 10, 1, 0 },
+  };
+
+  uint32_t now_ms = 0;
+  key_seq_entry const * key_seq_p = key_seq;
+  loop_seq_entry const * loop_seq_p = loop_seq;
+
+  uint32_t pit_tick_counter = 0;
+  void pit_tick_counter_int_handler() { ++pit_tick_counter; }
+  void (*pit_int_handler)() = pit_tick_counter_int_handler;
+
+  void advance_time_to(uint32_t to_ms);
+}
 
 
-void step_simulator_loop() {
-  assert(sim_seq_i < LENGTHOF(sim_seq));
-  ++sim_seq_i_step;
-  if ((sim_seq_i_step >= sim_seq[sim_seq_i].key)
-      && (sim_seq[sim_seq_i].key == 0)) {
-    assert(sim_seq_i + 1 < LENGTHOF(sim_seq));
-    ++sim_seq_i;
-    sim_seq_i_step = 0;
-    sim_seq_i_ms = 0;
+void sim::step_idle() {
+  advance_time_to(now_ms + loop_seq_p->ms_per_idle);
+}
+
+
+void sim::step_poll() {
+  assert(loop_seq_p < loop_seq + LENGTHOF(loop_seq));
+  advance_time_to(loop_seq_p->ms);
+  while ((loop_seq_p->ms > 0) && (now_ms >= (loop_seq_p + 1)->ms)) {
+    ++loop_seq_p;
   }
-  uint32_t target_ms = (uint64_t)sim_seq_i_step * sim_seq[sim_seq_i].ms
-    / sim_seq[sim_seq_i].steps;
-  while (sim_seq_i_ms < target_ms) {
+  advance_time_to(now_ms + loop_seq_p->ms_per_loop);
+}
+
+
+void sim::advance_time_to(uint32_t to_ms) {
+  while (now_ms < to_ms) {
     if (pit_int_handler != pit_tick_counter_int_handler) {
       pit_int_handler();
     }
-    ++sim_seq_i_ms;
+    ++now_ms;
   }
-  logf_imbibe("sim_step [%u:%u, %u ms]\n",
-    sim_seq_i, sim_seq_i_step, sim_seq_i_ms);
 }
 
 
-extern void step_simulator_idle() {
-}
-
-
-extern void step_simulator_poll() {
+void sim::step_animate(uint32_t anim_ms) {
+  (void)anim_ms;
+  // assert desired anim_ms achieved
 }
 
 
 bool keyboard::key_event_available() {
-  assert(sim_seq_i < LENGTHOF(sim_seq));
-  bool avail = (sim_seq[sim_seq_i].key != 0)
-    && (sim_seq_i_step >= sim_seq[sim_seq_i].steps);
-  logf_imbibe("key_avail: %d\n", (int)avail);
-  return avail;
+  assert(sim::key_seq_p < (sim::key_seq + LENGTHOF(sim::key_seq)));
+  return (sim::key_seq_p->ms > 0) && (sim::key_seq_p->ms <= sim::now_ms);
 }
 
 
 key_code_t keyboard::read_key_event() {
-  assert(sim_seq_i < LENGTHOF(sim_seq));
-  assert(key_event_available());
-  if (sim_seq_i >= LENGTHOF(sim_seq)) {
+  assert(sim::key_seq_p < (sim::key_seq + LENGTHOF(sim::key_seq)));
+  if (sim::key_seq_p->ms == 0) {
+    assert(!"read_key_event no key available!");
     return 0;
   }
-  if (sim_seq_i_step >= sim_seq[sim_seq_i].steps) {
-    assert(sim_seq_i_ms >= sim_seq[sim_seq_i].ms);
-    uint16_t key = sim_seq[sim_seq_i].key;
-    assert(sim_seq_i + 1 < LENGTHOF(sim_seq));
-    ++sim_seq_i;
-    sim_seq_i_step = 0;
-    sim_seq_i_ms = 0;
-    logf_imbibe("read_key: 0x%04X\n", key);
-    return key;
-  } else {
-    assert(!"read_key no key available!");
-    return 0;
+  if (sim::key_seq_p->ms > sim::now_ms) {
+    logf_imbibe("read_key_event blocking\n");
+    sim::advance_time_to(sim::key_seq_p->ms);
   }
+  assert(sim::key_seq_p->ms <= sim::now_ms);
+  return (sim::key_seq_p++)->key;
 }
 
 
@@ -205,16 +213,16 @@ void _dos_setvect(int int_no, void (*int_handler)()) {
   (void)int_no;
   assert(int_no == 8);
   logf_imbibe("setvect 0x%02X, %p (overwrites %p)\n", int_no,
-    int_handler, pit_int_handler);
-  pit_int_handler = int_handler;
+    int_handler, sim::pit_int_handler);
+  sim::pit_int_handler = int_handler;
 }
 
 
 void (*_dos_getvect(int int_no))() {
   (void)int_no;
   assert(int_no == 8);
-  logf_imbibe("getvect 0x%02X: %p\n", int_no, pit_int_handler);
-  return pit_int_handler;
+  logf_imbibe("getvect 0x%02X: %p\n", int_no, sim::pit_int_handler);
+  return sim::pit_int_handler;
 }
 
 
@@ -285,18 +293,31 @@ unsigned _dos_freemem(unsigned seg) {
 #else
 
 
+namespace aux_simulation {
+  uint32_t s_idle_count = 0;
+}
+
+
 void step_simulator_loop() {
-  logf_simulator("SIM: loop @ %010ms\n", timer::now());
+  logf_sim("('loop',{'t':%lu})\n", (unsigned long)timer::now());
 }
 
 
 void step_simulator_idle() {
-  logf_simulator("SIM: idle @ %010ms\n", timer::now());
+  ++aux_simulation::s_idle_count;
 }
 
 
 void step_simulator_poll() {
-  logf_simulator("SIM: poll @ %010ms\n", timer::now());
+  logf_sim("('poll',{'t':%lu,'idle'=%lu})\n",
+    (unsigned long)timer::now(),
+    (unsigned long)aux_simulation::s_idle_count);
+}
+
+
+void step_simulator_animate(uint32_t anim_ms) {
+  logf_sim("('animate',{'t':%lu,'anim_ms'=%lu})\n",
+    (unsigned long)timer::now(), (unsigned long)anim_ms);
 }
 
 

@@ -4,11 +4,14 @@
 
 #include "imbibe.h"
 
-#include "window_element.h"
+#include "screen_element.h"
 
 
-class viewer_element: public window_element {
+class viewer_element: public screen_element {
 public:
+  virtual void poll();
+  virtual bool handle_key(uint16_t key);
+  virtual void animate(uint32_t delta_ms);
 };
 
 

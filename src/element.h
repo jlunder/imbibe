@@ -44,9 +44,6 @@ public:
   void request_repaint();
   void request_repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2);
 
-  virtual void layout();
-  virtual void animate(uint32_t delta_ms);
-  virtual bool handle_key(uint16_t key);
   virtual void paint(graphics & g) = 0;
 
 private:

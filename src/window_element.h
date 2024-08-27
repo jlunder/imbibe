@@ -16,9 +16,6 @@ public:
 #endif
   }
 
-  virtual void layout();
-  virtual void animate(uint32_t delta_ms);
-  virtual bool handle_key(uint16_t key);
   virtual void paint(graphics & g);
 
   virtual void lock_repaint();

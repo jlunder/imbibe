@@ -66,7 +66,7 @@ namespace application {
   void animate(uint32_t anim_ms);
   void idle();
 
-  element & find_topmost_screen();
+  screen_element & focused_screen();
 
   void internal_do_cancel_prompts();
 
@@ -109,8 +109,7 @@ void application::setup() {
   s_quit_prompt_dialog.set_frame(0, 0,  s_display_width, s_display_height, 20);
   s_outro_screen.set_frame(0, 0,  s_display_width, s_display_height, 30);
 
-  s_capture_background.set_b(im_ptr<bitmap>(immutable::prealloc, &s_capture));
-
+  s_capture_background.set_owner(s_container);
   s_container.set_owner(s_win);
   s_menu_screen.set_owner(s_container);
   s_submenu_screen.set_owner(s_container);
@@ -119,6 +118,7 @@ void application::setup() {
   s_quit_prompt_dialog.set_owner(s_container);
   s_outro_screen.set_owner(s_container);
 
+  s_capture_background.set_b(im_ptr<bitmap>(immutable::prealloc, &s_capture));
   s_menu_screen.layout();
   s_submenu_screen.layout();
   s_viewer_screen.layout();
@@ -140,6 +140,7 @@ void application::teardown() {
 
   s_win.lock_repaint();
 
+  s_capture_background.hide();
   s_menu_screen.hide();
   s_submenu_screen.hide();
   s_viewer_screen.hide();
@@ -156,41 +157,44 @@ void application::teardown() {
 
 
 void application::run_loop() {
+  // cause reset of s_idle_timer
   idle();
   s_frame_timer.read_ms();
 
   while (!s_quitting) {
-    step_simulator_loop();
+    sim::step_poll();
+    poll_input();
+    update_transitions();
 
     // logf_application("main loop: check for starvation\n");
     // idle() if it's been a really long time since we last did
     while ((s_idle_timer.peek_ms() >= s_max_idle_interval_ms)
         || (s_frame_timer.peek_ms() < s_min_poll_interval_ms)) {
-      step_simulator_idle();
+      sim::step_idle();
       idle();
     }
 
-    step_simulator_poll();
-
-    poll_input();
-    update_transitions();
-
     uint32_t anim_ms = s_frame_timer.read_exact_ms(s_min_poll_interval_ms);
     assert(anim_ms >= s_min_poll_interval_ms);
+    sim::step_animate(anim_ms);
     animate(anim_ms);
   }
 }
 
 
 void application::poll_input() {
+  focused_screen().poll();
   while (keyboard::key_event_available()) {
     uint16_t key = keyboard::read_key_event();
     logf_application("key pressed: %X\n", key);
+    if(focused_screen().handle_key(key)) {
+      continue;
+    }
     switch(key) {
     case 'q':
     case 'x':
       do_quit_from_anywhere();
-      break;
+      continue;
     case 'Q': // shift_q
     case 'X': // shift_x
     case key_code::control_q:
@@ -198,21 +202,45 @@ void application::poll_input() {
     case key_code::alt_q:
     case key_code::alt_x:
       do_immediate_quit_from_anywhere();
-      break;
+      continue;
     default:
-      find_topmost_screen().handle_key(key);
+      break;
     }
   }
 }
 
 
 void application::animate(uint32_t anim_ms) {
-  element & topmost = find_topmost_screen();
-  // show() after animate() because coming into this method, animated
-  // positions may need to be initialized -- this avoids weird pops and
-  // over-rendering
-  topmost.animate(anim_ms);
-  topmost.show();
+  screen_element * screens[] = {
+    &s_quit_prompt_dialog,
+    &s_outro_screen,
+    &s_viewer_screen,
+    &s_submenu_screen,
+    &s_menu_screen,
+    &s_intro_screen,
+  };
+
+  bool found_active = false;
+  bool found_opaque = false;
+  for (size_t i = 0; i < LENGTHOF(screens); ++i) {
+    if (found_opaque || (!found_active && !screens[i]->active())) {
+      screens[i]->hide();
+    } else {
+      if (screens[i]->active()) {
+        found_active = true;
+      }
+      // show() after animate() because coming into this method, animated
+      // positions may need to be initialized -- this avoids weird pops and
+      // over-rendering
+      screens[i]->animate(anim_ms);
+      screens[i]->show();
+      if (screens[i]->opaque()) {
+        found_opaque = true;
+      }
+    }
+  }
+  // show the background if it would be visible
+  s_capture_background.set_visible(!found_opaque);
 
   s_win.present();
 }
@@ -223,13 +251,13 @@ void application::idle() {
 }
 
 
-element & application::find_topmost_screen() {
-  if (s_last_showing_quit_prompt) {
+screen_element & application::focused_screen() {
+  if (s_showing_quit_prompt) {
     return s_quit_prompt_dialog;
-  } else if(s_last_showing_viewer) {
+  } else if(s_showing_viewer) {
     return s_viewer_screen;
   } else {
-    switch(s_last_mode) {
+    switch(s_mode) {
     case mode_intro:
       return s_intro_screen;
     case mode_menu:
@@ -388,7 +416,7 @@ void application::update_transitions() {
       activate_submenu(s_submenu_category);
       break;
     case mode_outro:
-      assert(!"should only leave outro mode to quit?");
+      activate_outro();
       break;
     default:
       assert(!"invalid s_mode");
@@ -400,28 +428,28 @@ void application::update_transitions() {
 
 void application::activate_intro() {
   assert(s_last_mode == mode_none);
-  s_intro_screen.show();
+  s_intro_screen.activate();
   s_last_mode = mode_intro;
 }
 
 
 void application::deactivate_intro() {
   assert(s_last_mode == mode_intro);
-  s_intro_screen.hide();
+  s_intro_screen.deactivate();
   s_last_mode = mode_none;
 }
 
 
 void application::activate_menu() {
   assert(s_last_mode == mode_none);
-  s_menu_screen.show();
+  s_menu_screen.activate();
   s_last_mode = mode_menu;
 }
 
 
 void application::deactivate_menu() {
   assert(s_last_mode == mode_menu);
-  s_menu_screen.hide();
+  s_menu_screen.deactivate();
   s_last_mode = mode_none;
 }
 
@@ -429,7 +457,7 @@ void application::deactivate_menu() {
 void application::activate_submenu(imstring category) {
   assert(s_last_mode == mode_none);
   assert(!category.null_or_empty());
-  s_submenu_screen.show();
+  s_submenu_screen.activate();
   s_last_submenu_category = category;
   s_last_mode = mode_submenu;
 }
@@ -437,7 +465,7 @@ void application::activate_submenu(imstring category) {
 
 void application::deactivate_submenu() {
   assert(s_last_mode == mode_submenu);
-  s_submenu_screen.hide();
+  s_submenu_screen.deactivate();
   s_last_submenu_category = NULL;
   s_last_mode = mode_none;
 }
@@ -446,7 +474,7 @@ void application::deactivate_submenu() {
 void application::activate_viewer(imstring article) {
   assert((s_last_mode == mode_menu) || (s_last_mode == mode_submenu));
   assert(!article.null_or_empty());
-  s_viewer_screen.show();
+  s_viewer_screen.activate();
   s_last_viewer_article = article;
   s_last_showing_viewer = true;
 }
@@ -454,7 +482,7 @@ void application::activate_viewer(imstring article) {
 
 void application::deactivate_viewer() {
   assert(s_last_showing_viewer);
-  s_viewer_screen.hide();
+  s_viewer_screen.deactivate();
   s_last_viewer_article = NULL;
   s_last_showing_viewer = false;
 }
@@ -462,21 +490,21 @@ void application::deactivate_viewer() {
 
 void application::activate_quit_prompt() {
   assert(!s_last_showing_quit_prompt);
-  s_quit_prompt_dialog.show();
+  s_quit_prompt_dialog.activate();
   s_last_showing_quit_prompt = true;
 }
 
 
 void application::deactivate_quit_prompt() {
   assert(s_last_showing_quit_prompt);
-  s_quit_prompt_dialog.hide();
+  s_quit_prompt_dialog.deactivate();
   s_last_showing_quit_prompt = false;
 }
 
 
 void application::activate_outro() {
   assert(s_last_mode == mode_none);
-  s_outro_screen.show();
+  s_outro_screen.activate();
   s_last_mode = mode_outro;
 }
 

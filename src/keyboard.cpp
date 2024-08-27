@@ -122,7 +122,9 @@ extern bool asm_bios_key_event_available();
 
 
 bool keyboard::key_event_available() {
-  return asm_bios_key_event_available();
+  bool result = asm_bios_key_event_available();
+  logf_sim("('key_avail',%d)\n", result);
+  return result;
 }
 
 
@@ -136,7 +138,7 @@ extern uint16_t asm_bios_read_key_event();
 
 key_code_t keyboard::read_key_event() {
   uint16_t k = asm_bios_read_key_event();
-  logf_simulator("SIM: read key 0x%04X\n", k);
+  logf_sim("('read_key',0x%04X)\n", k);
   if ((k & 0xFF) != 0) {
     return (key_code_t)(k & 0xFF);
   } else {

@@ -6,28 +6,6 @@
 #define logf_window_element(...) disable_logf("WINDOW_ELEMENT: " __VA_ARGS__)
 
 
-void window_element::layout() {
-  for (element_list_iterator i = m_elements.begin(); i != m_elements.end();
-      ++i) {
-    i->ref->layout();
-  }
-}
-
-
-void window_element::animate(uint32_t delta_ms) {
-  for (element_list_iterator i = m_elements.begin(); i != m_elements.end();
-      ++i) {
-    i->ref->animate(delta_ms);
-  }
-}
-
-
-bool window_element::handle_key(uint16_t key) {
-  (void)key;
-  return false;
-}
-
-
 void window_element::paint(graphics & g) {
 #ifndef NDEBUG
   assert(m_lock_count == 0);

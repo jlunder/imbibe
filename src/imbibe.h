@@ -67,10 +67,12 @@ typedef int32_t large_anim_time_t;
 #define FP_SEG(p) ((uintptr_t)(p) & ~0xFLLU)
 #define FP_OFF(p) ((uintptr_t)(p) & 0xFLLU)
 #define MK_FP(s, o) \
-  ((uintptr_t)(s) == 0xB800 ? (void *)dummy_screen \
+  ((uintptr_t)(s) == 0xB800 ? (void *)(sim::dummy_screen) \
     : (void *)((uintptr_t)(s) + (uintptr_t)(o)))
 
-extern uint16_t dummy_screen[16384];
+namespace sim {
+  extern uint16_t dummy_screen[16384];
+}
 
 #define __interrupt
 
@@ -127,16 +129,18 @@ extern unsigned _dos_lseek(int handle, long offset, int whence,
 #endif
 
 
-extern void step_simulator_loop();
-extern void step_simulator_idle();
-extern void step_simulator_poll();
+namespace sim {
+  extern void step_poll();
+  extern void step_idle();
+  extern void step_animate(uint32_t anim_ms);
+}
 
 
 #define LENGTHOF(a) (sizeof (a) / sizeof (a[0]))
 
 #define logf(...) cprintf(__VA_ARGS__)
 #define disable_logf(...) do {} while (false)
-#define logf_simulator(...) logf(__VA_ARGS__)
+#define logf_sim(...) logf("SIM: " __VA_ARGS__)
 
 #define abortf(...) do { failsafe_textmode(); cprintf("fatal error: "); \
   cprintf(__VA_ARGS__); abort(); } while(false)
