@@ -2,13 +2,15 @@
 
 #include "outro_element.h"
 
-#include "keyboard.h"
 #include "application.h"
+#include "keyboard.h"
 
-
-void outro_element::poll() {
+void outro_element::layout(coord_t window_width, coord_t window_height) {
+  set_frame(0, 0, window_width, window_height);
+  m_active = false;
 }
 
+void outro_element::poll() { application::do_next_from_outro(); }
 
 bool outro_element::handle_key(uint16_t key) {
   switch (key) {
@@ -27,10 +29,8 @@ bool outro_element::handle_key(uint16_t key) {
   return false;
 }
 
+bool outro_element::active() const { return m_active; }
 
-void outro_element::animate(uint32_t delta_ms) {
-  (void)delta_ms;
-  application::do_next_from_outro();
-}
+void outro_element::animate(anim_time_t delta_ms) { (void)delta_ms; }
 
-
+void outro_element::play_outro() { m_active = true; }

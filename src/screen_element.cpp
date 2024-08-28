@@ -1,9 +1,3 @@
-  #include "imbibe.h"
+#include "imbibe.h"
 
-  #include "screen_element.h"
-
-
-void screen_element::layout() {
-}
-
-
+#include "screen_element.h"

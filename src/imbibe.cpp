@@ -298,24 +298,19 @@ namespace aux_simulation {
 }
 
 
-void step_simulator_loop() {
-  logf_sim("('loop',{'t':%lu})\n", (unsigned long)timer::now());
-}
-
-
-void step_simulator_idle() {
+void sim::step_idle() {
   ++aux_simulation::s_idle_count;
 }
 
 
-void step_simulator_poll() {
+void sim::step_poll() {
   logf_sim("('poll',{'t':%lu,'idle'=%lu})\n",
     (unsigned long)timer::now(),
     (unsigned long)aux_simulation::s_idle_count);
 }
 
 
-void step_simulator_animate(uint32_t anim_ms) {
+void sim::step_animate(uint32_t anim_ms) {
   logf_sim("('animate',{'t':%lu,'anim_ms'=%lu})\n",
     (unsigned long)timer::now(), (unsigned long)anim_ms);
 }

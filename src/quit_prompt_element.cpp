@@ -5,10 +5,11 @@
 #include "application.h"
 #include "keyboard.h"
 
-
-void quit_prompt_element::poll() {
+void quit_prompt_element::layout(coord_t window_width, coord_t window_height) {
+  set_frame(0, 0, window_width, window_height);
 }
 
+void quit_prompt_element::poll() {}
 
 bool quit_prompt_element::handle_key(uint16_t key) {
   switch (key) {
@@ -26,9 +27,6 @@ bool quit_prompt_element::handle_key(uint16_t key) {
   return false;
 }
 
+bool quit_prompt_element::active() const { return false; }
 
-void quit_prompt_element::animate(uint32_t delta_ms) {
-  (void)delta_ms;
-}
-
-
+void quit_prompt_element::animate(anim_time_t delta_ms) { (void)delta_ms; }
