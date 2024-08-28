@@ -5,27 +5,23 @@
 #include "inplace.h"
 
 #include "application.h"
-#include "keyboard.h"
 #include "imstring.h"
+#include "keyboard.h"
 #include "resource_manager.h"
 #include "timer.h"
 
-
 #define logf_imbibe(...) disable_logf("IMBIBE: " __VA_ARGS__)
-
 
 #if !defined(SIMULATE)
 
-
 int harderr_handler(unsigned deverror, unsigned errcode,
-    unsigned __far * devhdr) {
+                    unsigned __far *devhdr) {
   (void)deverror;
   (void)errcode;
   (void)devhdr;
   _hardresume(_HARDERR_FAIL);
   return 0;
 }
-
 
 // --------D-2142-------------------------------
 // INT 21 - DOS 2+ - "LSEEK" - SET CURRENT FILE POSITION
@@ -40,8 +36,8 @@ int harderr_handler(unsigned deverror, unsigned errcode,
 // 	    DX:AX = new file position in bytes from start of file
 // 	CF set on error
 // 	    AX = error code (01h,06h) (see #01680 at AH=59h/BX=0000h)
-// Notes:	for origins 01h and 02h, the pointer may be positioned before the
-// 	  start of the file; no error is returned in that case (except under
+// Notes:	for origins 01h and 02h, the pointer may be positioned before
+// the 	  start of the file; no error is returned in that case (except under
 // 	  Windows NT), but subsequent attempts at I/O will produce errors
 // 	if the new position is beyond the current end of file, the file will
 // 	  be extended by the next write (see AH=40h); for FAT32 drives, the
@@ -53,22 +49,19 @@ int harderr_handler(unsigned deverror, unsigned errcode,
 // SeeAlso: AH=24h,INT 2F/AX=1228h
 
 extern unsigned asm_dos_lseek(int handle, long offset, int whence,
-  unsigned long __far * where);
+                              unsigned long __far *where);
 
-#pragma aux asm_dos_lseek = \
-  "   mov     ah, 042h              " \
-  "   int     21h                   " \
-  "   jc      @error                " \
-  "   mov     es:[di], ax           " \
-  "   mov     es:[di + 2], dx       " \
-  "   xor     ax, ax                " \
-  "@error:                          " \
-  parm [bx] [cx dx] [ax] [es di] \
-  modify [ax bx cx dx] nomemory \
-  value [ax]
+#pragma aux asm_dos_lseek = "   mov     ah, 042h              "                \
+                            "   int     21h                   "                \
+                            "   jc      @error                "                \
+                            "   mov     es:[di], ax           "                \
+                            "   mov     es:[di + 2], dx       "                \
+                            "   xor     ax, ax                "                \
+                            "@error:                          " parm[bx]       \
+    [cx dx][ax][es di] modify[ax bx cx dx] nomemory value[ax]
 
 unsigned _dos_lseek(int handle, long offset, int whence,
-    unsigned long __far * where) {
+                    unsigned long __far *where) {
   assert(whence == 0 || whence == 0 || whence == 2);
   assert(handle >= 0);
   assert(where);
@@ -80,11 +73,9 @@ unsigned _dos_lseek(int handle, long offset, int whence,
   return result;
 }
 
-
 #endif
 
-
-int main(int argc, char * argv[]) {
+int main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
 
@@ -114,53 +105,47 @@ int main(int argc, char * argv[]) {
   return 0;
 }
 
-
 #if defined(SIMULATE)
-
 
 namespace sim {
 
-  uint16_t dummy_screen[16384];
+uint16_t dummy_screen[16384];
 
-  struct key_seq_entry {
-    uint32_t ms;
-    uint16_t key;
-  };
+struct key_seq_entry {
+  uint32_t ms;
+  uint16_t key;
+};
 
-  struct loop_seq_entry {
-    uint32_t ms;
-    uint32_t ms_per_loop;
-    uint32_t ms_per_idle;
-    uint32_t idle_per_loop;
-  };
+struct loop_seq_entry {
+  uint32_t ms;
+  uint32_t ms_per_loop;
+  uint32_t ms_per_idle;
+  uint32_t idle_per_loop;
+};
 
-  key_seq_entry const key_seq[] = {
-    {   500, key_code::escape },
-    {  2000, key_code::control_q },
-    {     0, 0 },
-  };
+key_seq_entry const key_seq[] = {
+    {500, key_code::escape},
+    {2000, key_code::control_q},
+    {0, 0},
+};
 
-  loop_seq_entry const loop_seq[] = {
-    {     1, 10, 1, 0 },
-    {     0, 10, 1, 0 },
-  };
+loop_seq_entry const loop_seq[] = {
+    {1, 10, 1, 0},
+    {0, 10, 1, 0},
+};
 
-  uint32_t now_ms = 0;
-  key_seq_entry const * key_seq_p = key_seq;
-  loop_seq_entry const * loop_seq_p = loop_seq;
+uint32_t now_ms = 0;
+key_seq_entry const *key_seq_p = key_seq;
+loop_seq_entry const *loop_seq_p = loop_seq;
 
-  uint32_t pit_tick_counter = 0;
-  void pit_tick_counter_int_handler() { ++pit_tick_counter; }
-  void (*pit_int_handler)() = pit_tick_counter_int_handler;
+uint32_t pit_tick_counter = 0;
+void pit_tick_counter_int_handler() { ++pit_tick_counter; }
+void (*pit_int_handler)() = pit_tick_counter_int_handler;
 
-  void advance_time_to(uint32_t to_ms);
-}
+void advance_time_to(uint32_t to_ms);
+} // namespace sim
 
-
-void sim::step_idle() {
-  advance_time_to(now_ms + loop_seq_p->ms_per_idle);
-}
-
+void sim::step_idle() { advance_time_to(now_ms + loop_seq_p->ms_per_idle); }
 
 void sim::step_poll() {
   assert(loop_seq_p < loop_seq + LENGTHOF(loop_seq));
@@ -171,7 +156,6 @@ void sim::step_poll() {
   advance_time_to(now_ms + loop_seq_p->ms_per_loop);
 }
 
-
 void sim::advance_time_to(uint32_t to_ms) {
   while (now_ms < to_ms) {
     if (pit_int_handler != pit_tick_counter_int_handler) {
@@ -181,18 +165,15 @@ void sim::advance_time_to(uint32_t to_ms) {
   }
 }
 
-
 void sim::step_animate(uint32_t anim_ms) {
   (void)anim_ms;
   // assert desired anim_ms achieved
 }
 
-
 bool keyboard::key_event_available() {
   assert(sim::key_seq_p < (sim::key_seq + LENGTHOF(sim::key_seq)));
   return (sim::key_seq_p->ms > 0) && (sim::key_seq_p->ms <= sim::now_ms);
 }
-
 
 key_code_t keyboard::read_key_event() {
   assert(sim::key_seq_p < (sim::key_seq + LENGTHOF(sim::key_seq)));
@@ -208,15 +189,13 @@ key_code_t keyboard::read_key_event() {
   return (sim::key_seq_p++)->key;
 }
 
-
 void _dos_setvect(int int_no, void (*int_handler)()) {
   (void)int_no;
   assert(int_no == 8);
-  logf_imbibe("setvect 0x%02X, %p (overwrites %p)\n", int_no,
-    int_handler, sim::pit_int_handler);
+  logf_imbibe("setvect 0x%02X, %p (overwrites %p)\n", int_no, int_handler,
+              sim::pit_int_handler);
   sim::pit_int_handler = int_handler;
 }
-
 
 void (*_dos_getvect(int int_no))() {
   (void)int_no;
@@ -225,15 +204,13 @@ void (*_dos_getvect(int int_no))() {
   return sim::pit_int_handler;
 }
 
-
 void _chain_intr(void (*int_handler)()) {
   assert(int_handler);
   logf_imbibe("chain_intr %p\n", int_handler);
   int_handler();
 }
 
-
-unsigned _dos_open(const char * path, unsigned mode, int * handle) {
+unsigned _dos_open(const char *path, unsigned mode, int *handle) {
   assert(handle);
   *handle = open(path, mode);
   if (*handle < 0) {
@@ -242,16 +219,13 @@ unsigned _dos_open(const char * path, unsigned mode, int * handle) {
   return 0;
 }
 
-
 unsigned _dos_close(int handle) {
   assert(handle >= 0);
   close(handle);
   return 0;
 }
 
-
-unsigned _dos_read(int handle, void * buf, unsigned count,
-    unsigned * bytes) {
+unsigned _dos_read(int handle, void *buf, unsigned count, unsigned *bytes) {
   assert(handle >= 0);
   assert(buf);
   ssize_t amount = read(handle, buf, count);
@@ -262,9 +236,8 @@ unsigned _dos_read(int handle, void * buf, unsigned count,
   return 0;
 }
 
-
 unsigned _dos_lseek(int handle, long offset, int whence,
-    unsigned long __far * where) {
+                    unsigned long __far *where) {
   ssize_t actual = lseek(handle, offset, whence);
   if (actual < 0) {
     *where = UINT32_MAX;
@@ -274,14 +247,12 @@ unsigned _dos_lseek(int handle, long offset, int whence,
   return 0;
 }
 
-
-unsigned _dos_allocmem(unsigned size, unsigned * seg) {
+unsigned _dos_allocmem(unsigned size, unsigned *seg) {
   (void)size;
   (void)seg;
   assert(!"TODO");
   return 1;
 }
-
 
 unsigned _dos_freemem(unsigned seg) {
   (void)seg;
@@ -289,33 +260,22 @@ unsigned _dos_freemem(unsigned seg) {
   return 1;
 }
 
-
 #else
 
-
 namespace aux_simulation {
-  uint32_t s_idle_count = 0;
+uint32_t s_idle_count = 0;
 }
 
-
-void sim::step_idle() {
-  ++aux_simulation::s_idle_count;
-}
-
+void sim::step_idle() { ++aux_simulation::s_idle_count; }
 
 void sim::step_poll() {
-  logf_sim("('poll',{'t':%lu,'idle'=%lu})\n",
-    (unsigned long)timer::now(),
-    (unsigned long)aux_simulation::s_idle_count);
+  logf_sim("('poll',{'t':%lu,'idle'=%lu})\n", (unsigned long)timer::now(),
+           (unsigned long)aux_simulation::s_idle_count);
 }
-
 
 void sim::step_animate(uint32_t anim_ms) {
-  logf_sim("('animate',{'t':%lu,'anim_ms'=%lu})\n",
-    (unsigned long)timer::now(), (unsigned long)anim_ms);
+  logf_sim("('animate',{'t':%lu,'anim_ms'=%lu})\n", (unsigned long)timer::now(),
+           (unsigned long)anim_ms);
 }
 
-
 #endif
-
-

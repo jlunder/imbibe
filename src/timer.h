@@ -1,14 +1,11 @@
 #ifndef __TIMER_H_INCLUDED
 #define __TIMER_H_INCLUDED
 
-
 #include "imbibe.h"
 
-
-class timer
-{
+class timer {
 public:
-  timer(): m_last_ms(now()) { }
+  timer() : m_last_ms(now()) {}
 
   uint32_t read_ms() {
     uint32_t new_ms = now();
@@ -67,7 +64,7 @@ public:
     return new_ms - m_last_ms;
   }
 
-  //in milliseconds
+  // in milliseconds
   static uint32_t now();
 
   static void setup();
@@ -77,7 +74,4 @@ private:
   uint32_t m_last_ms;
 };
 
-
 #endif // __TIMER_H_INCLUDED
-
-

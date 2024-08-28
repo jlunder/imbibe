@@ -1,7 +1,6 @@
 #ifndef __RESOURCE_MANAGER_H_INCLUDED
 #define __RESOURCE_MANAGER_H_INCLUDED
 
-
 #include "imbibe.h"
 
 #include "bitmap.h"
@@ -12,19 +11,16 @@
 #define RESOURCE_NAME_LEN_MAX 63
 
 namespace resource_manager {
-  void setup();
-  void teardown();
-  void teardown_exiting();
+void setup();
+void teardown();
+void teardown_exiting();
 
-  extern bool begin_fetch_tbm(imstring const & name);
-  extern bool fetch_ready(imstring const & name);
-  extern im_ptr<bitmap> fetch_bitmap(imstring const & name);
-  extern unpacker fetch_tbm(imstring const & name);
-  void flush(imstring const & name);
-  void flush_all();
-}
-
+extern bool begin_fetch_tbm(imstring const &name);
+extern bool fetch_ready(imstring const &name);
+extern im_ptr<bitmap> fetch_bitmap(imstring const &name);
+extern unpacker fetch_tbm(imstring const &name);
+void flush(imstring const &name);
+void flush_all();
+} // namespace resource_manager
 
 #endif // __RESOURCE_MANAGER_H_INCLUDED
-
-

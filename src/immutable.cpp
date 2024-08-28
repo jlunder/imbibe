@@ -2,7 +2,6 @@
 
 #include "immutable.h"
 
-
 struct immutable_tracking_t {
   immutable::reclaim_func_t reclaimer;
   __segment orig_seg;
@@ -12,18 +11,15 @@ struct immutable_tracking_t {
   };
 };
 
-
 immutable_tracking_t immutable_index[immutable::max_reclaimable + 1];
 
-
-void immutable::init(reclaim_func_t f, void const * orig_p)
-{
+void immutable::init(reclaim_func_t f, void const *orig_p) {
   if (!f) {
     m_index = 0;
     return;
   }
 
-  immutable_tracking_t & zero_tracking = immutable_index[0];
+  immutable_tracking_t &zero_tracking = immutable_index[0];
   assert(zero_tracking.reclaimer == NULL);
   if (zero_tracking.next_unrefd == 0) {
     uint16_t last_link = 0;
@@ -41,13 +37,12 @@ void immutable::init(reclaim_func_t f, void const * orig_p)
   assert(zero_tracking.next_unrefd < max_reclaimable);
   m_index = (uint8_t)zero_tracking.next_unrefd;
 
-  immutable_tracking_t & tracking = immutable_index[m_index];
+  immutable_tracking_t &tracking = immutable_index[m_index];
   zero_tracking.next_unrefd = tracking.next_unrefd;
   tracking.live_refs = 1;
   tracking.reclaimer = f;
   tracking.orig_seg = FP_SEG(orig_p);
 }
-
 
 void immutable::ref() {
   assert(m_index > 0);
@@ -58,12 +53,11 @@ void immutable::ref() {
   ++immutable_index[m_index].live_refs;
 }
 
-
 void immutable::unref() {
   assert(m_index > 0);
   assert(m_index < max_reclaimable);
 
-  immutable_tracking_t & tracking = immutable_index[m_index];
+  immutable_tracking_t &tracking = immutable_index[m_index];
   assert(tracking.reclaimer != NULL);
   assert(tracking.live_refs > 0);
 
@@ -71,8 +65,8 @@ void immutable::unref() {
     --tracking.live_refs;
   } else {
     // Reclaim the data
-    void const * norm_p = data();
-    void const * p = denormalize(tracking.orig_seg, norm_p);
+    void const *norm_p = data();
+    void const *p = denormalize(tracking.orig_seg, norm_p);
     tracking.reclaimer((void *)p);
 
     // Add the index entry back into the unrefd chain
@@ -81,5 +75,3 @@ void immutable::unref() {
     immutable_index[0].next_unrefd = m_index;
   }
 }
-
-

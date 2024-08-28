@@ -1,12 +1,9 @@
 #ifndef __KEY_MANAGER_H_INCLUDED
 #define __KEY_MANAGER_H_INCLUDED
 
-
 #include "imbibe.h"
 
-
 typedef uint16_t key_code_t;
-
 
 class key_code {
 public:
@@ -137,13 +134,9 @@ public:
   };
 };
 
-
 namespace keyboard {
-  extern bool key_event_available();
-  extern key_code_t read_key_event();
-}
-
+extern bool key_event_available();
+extern key_code_t read_key_event();
+} // namespace keyboard
 
 #endif // __KEY_MANAGER_H_INCLUDED
-
-

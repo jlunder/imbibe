@@ -1,29 +1,26 @@
 #ifndef __IMBIBE_H_INCLUDED
 #define __IMBIBE_H_INCLUDED
 
-
 #if defined(__WATCOMC__)
 #define __STDC_LIMIT_MACROS
 #pragma warning 549 9
 #endif
 
-
 #include <assert.h>
 #include <fcntl.h>
+#include <malloc.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stddef.h>
 #include <string.h>
-#include <malloc.h>
 
+#define fourcc(arr)                                                            \
+  ((uint32_t)arr[0] | ((uint32_t)arr[1] << 8) | ((uint32_t)arr[2] << 16) |     \
+   ((uint32_t)arr[3] << 24))
 
-#define fourcc(arr) ((uint32_t)arr[0] | ((uint32_t)arr[1] << 8) \
-  | ((uint32_t)arr[2] << 16) | ((uint32_t)arr[3] << 24))
-
-
-#define assert_margin(x, mag) assert(((x) >= -((mag) / 4)) && ((x) <= (mag) / 4))
-
+#define assert_margin(x, mag)                                                  \
+  assert(((x) >= -((mag) / 4)) && ((x) <= (mag) / 4))
 
 typedef int16_t coord_t;
 typedef uint8_t color_t;
@@ -31,7 +28,6 @@ typedef uint8_t attribute_t;
 typedef uint16_t termel_t;
 typedef int16_t anim_time_t;
 typedef int32_t large_anim_time_t;
-
 
 #define COORD_MIN INT16_MIN
 #define COORD_MAX INT16_MAX
@@ -66,12 +62,12 @@ typedef int32_t large_anim_time_t;
 */
 #define FP_SEG(p) ((uintptr_t)(p) & ~0xFLLU)
 #define FP_OFF(p) ((uintptr_t)(p) & 0xFLLU)
-#define MK_FP(s, o) \
-  ((uintptr_t)(s) == 0xB800 ? (void *)(sim::dummy_screen) \
-    : (void *)((uintptr_t)(s) + (uintptr_t)(o)))
+#define MK_FP(s, o)                                                            \
+  ((uintptr_t)(s) == 0xB800 ? (void *)(sim::dummy_screen)                      \
+                            : (void *)((uintptr_t)(s) + (uintptr_t)(o)))
 
 namespace sim {
-  extern uint16_t dummy_screen[16384];
+extern uint16_t dummy_screen[16384];
 }
 
 #define __interrupt
@@ -82,28 +78,28 @@ namespace sim {
 #include <fcntl.h>
 #include <unistd.h>
 
-
 #define cprintf(...) fprintf(stderr, __VA_ARGS__)
 
-
-inline void failsafe_textmode() { }
+inline void failsafe_textmode() {}
 
 extern void _dos_setvect(int, void (*)());
 extern void (*_dos_getvect(int))();
 extern void _chain_intr(void (*)());
 
-extern unsigned _dos_open(const char * path, unsigned mode, int * handle);
+extern unsigned _dos_open(const char *path, unsigned mode, int *handle);
 extern unsigned _dos_close(int handle);
-extern unsigned _dos_read(int handle, void * buf, unsigned count,
-  unsigned * bytes);
+extern unsigned _dos_read(int handle, void *buf, unsigned count,
+                          unsigned *bytes);
 extern unsigned _dos_lseek(int handle, long offset, int whence,
-    unsigned long __far * where);
+                           unsigned long __far *where);
 
-extern unsigned _dos_allocmem(unsigned size, unsigned * seg);
+extern unsigned _dos_allocmem(unsigned size, unsigned *seg);
 extern unsigned _dos_freemem(unsigned seg);
 
-
-inline void * operator new (size_t size, void * p) { (void)size; return p; }
+inline void *operator new(size_t size, void *p) {
+  (void)size;
+  return p;
+}
 
 #define SIMULATE
 
@@ -111,52 +107,51 @@ inline void * operator new (size_t size, void * p) { (void)size; return p; }
 
 // This part is for real
 
-#include <i86.h>
 #include <conio.h>
 #include <dos.h>
+#include <i86.h>
 
 extern void failsafe_textmode();
 
-#pragma aux failsafe_textmode = \
-  "mov ax, 03h" "int 010h" modify [ax] nomemory
+#pragma aux failsafe_textmode = "mov ax, 03h"                                  \
+                                "int 010h" modify[ax] nomemory
 
 // seemingly missing from dos.h??
 extern unsigned _dos_lseek(int handle, long offset, int whence,
-    unsigned long __far * where);
+                           unsigned long __far *where);
 
 #define __packed__
 
 #endif
 
-
 namespace sim {
-  extern void step_poll();
-  extern void step_idle();
-  extern void step_animate(uint32_t anim_ms);
-}
+extern void step_poll();
+extern void step_idle();
+extern void step_animate(uint32_t anim_ms);
+} // namespace sim
 
-
-#define LENGTHOF(a) (sizeof (a) / sizeof (a[0]))
+#define LENGTHOF(a) (sizeof(a) / sizeof(a[0]))
 
 #define logf(...) cprintf(__VA_ARGS__)
-#define disable_logf(...) do {} while (false)
+#define disable_logf(...)                                                      \
+  do {                                                                         \
+  } while (false)
 #define logf_sim(...) logf("SIM: " __VA_ARGS__)
 
-#define abortf(...) do { failsafe_textmode(); cprintf("fatal error: "); \
-  cprintf(__VA_ARGS__); abort(); } while(false)
+#define abortf(...)                                                            \
+  do {                                                                         \
+    failsafe_textmode();                                                       \
+    cprintf("fatal error: ");                                                  \
+    cprintf(__VA_ARGS__);                                                      \
+    abort();                                                                   \
+  } while (false)
 
-template<class T>
-inline T min(T x, T y) { return (x < y) ? x : y; }
+template <class T> inline T min(T x, T y) { return (x < y) ? x : y; }
 
-template<class T>
-inline T min(T x, T y, T z) { return min(min(x, y), z); }
+template <class T> inline T min(T x, T y, T z) { return min(min(x, y), z); }
 
-template<class T>
-inline T max(T x, T y) { return (x > y) ? x : y; }
+template <class T> inline T max(T x, T y) { return (x > y) ? x : y; }
 
-template<class T>
-inline T max(T x, T y, T z) { return max(max(x, y), z); }
-
+template <class T> inline T max(T x, T y, T z) { return max(max(x, y), z); }
 
 #endif // __IMBIBE_H_INCLUDED
-

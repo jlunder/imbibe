@@ -4,12 +4,11 @@
 
 #include "window.h"
 
-
 #define logf_element(...) disable_logf("ELEMENT: " __VA_ARGS__)
 
-
 void element::set_frame_pos(coord_t x1, coord_t y1) {
-  assert_margin(x1, COORD_MAX); assert_margin(y1, COORD_MAX);
+  assert_margin(x1, COORD_MAX);
+  assert_margin(y1, COORD_MAX);
 
   if ((x1 == m_x1) && (y1 == m_y1)) {
     return;
@@ -24,15 +23,15 @@ void element::set_frame_pos(coord_t x1, coord_t y1) {
   m_x2 = x1 + (old_x2 - old_x1);
   m_y2 = y1 + (old_y2 - old_y1);
   if (m_visible && m_owner) {
-    m_owner->element_frame_changed(*this, old_x1, old_y1, old_x2, old_y2,
-      m_z);
+    m_owner->element_frame_changed(*this, old_x1, old_y1, old_x2, old_y2, m_z);
   }
 }
 
-
 void element::set_frame_size(coord_t width, coord_t height) {
-  assert_margin(width, COORD_MAX); assert_margin(height, COORD_MAX);
-  assert(width >= 0); assert(height >= 0);
+  assert_margin(width, COORD_MAX);
+  assert_margin(height, COORD_MAX);
+  assert(width >= 0);
+  assert(height >= 0);
 
   if ((width == frame_width()) && (height == frame_height())) {
     return;
@@ -42,12 +41,12 @@ void element::set_frame_size(coord_t width, coord_t height) {
   coord_t old_y2 = m_y2;
   m_x2 = m_x1 + width;
   m_y2 = m_y1 + height;
-  assert_margin(m_x2, COORD_MAX); assert_margin(m_y2, COORD_MAX);
+  assert_margin(m_x2, COORD_MAX);
+  assert_margin(m_y2, COORD_MAX);
   if (m_visible && m_owner) {
     m_owner->element_frame_changed(*this, m_x1, m_y2, old_x2, old_y2, m_z);
   }
 }
-
 
 void element::set_frame_depth(coord_t z) {
   assert_margin(z, COORD_MAX);
@@ -63,13 +62,15 @@ void element::set_frame_depth(coord_t z) {
   }
 }
 
-
 void element::set_frame(coord_t x1, coord_t y1, coord_t x2, coord_t y2,
-    coord_t z) {
-  assert_margin(x1, COORD_MAX); assert_margin(y1, COORD_MAX);
-  assert_margin(x2, COORD_MAX); assert_margin(y2, COORD_MAX);
+                        coord_t z) {
+  assert_margin(x1, COORD_MAX);
+  assert_margin(y1, COORD_MAX);
+  assert_margin(x2, COORD_MAX);
+  assert_margin(y2, COORD_MAX);
   assert_margin(z, COORD_MAX);
-  assert(x1 <= x2); assert(y1 <= y2);
+  assert(x1 <= x2);
+  assert(y1 <= y2);
 
   if ((x1 == m_x1) && (y1 == m_y1) && (x2 == m_x2) && (y2 == m_y2)) {
     return;
@@ -87,12 +88,11 @@ void element::set_frame(coord_t x1, coord_t y1, coord_t x2, coord_t y2,
   m_z = z;
   if (m_visible && m_owner) {
     m_owner->element_frame_changed(*this, old_x1, old_y1, old_x2, old_y2,
-      old_z);
+                                   old_z);
   }
 }
 
-
-void element::set_owner(window & n_owner) {
+void element::set_owner(window &n_owner) {
 #ifndef NDEBUG
   owner_changing();
 #endif
@@ -105,7 +105,6 @@ void element::set_owner(window & n_owner) {
     m_owner->add_element(*this);
   }
 }
-
 
 void element::set_visible(bool n_visible) {
   if (m_visible == n_visible) {
@@ -127,23 +126,22 @@ void element::set_visible(bool n_visible) {
 
 void element::request_repaint() {
   if (m_visible && m_owner) {
-    logf_element("element %p request_repaint %d, %d, %d, %d\n",
-      this, 0, 0, frame_width(), frame_height());
+    logf_element("element %p request_repaint %d, %d, %d, %d\n", this, 0, 0,
+                 frame_width(), frame_height());
     m_owner->repaint(m_x1, m_y1, m_x2, m_y2);
   }
 }
 
-
-void element::request_repaint(coord_t x1, coord_t y1, coord_t x2,
-    coord_t y2) {
-  assert_margin(x1, COORD_MAX); assert_margin(y1, COORD_MAX);
-  assert_margin(x2, COORD_MAX); assert_margin(y2, COORD_MAX);
+void element::request_repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
+  assert_margin(x1, COORD_MAX);
+  assert_margin(y1, COORD_MAX);
+  assert_margin(x2, COORD_MAX);
+  assert_margin(y2, COORD_MAX);
   if (m_visible && m_owner && (x1 < x2) && (y1 < y2)) {
-    logf_element("element %p request_repaint %d, %d, %d, %d\n",
-      this, x1, y1, x2, y2);
+    logf_element("element %p request_repaint %d, %d, %d, %d\n", this, x1, y1,
+                 x2, y2);
     m_owner->repaint(m_x1 + max<coord_t>(x1, 0), m_y1 + max<coord_t>(y1, 0),
-      min<coord_t>(m_x1 + x2, m_x2), min<coord_t>(m_y1 + y2, m_y2));
+                     min<coord_t>(m_x1 + x2, m_x2),
+                     min<coord_t>(m_y1 + y2, m_y2));
   }
 }
-
-
