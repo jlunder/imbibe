@@ -39,7 +39,6 @@ void intro_element::layout(coord_t window_width, coord_t window_height) {
 void intro_element::poll() {
   if (m_active && !opaque()) {
     application::do_next_from_intro();
-    m_active = false;
   }
 }
 
@@ -55,14 +54,17 @@ bool intro_element::handle_key(uint16_t key) {
 void intro_element::animate(anim_time_t delta_ms) {
   m_logo_fade.update(delta_ms);
   m_logo.set_fade(m_logo_fade.value());
+
   m_cover_y.update(delta_ms);
   coord_t cover_y = m_cover_y.value();
-  logf("INTRO_ELEMENT: logo_fade=%d cover_y=%d\n", (int)m_logo_fade.value(),
-       (int)cover_y);
   m_capture_background.set_visible(cover_y > 0);
-  m_logo.set_visible(cover_y > 0);
   m_cover.set_frame_pos(0, cover_y);
-  m_intro_timer.update(delta_ms);
+
+  m_logo.set_visible(cover_y > 0);
+
+  if (m_cover_y.done()) {
+    m_active = false;
+  }
 }
 
 bool intro_element::active() const { return m_active; }
@@ -78,12 +80,10 @@ void intro_element::set_capture(im_ptr<bitmap> n_capture) {
 void intro_element::play_intro() {
   m_logo_fade.reset(0, termviz::fade_steps - 1, 500);
   m_cover_y.reset(frame_height(), -m_cover.frame_height(), 8000, 1000);
-  m_intro_timer.reset(9000);
   m_active = true;
 }
 
 void intro_element::skip_transition() {
   m_logo_fade.finish();
   m_cover_y.finish();
-  m_intro_timer.finish();
 }

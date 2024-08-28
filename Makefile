@@ -33,10 +33,11 @@ IMBIBE_SIM_OBJS = $(patsubst $(SRC_DIR)%.cpp,$(SIM_OBJ_DIR)%.o,$(IMBIBE_SOURCES)
 IMBIBE_DEPS = $(patsubst $(SRC_DIR)%.cpp,$(DEP_DIR)%.d,$(IMBIBE_SOURCES))
 
 IMBIBE_RESOURCES = \
+	testdata/cover.tbm \
+	testdata/logo.tbm \
 	testdata/menu-top.tbm \
 	testdata/menu-bot.tbm \
-	testdata/cover.tbm \
-	testdata/logo.tbm
+	testdata/quit.tbm
 
 .PHONY: all clean deps dirs imbibe
 .DEFAULT_GOAL: all

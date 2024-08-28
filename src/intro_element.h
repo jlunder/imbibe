@@ -34,7 +34,6 @@ private:
   coord_t m_cover_height;
   linear_tween<uint8_t> m_logo_fade;
   linear_tween<coord_t> m_cover_y;
-  timer_tween m_intro_timer;
   bool m_active;
 };
 

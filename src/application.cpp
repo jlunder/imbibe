@@ -58,7 +58,7 @@ inplace<menu_element> s_menu_screen;
 inplace<submenu_element> s_submenu_screen;
 inplace<viewer_element> s_viewer_screen;
 inplace<outro_element> s_outro_screen;
-inplace<quit_prompt_element> s_quit_prompt_dialog;
+inplace<quit_prompt_element> s_quit_prompt;
 
 void poll_input();
 void animate(anim_time_t anim_ms);
@@ -100,7 +100,7 @@ void application::setup() {
   s_submenu_screen.setup();
   s_viewer_screen.setup();
   s_outro_screen.setup();
-  s_quit_prompt_dialog.setup();
+  s_quit_prompt.setup();
 
   bitmap *capture = new bitmap();
   s_win->setup(capture);
@@ -112,7 +112,7 @@ void application::setup() {
   s_submenu_screen->set_frame_depth(2);
   s_viewer_screen->set_frame_depth(3);
   s_intro_screen->set_frame_depth(10);
-  s_quit_prompt_dialog->set_frame_depth(20);
+  s_quit_prompt->set_frame_depth(20);
   s_outro_screen->set_frame_depth(30);
 
   s_main->set_owner(*s_win);
@@ -120,7 +120,7 @@ void application::setup() {
   s_submenu_screen->set_owner(*s_main);
   s_viewer_screen->set_owner(*s_main);
   s_intro_screen->set_owner(*s_main);
-  s_quit_prompt_dialog->set_owner(*s_main);
+  s_quit_prompt->set_owner(*s_main);
   s_outro_screen->set_owner(*s_main);
 
   s_intro_screen->set_capture(im_ptr<bitmap>(capture));
@@ -129,7 +129,7 @@ void application::setup() {
   s_submenu_screen->layout(s_display_width, s_display_height);
   s_viewer_screen->layout(s_display_width, s_display_height);
   s_intro_screen->layout(s_display_width, s_display_height);
-  s_quit_prompt_dialog->layout(s_display_width, s_display_height);
+  s_quit_prompt->layout(s_display_width, s_display_height);
   s_outro_screen->layout(s_display_width, s_display_height);
 
   logf_application("imbibe 0.1 loaded\n");
@@ -144,7 +144,7 @@ void application::teardown() {
   s_submenu_screen->hide();
   s_viewer_screen->hide();
   s_intro_screen->hide();
-  s_quit_prompt_dialog->hide();
+  s_quit_prompt->hide();
   s_outro_screen->hide();
 
   s_win->teardown();
@@ -156,7 +156,7 @@ void application::teardown() {
   s_submenu_screen.teardown();
   s_viewer_screen.teardown();
   s_outro_screen.teardown();
-  s_quit_prompt_dialog.teardown();
+  s_quit_prompt.teardown();
 
   logf_application("bye!\n");
 }
@@ -219,8 +219,8 @@ void application::poll_input() {
 
 void application::animate(anim_time_t anim_ms) {
   screen_element *screens[] = {
-      &*s_quit_prompt_dialog, &*s_outro_screen,   &*s_intro_screen,
-      &*s_viewer_screen,      &*s_submenu_screen, &*s_menu_screen,
+      &*s_quit_prompt,   &*s_outro_screen,   &*s_intro_screen,
+      &*s_viewer_screen, &*s_submenu_screen, &*s_menu_screen,
   };
 
   bool found_active = false;
@@ -252,7 +252,7 @@ screen_element &application::focused_screen() {
   if (s_mode == mode_outro) {
     return *s_outro_screen;
   } else if (s_showing_quit_prompt) {
-    return *s_quit_prompt_dialog;
+    return *s_quit_prompt;
   } else if (s_showing_viewer) {
     return *s_viewer_screen;
   } else {
@@ -468,6 +468,7 @@ void application::deactivate_viewer() {
 
 void application::activate_quit_prompt() {
   assert(!s_last_showing_quit_prompt);
+  s_quit_prompt->prompt_quit();
   s_last_showing_quit_prompt = true;
 }
 
