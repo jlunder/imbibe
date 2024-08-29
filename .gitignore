@@ -1,5 +1,7 @@
 build/
 workspace/
+old/
+imbibe/
 *.ERR
 RUN.LOG
 simbibe
