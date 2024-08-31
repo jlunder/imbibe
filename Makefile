@@ -77,7 +77,7 @@ imbibe: $(OBJ_DIR)imbibe.exe $(IMBIBE_RESOURCES)
 	    -c "`echo $< | tr '/' '\\' ` > RUN.LOG"
 
 %.tbm: %.bin support/mk_tbm.py Makefile
-	support/mk_tbm.py -v --type=rle -o $@ -k ,0,0 $<
+	support/mk_tbm.py -v -o $@ $<
 
 $(OBJ_DIR)imbibe.lnk: Makefile | $(OBJ_DIR)
 	echo NAME $(OBJ_DIR)imbibe.exe > $@ && \

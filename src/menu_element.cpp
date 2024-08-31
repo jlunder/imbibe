@@ -8,6 +8,8 @@
 #include "tbm.h"
 #include "termviz.h"
 
+// first hotspot lines 11-17
+
 menu_element::menu_element() {
   m_background.set_brush(termel::from('/', color::white, color::black));
 }

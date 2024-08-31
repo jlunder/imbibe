@@ -11,15 +11,18 @@ import dataclasses
 import logging
 import os
 import numpy as np
+import re
 import struct
 import sys
 
 logger = logging.getLogger(__appname__)
 
-OUT_PLAIN = "plain"
-OUT_MASK = "mask"
-OUT_MASK_KEY = "key"
-OUT_MASK_RLE = "rle"
+OUT_AUTO = "auto"
+OUT_FLAT = "flat"
+OUT_RLE = "rle"
+OUT_MASK_FLAT = "mask_flat"
+OUT_MASK_KEY = "mask_key"
+OUT_MASK_RLE = "mask_rle"
 
 IN_DETECT = "detect"
 IN_ASCII = "ascii"
@@ -30,14 +33,28 @@ IN_OTHER = "other"
 
 MAX_INPUT_SIZE = 1 << 20
 
+FLAGS_ICE_COLOR = 0x0001
+FLAGS_FONT_8PX = 0x0002
+FLAGS_FONT_9PX = 0x0004
+FLAGS_ASPECT_LEGACY = 0x0008
+FLAGS_ASPECT_SQUARE = 0x0010
+
+TBM_FORMAT_FLAT = 0x01
+TBM_FORMAT_RLE = 0x02
+TBM_FORMAT_MASK_FLAT = 0x03
+TBM_FORMAT_MASK_KEY = 0x04
+TBM_FORMAT_MASK_RLE = 0x05
+
 
 @dataclasses.dataclass
 class Args:
     verbose: bool = False
-    output_subtype: str = OUT_PLAIN
+    normalize: bool = False
+    output_subtype: str = OUT_AUTO
     input_format: str = IN_DETECT
     input_width: int = None
     key: str = None
+    opaque: bool = False
     input_path: str = None
     output_path: str = None
 
@@ -49,6 +66,7 @@ class ImageInfo:
     width: int = 80
     height: int = 25
     flags: int = 0
+    args: list[str] | None = None
 
 
 @dataclasses.dataclass
@@ -59,6 +77,46 @@ class Image:
     mask_key: int = None
 
 
+def make_arg_parser():
+    parser = argparse.ArgumentParser(
+        description="Convert a BinText (ANSI .BIN file) to a .TBM"
+    )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="verbose message output"
+    )
+    parser.add_argument(
+        "-n",
+        "--normalize",
+        action="store_true",
+        help="output a normalized BinText",
+    )
+    parser.add_argument(
+        "-t",
+        "--type",
+        dest="output_subtype",
+        metavar="SUBTYPE",
+        choices=["auto", "flat", "rle", "mask_flat", "mask_key", "mask_rle"],
+        help="output specific TBM subtype",
+    )
+    parser.add_argument("-k", "--key", type=str, help="attribute key for masked BINs")
+    parser.add_argument(
+        "-p", "--opaque", action="store_true", help="don't generate a mask"
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        dest="output_path",
+        metavar="OUTPUT",
+        help="output TBM path",
+    )
+    parser.add_argument("input_path", metavar="INPUT", nargs=1, help="input BIN path")
+
+    return parser
+
+
+arg_parser: argparse.ArgumentParser = make_arg_parser()
+
+
 def parse_sauce(data: bin):
     sauce_rec_len = 128
     sauce_rec_id = b"SAUCE"
@@ -67,8 +125,9 @@ def parse_sauce(data: bin):
         return None
     sauce_rec = data[-sauce_rec_len:]
     if sauce_rec[: len(sauce_rec_id)] != sauce_rec_id:
-        logger.info("File does not have sauce header magic")
+        logger.info("File does not have SAUCE header magic")
         return None
+    title: bytes
     (
         id,
         version,
@@ -97,6 +156,7 @@ def parse_sauce(data: bin):
             ord("0"),
         )
 
+    title, author, group = (title.rstrip(), author.rstrip(), group.rstrip())
     logger.info(
         "id = %s; version = %s; title = %r; author = %r; group = %r; "
         + "date = %r; fsize = %d; dtype = %d; ftype = %d; tinfo1 = %d; "
@@ -104,9 +164,9 @@ def parse_sauce(data: bin):
         + "flags = %02X; tinfos = %r",
         id,
         version,
-        title.rstrip(),
-        author.rstrip(),
-        group.rstrip(),
+        title,
+        author,
+        group,
         date,
         fsize,
         dtype,
@@ -170,6 +230,20 @@ def parse_sauce(data: bin):
             actual_fsize,
         )
 
+    equals_arg_re = re.compile(b"^(--?[a-zA-Z_-]+)=(.*)$")
+    if (len(title) > 0) and (title[-1] == ord(b":")):
+        img_args = []
+        for a in title.split(b":")[1:-1]:
+            m = equals_arg_re.match(a)
+            if m:
+                img_args.append(m.group(1))
+                img_args.append(m.group(2))
+            else:
+                img_args.append(a)
+        img_args = [b.decode("ascii") for b in img_args]
+    else:
+        img_args = None
+
     if dtype == 1:
         if ftype == 0:
             return ImageInfo(
@@ -178,6 +252,7 @@ def parse_sauce(data: bin):
                 width=tinfo1 or None,
                 height=tinfo2 or None,
                 flags=flags,
+                args=img_args,
             )
         elif ftype == 1:
             return ImageInfo(
@@ -186,6 +261,7 @@ def parse_sauce(data: bin):
                 width=tinfo1 or None,
                 height=tinfo2 or None,
                 flags=flags,
+                args=img_args,
             )
         elif ftype == 2:
             return ImageInfo(
@@ -194,6 +270,7 @@ def parse_sauce(data: bin):
                 width=tinfo1 or None,
                 height=tinfo2 or None,
                 flags=flags,
+                args=img_args,
             )
     elif dtype == 5:
         w = ftype * 2
@@ -221,13 +298,16 @@ def parse_sauce(data: bin):
             width=w or None,
             height=h or None,
             flags=flags,
+            args=img_args,
         )
     else:
         logger.warning("Unsupported datatype %d in SAUCE", dtype)
         return ImageInfo(format=IN_OTHER, data_size=used_fsize)
 
 
-def parse_args_key(args_key: str) -> tuple[int, int]:
+def parse_args_key(args_key: str | None) -> tuple[int, int]:
+    if (args_key == None) or (args_key == ""):
+        return (0, -1)
     ch, fg, bg = args_key.split(",")
     key_mask = 0
     key = 0
@@ -251,7 +331,7 @@ def parse_args_key(args_key: str) -> tuple[int, int]:
     return key_mask, key
 
 
-def read_input_image(args: Args, input_path: str):
+def read_bintext(args: Args, input_path: str):
     logger.info("Opening %s", input_path)
     try:
         with open(input_path, "rb") as f:
@@ -265,6 +345,11 @@ def read_input_image(args: Args, input_path: str):
             "Input file '%s' does not have valid SAUCE, assuming BINTEXT", input_path
         )
         inf = ImageInfo(format=IN_BINTEXT)
+    if inf.args != None:
+        logger.info("Parsing extra image args: %r", inf.args)
+        args = arg_parser.parse_args(
+            inf.args + [input_path], namespace=dataclasses.replace(args)
+        )
     if inf.format != IN_BINTEXT:
         logger.error("Only BINTEXT input is supported, this is %s", inf.format.upper())
         return None
@@ -303,7 +388,218 @@ def read_input_image(args: Args, input_path: str):
     return Image(flags=inf.flags, data=img_data, mask_key=key, mask=mask)
 
 
-def write_output_image(args: Args, input_path: str, img: Image) -> bool | None:
+def normalizer(img: Image) -> list[list[int]]:
+    blank = set([0x00, 0x20, 0xFF])
+    inverse_blank = set([0xDB])
+    blank_c = 0
+    inverse = {0xDE: 0xDD, 0xDF: 0xDC}
+    # if img.flags & FLAGS_FONT_8PX:
+    #     inverse |= {0x08: 0x07, 0x0A: 0x09, 0xB2: 0xB0}
+
+    def normalize_tm(termel: int) -> int:
+        c = termel & 0xFF
+        fg = (termel >> 8) & 0xF
+        if img.flags & FLAGS_ICE_COLOR:
+            bg = (termel >> 12) & 0xF
+            blink = 0
+            can_invert = True
+        else:
+            bg = (termel >> 12) & 0x7
+            blink = (termel >> 15) & 0x1
+            can_invert = (fg & 0x80) == 0
+        if fg == bg:
+            # character not visible over background
+            c = blank_c
+            fg = 0
+            blink = 0
+        elif c in blank:
+            # foreground not used by this character
+            c = blank_c
+            fg = 0
+        elif not blink:
+            if c in inverse:
+                c = inverse[c]
+                fg, bg = bg, fg
+            elif c in inverse_blank:
+                if can_invert:
+                    c = blank_c
+                    fg, bg = 0, fg
+                else:
+                    # background entirely covered by this character
+                    bg = 0
+        return c | (fg << 8) | (bg << 12) | (blink << 15)
+
+    norms = [None] * (1 << 16)
+    for tm in range(len(norms)):
+        norm_tm = normalize_tm(tm)
+        if norm_tm == tm:
+            norms[tm] = [tm]
+        else:
+            if norms[norm_tm] == None:
+                norms[norm_tm] = []
+            norms[tm] = norms[norm_tm]
+            norms[tm].append(tm)
+    for tm in range(len(norms)):
+        assert tm in norms[tm]
+        for n in norms[tm]:
+            assert norms[n] is norms[tm]
+    # for tm in range(len(norms)):
+    #     if (len(norms[tm]) > 1) and (norms[tm][0] == tm):
+    #         c = lambda x: "%02X %X %X %d" % (
+    #             x & 0xFF,
+    #             (x >> 8) & 0xF,
+    #             (x >> 12) & 0x7,
+    #             x >> 15,
+    #         )
+    #         print("%s: %s" % (c(tm), ", ".join(map(c, norms[tm][1:]))))
+    return norms
+
+
+def write_bintext(args: Args, input_path: str, img: Image) -> bool | None:
+    if args.output_path != None:
+        output_path = args.output_path
+    else:
+        output_path = os.path.splitext(input_path)[0] + ".bin"
+        if output_path == input_path:
+            logger.error(
+                "Output must be specified -- default would overwrite input file"
+            )
+            return None
+    logger.info("Writing normalized BINTEXT '%s'", output_path)
+
+    norms = normalizer(img)
+    zero = norms[0x0000][0]
+    normalize = np.vectorize(lambda x, m: norms[x][0] if m else zero, [np.uint16])
+    norm_data: np.ndarray = normalize(img.data, img.mask)
+    assert (norm_data.shape[1] & 1) == 0
+    assert (norm_data.shape[1] > 0) and (norm_data.shape[1] // 2) < 256
+    norm_bytes = norm_data.tobytes()
+    file_size = len(norm_bytes)
+    sauce_dtype = 5
+    sauce_ftype = norm_data.shape[1] // 2
+    sauce_flags = img.flags & 0xFF
+    sauce = struct.pack(
+        "<5s2s35s20s20s8sLBBHHHHBB22s",
+        b"SAUCE",
+        b"00",
+        b" " * 35,
+        b" " * 20,
+        b" " * 20,
+        b"20240831",
+        file_size,
+        sauce_dtype,
+        sauce_ftype,
+        0,
+        0,
+        0,
+        0,
+        0,
+        sauce_flags,
+        b"",
+    )
+    assert len(sauce) == 128
+    with open(output_path, "wb") as f:
+        f.write(norm_bytes)
+        f.write(b"0x1A")
+        f.write(sauce)
+
+
+def encode_flat(img: Image) -> tuple[int, bytes]:
+    return (TBM_FORMAT_FLAT, img.data.tobytes())
+
+
+def encode_rle(img: Image) -> tuple[int, bytes]:
+    return (TBM_FORMAT_FLAT, None)
+
+
+def encode_mask_flat(img: Image) -> tuple[int, bytes]:
+    encoded = np.packbits(img.mask, axis=-1).tobytes() + img.data.tobytes()
+    return (TBM_FORMAT_MASK_FLAT, encoded)
+
+
+def encode_mask_key(img: Image) -> tuple[int, bytes]:
+    encoded = (
+        struct.pack("<H", img.mask_key if img.mask_key != None else 0x0000)
+        + img.data.tobytes()
+    )
+    return (TBM_FORMAT_MASK_KEY, encoded)
+
+
+def encode_mask_rle(img: Image) -> tuple[int, bytes]:
+    norms = normalizer(img)
+    zero = norms[0x0000][0]
+    normalize = np.vectorize(lambda x, m: norms[x][0] if m else zero, [np.uint16])
+    norm_data: np.ndarray = normalize(img.data, img.mask)
+    lines = []
+    pos = 2 * norm_data.shape[0]
+    max_skip = 255
+    rle_bytes = bytes()
+    for i in range(norm_data.shape[0]):
+        data = []
+        maybe_data = []
+        j = 0
+        # logger.info(
+        #     "RLE line %d: input mask %r",
+        #     i,
+        #     list(np.asarray(img.mask[i], np.uint8)),
+        # )
+        while j < norm_data.shape[1]:
+            skip = 0
+            span = []
+            while (j < norm_data.shape[1]) and (skip < max_skip) and not img.mask[i][j]:
+                skip += 1
+                j += 1
+            while (
+                (j < norm_data.shape[1]) and (len(span) < max_skip) and img.mask[i][j]
+            ):
+                span.append(norm_data[i][j])
+                j += 1
+            if len(span) > 0:
+                data += maybe_data
+                maybe_data = []
+                data.append(skip)
+                data.append(len(span))
+                data += list(np.array(span, np.uint16).tobytes())
+                # logger.info(
+                #     "RLE line %d: j=%d; skip %d, span %d", i, j, skip, len(span)
+                # )
+            else:
+                maybe_data.append(skip)
+                maybe_data.append(0)
+                # logger.info("RLE line %d: j=%d; MAYBE skip %d", i, j, skip)
+        # logger.info("RLE line %d: adding %r", i, data)
+        # logger.info("RLE line %d: discarding %r", i, maybe_data)
+        if len(data) == 0:
+            lines.append(0)
+        else:
+            lines.append(pos)
+            data += [0, 0]
+        rle_bytes += bytes(data)
+        pos += len(data)
+    encoded = np.array(lines, np.uint16).tobytes() + rle_bytes
+    assert len(lines) == norm_data.shape[0]
+    assert pos < 16000
+    return (TBM_FORMAT_MASK_RLE, encoded)
+
+
+def encode_smallest(img: Image) -> tuple[int, bytes]:
+    if img.mask.all():
+        encodings = [encode_flat]  # , encode_rle]
+    else:
+        encodings = [encode_mask_flat, encode_mask_key, encode_mask_rle]
+    alts = [e(img) for e in encodings]
+    smallest = None
+    for a in alts:
+        fmt, encoded = a
+        if (smallest == None) or (len(encoded) < len(smallest[1])):
+            logger.info("Format %X: size=%d" % (fmt, len(encoded)))
+            smallest = a
+    logger.info("Choosing %X" % (smallest[0],))
+    return smallest
+
+
+def write_tbm(args: Args, input_path: str, img: Image) -> bool | None:
+    assert img.mask.shape == img.data.shape
     if args.output_path != None:
         output_path = args.output_path
     else:
@@ -313,148 +609,56 @@ def write_output_image(args: Args, input_path: str, img: Image) -> bool | None:
                 "Output must be specified -- default would overwrite input file"
             )
             return None
-    logger.info("Writing '%s'", output_path)
+    logger.info("Writing TBM '%s'", output_path)
     with open(output_path, "wb") as f:
         assert len(img.data.shape) == 2
-        if args.output_subtype == OUT_PLAIN:
-            format_flags = 0x0000
-        elif args.output_subtype == OUT_MASK:
-            format_flags = 0x0100
-        elif args.output_subtype == OUT_MASK_KEY:
-            format_flags = 0x0400
-        elif args.output_subtype == OUT_MASK_RLE:
-            format_flags = 0x0500
         f.write(b"TBMa")
-        if args.output_subtype == OUT_PLAIN:
+        if args.output_subtype == OUT_AUTO:
+            logger.info("Autodetecting smallest encoding")
+            fmt, encoded = encode_smallest(img)
+        if args.output_subtype == OUT_FLAT:
             logger.info("Encoding plain TBM")
-            data_bytes = img.data.tobytes()
-        elif args.output_subtype == OUT_MASK:
+            fmt, encoded = encode_flat(img)
+        elif args.output_subtype == OUT_MASK_FLAT:
             logger.info("Encoding masked TBM")
-            assert img.mask.shape == img.data.shape
-            data_bytes = np.packbits(img.mask, axis=-1).tobytes() + img.data.tobytes()
+            fmt, encoded = encode_mask_flat(img)
         elif args.output_subtype == OUT_MASK_KEY:
             logger.info("Encoding key masked TBM")
-            data_bytes = (
-                struct.pack("<H", img.mask_key if img.mask_key != None else 0x0000)
-                + img.data.tobytes()
-            )
+            fmt, encoded = encode_mask_key(img)
         elif args.output_subtype == OUT_MASK_RLE:
-            logger.info(
-                "Encoding RLE masked TBM, mask %r, image %r",
-                img.mask.shape,
-                img.data.shape,
-            )
-            lines = []
-            pos = 2 * img.data.shape[0]
-            max_skip = 255
-            rle_bytes = bytes()
-            for i in range(img.data.shape[0]):
-                data = []
-                maybe_data = []
-                j = 0
-                # logger.info(
-                #     "RLE line %d: input mask %r",
-                #     i,
-                #     list(np.asarray(img.mask[i], np.uint8)),
-                # )
-                while j < img.data.shape[1]:
-                    skip = 0
-                    span = []
-                    while (
-                        (j < img.data.shape[1])
-                        and (skip < max_skip)
-                        and not img.mask[i][j]
-                    ):
-                        skip += 1
-                        j += 1
-                    while (
-                        (j < img.data.shape[1])
-                        and (len(span) < max_skip)
-                        and img.mask[i][j]
-                    ):
-                        span.append(img.data[i][j])
-                        j += 1
-                    if len(span) > 0:
-                        data += maybe_data
-                        maybe_data = []
-                        data.append(skip)
-                        data.append(len(span))
-                        data += list(np.array(span, np.uint16).tobytes())
-                        # logger.info(
-                        #     "RLE line %d: j=%d; skip %d, span %d", i, j, skip, len(span)
-                        # )
-                    else:
-                        maybe_data.append(skip)
-                        maybe_data.append(0)
-                        # logger.info("RLE line %d: j=%d; MAYBE skip %d", i, j, skip)
-                # logger.info("RLE line %d: adding %r", i, data)
-                # logger.info("RLE line %d: discarding %r", i, maybe_data)
-                if len(data) == 0:
-                    lines.append(0)
-                else:
-                    lines.append(pos)
-                    data += [0, 0]
-                rle_bytes += bytes(data)
-                pos += len(data)
-            data_bytes = np.array(lines, np.uint16).tobytes() + rle_bytes
-            assert len(lines) == img.data.shape[0]
-            assert pos < 16000
+            logger.info("Encoding RLE masked TBM")
+            fmt, encoded = encode_mask_key(img)
         f.write(
             struct.pack(
                 "<LBBH",
-                len(data_bytes) + 4,
+                len(encoded) + 4,
                 img.data.shape[1],
                 img.data.shape[0],
-                img.flags | format_flags,
+                img.flags | fmt,
             )
         )
-        f.write(data_bytes)
+        f.write(encoded)
         return True
 
 
 def main(args: Args):
     assert len(args.input_path) == 1
     input_path = args.input_path[0]
-    img = read_input_image(args, input_path)
+    img = read_bintext(args, input_path)
     if img == None:
         return 1
-    write_res = write_output_image(args, input_path, img)
-    if write_res == None:
-        return 1
+    if args.normalize:
+        write_bintext(args, input_path, img)
+    else:
+        write_res = write_tbm(args, input_path, img)
+        if write_res == None:
+            return 1
     return 0
 
 
 if __name__ == "__main__":
     try:
-        parser = argparse.ArgumentParser(
-            description="Convert a BinText (ANSI .BIN file) to a .TBM"
-        )
-        parser.add_argument(
-            "-v", "--verbose", action="store_true", help="verbose message output"
-        )
-        parser.add_argument(
-            "-t",
-            "--type",
-            dest="output_subtype",
-            metavar="SUBTYPE",
-            choices=["plain", "mask", "key", "rle"],
-            help="output specific TBM subtype",
-        )
-        parser.add_argument(
-            "-k", "--key", type=str, help="attribute key for masked BINs"
-        )
-        parser.add_argument(
-            "-o",
-            "--output",
-            dest="output_path",
-            metavar="OUTPUT",
-            help="output TBM path",
-        )
-        parser.add_argument(
-            "input_path", metavar="INPUT", nargs=1, help="input BIN path"
-        )
-
-        args: Args = parser.parse_args(namespace=Args())
+        args: Args = arg_parser.parse_args(namespace=Args())
         logger.setLevel(logging.INFO if args.verbose else logging.DEBUG)
         handler = logging.StreamHandler()
         handler.setFormatter(logging.Formatter("%(message)s"))
