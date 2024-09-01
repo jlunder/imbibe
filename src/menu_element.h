@@ -19,13 +19,14 @@ public:
   virtual bool active() const;
 
 private:
-  tbm_element m_header;
-  coord_t m_header_width;
-  coord_t m_header_height;
-  tbm_element m_footer;
-  coord_t m_footer_width;
-  coord_t m_footer_height;
-  rectangle_element m_background;
+  // tbm_element m_header;
+  // coord_t m_header_width;
+  // coord_t m_header_height;
+  // tbm_element m_footer;
+  // coord_t m_footer_width;
+  // coord_t m_footer_height;
+  tbm_element m_background;
+  coord_t m_scroll_height;
 };
 
 #endif // __MENU_ELEMENT_H_INCLUDED

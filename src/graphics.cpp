@@ -110,6 +110,11 @@ public:
                      uint16_t count) const {
     memcpy(dest, src, count * sizeof(termel_t));
   }
+  void fill_line(termel_t __far *dest, termel_t src, uint16_t count) const {
+    for (uint16_t i = 0; i < count; ++i) {
+      dest[i] = src;
+    }
+  }
 };
 
 class fade_line_op {
@@ -125,6 +130,15 @@ public:
       termel_t te = src[j];
       dest[j] = termel::with_attribute(te, m_fade_lut[termel::foreground(te)],
                                        m_fade_lut[termel::background(te)]);
+    }
+  }
+
+  void fill_line(termel_t __far *dest, termel_t src, uint16_t count) const {
+    termel_t te =
+        termel::with_attribute(src, m_fade_lut[termel::foreground(src)],
+                               m_fade_lut[termel::background(src)]);
+    for (uint16_t i = 0; i < count; ++i) {
+      dest[i] = te;
     }
   }
 
@@ -172,12 +186,20 @@ void draw_tbm(graphics &g, coord_t x, coord_t y, unpacker const &tbm_data,
                  (uint16_t)min<uint32_t>(tbm.remain(), iff_h.data_size));
   tbm_header tbm_h = tbm.unpack<tbm_header>();
 
-  if ((tbm_h.flags & tbm_flags::flags_format) == tbm_flags::fmt_plain) {
+  if ((tbm_h.flags & tbm_flags::flags_format) == tbm_flags::fmt_flat) {
     bitmap_transform_params p;
     if (prepare_plain_tbm_transform_params(g, tbm, x, y, tbm_h.width,
                                            tbm_h.height, p)) {
       p.transform(op);
     }
+  } else if ((tbm_h.flags & tbm_flags::flags_format) == tbm_flags::fmt_rle) {
+    aux_graphics::clip_params p;
+    if (!p.compute_clip(g, x, y, x + tbm_h.width, y + tbm_h.height)) {
+      return;
+    }
+    assert(p.source_y1 < tbm_h.height);
+    assert(p.source_y2 <= tbm_h.height);
+    draw_rle_tbm(g, p, tbm, op);
   } else if ((tbm_h.flags & tbm_flags::flags_format) ==
              tbm_flags::fmt_mask_rle) {
     aux_graphics::clip_params p;
@@ -187,6 +209,50 @@ void draw_tbm(graphics &g, coord_t x, coord_t y, unpacker const &tbm_data,
     assert(p.source_y1 < tbm_h.height);
     assert(p.source_y2 <= tbm_h.height);
     draw_mask_rle_tbm(g, p, tbm, op);
+  }
+}
+
+template <class TLineOp>
+void draw_rle_tbm(graphics &g, aux_graphics::clip_params const &p,
+                  unpacker const &tbm_data, TLineOp op) {
+  unpacker tbm(tbm_data);
+  uint16_t lines_origin = tbm.pos();
+  uint16_t const *lines = tbm.unpack_array<uint16_t>(p.source_y1);
+  termel_t *dest_p = g.b().data() + p.dest_y * g.b().width() + p.dest_x;
+  uint16_t dest_stride = g.b().width();
+  for (coord_t i = p.source_y1; i < p.source_y2; ++i) {
+    if (lines[i] == 0) {
+      continue;
+    }
+    tbm.seek_to(lines[i] + lines_origin);
+
+    coord_t run_end;
+    for (coord_t run_start = p.source_x1; run_start < p.source_x2;
+         run_start = run_end) {
+      uint8_t run_info = tbm.unpack<uint8_t>();
+      uint8_t run_length = ((run_info - 1) & 0x7F) + 1;
+      run_end = run_start + run_length;
+      if (run_end > p.source_x2) {
+        run_end = p.source_x2;
+      }
+      if ((run_info & 0x80) == 0) {
+        termel_t const __far *run_data = tbm.unpack_array<termel_t>(run_length);
+        if (run_start < p.source_x1) {
+          run_data += p.source_x1 - run_start;
+          run_start = p.source_x1;
+        }
+        op.transfer_line(dest_p + run_start - p.source_x1, run_data,
+                         run_end - run_start);
+      } else {
+        termel_t run_tm = tbm.unpack<termel_t>();
+        if (run_start < p.source_x1) {
+          run_start = p.source_x1;
+        }
+        op.fill_line(dest_p + run_start - p.source_x1, run_tm,
+                     run_end - run_start);
+      }
+    }
+    dest_p += dest_stride;
   }
 }
 
@@ -203,8 +269,9 @@ void draw_mask_rle_tbm(graphics &g, aux_graphics::clip_params const &p,
       continue;
     }
     tbm.seek_to(lines[i] + lines_origin);
-    uint16_t span_start = 0;
-    for (;;) {
+
+    coord_t span_end;
+    for (coord_t span_start = 0;; span_start = span_end) {
       tbm_span span = tbm.unpack<tbm_span>();
       if ((span.skip == 0) && (span.termel_count == 0)) {
         break;
@@ -215,24 +282,26 @@ void draw_mask_rle_tbm(graphics &g, aux_graphics::clip_params const &p,
       }
       termel_t const __far *span_data =
           tbm.unpack_array<termel_t>(span.termel_count);
-      uint16_t span_end = span_start + span.termel_count;
-      if (span_start < p.source_x1) {
-        span_data += p.source_x1 - span_start;
-        span_start = p.source_x1;
+      span_end = span_start + span.termel_count;
+      if (span_end > p.source_x1) {
+        if (span_start < p.source_x1) {
+          span_data += p.source_x1 - span_start;
+          span_start = p.source_x1;
+        }
+        if (span_end > p.source_x2) {
+          span_end = p.source_x2;
+        }
+        op.transfer_line(dest_p + span_start - p.source_x1, span_data,
+                         span_end - span_start);
       }
-      if (span_end >= p.source_x2) {
-        span_end = p.source_x2;
-      }
-      op.transfer_line(dest_p + span_start - p.source_x1, span_data,
-                       span_end - span_start);
       if (span_end >= p.source_x2) {
         break;
       }
-      span_start = span_end;
     }
     dest_p += dest_stride;
   }
 }
+
 } // namespace aux_graphics
 
 graphics::graphics(bitmap &n_b)
