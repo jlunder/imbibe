@@ -35,8 +35,8 @@ IMBIBE_DEPS = $(patsubst $(SRC_DIR)%.cpp,$(DEP_DIR)%.d,$(IMBIBE_SOURCES))
 IMBIBE_RESOURCES = \
 	testdata/cover.tbm \
 	testdata/logo.tbm \
-	testdata/menu-top.tbm \
-	testdata/menu-bot.tbm \
+	testdata/menu-bg.tbm \
+	testdata/menu-sel.tbm \
 	testdata/quit.tbm
 
 .PHONY: all clean deps dirs imbibe

@@ -508,8 +508,102 @@ def encode_flat(img: Image) -> tuple[int, bytes]:
     return (TBM_FORMAT_FLAT, img.data.tobytes())
 
 
+class RleEncoder:
+    runs: list[tuple]
+    copy_buf: list[int]
+    last: int
+    rep: int
+
+    def __init__(self):
+        self.runs = []
+        self.copy_buf = []
+        self.last = None
+        self.rep = 0
+
+    def commit_copy(self):
+        if len(self.copy_buf) > 0:
+            self.runs.append((0, self.copy_buf))
+            self.copy_buf = []
+
+    def commit_fill(self):
+        self.commit_copy()
+        if self.rep > 0:
+            self.runs.append((1, self.last, self.rep))
+            self.rep = 0
+
+    def encode(self, src):
+        max_run = 127
+        for cur in src:
+            if cur != self.last:
+                if self.rep >= 3:
+                    self.commit_copy()
+                    self.commit_fill()
+                else:
+                    while self.rep > 0:
+                        self.copy_buf.append(self.last)
+                        self.rep -= 1
+                        if len(self.copy_buf) >= max_run:
+                            self.commit_copy()
+                self.last = cur
+                self.rep = 1
+            else:
+                self.rep += 1
+            if len(self.copy_buf) >= max_run:
+                self.commit_copy()
+            if self.rep >= max_run:
+                self.commit_copy()
+                self.commit_fill()
+        self.commit_copy()
+        self.commit_fill()
+
+    def data(self):
+        def run_bytes(run):
+            if run[0] == 0:
+                return (
+                    struct.pack("<B", (len(run[1]) & 0x7F) | 0x00)
+                    + np.array(run[1], dtype=np.uint16).tobytes()
+                )
+            elif run[0] == 1:
+                return struct.pack("<BH", (run[2] & 0x7F) | 0x80, run[1])
+
+        return b"".join(map(run_bytes, self.runs))
+
+
 def encode_rle(img: Image) -> tuple[int, bytes]:
-    return (TBM_FORMAT_FLAT, None)
+    lines = []
+    pos = 2 * img.data.shape[0]
+    rle_bytes = bytes()
+    for i in range(img.data.shape[0]):
+        lines.append(pos)
+        encoder = RleEncoder()
+        encoder.encode(img.data[i])
+        data = encoder.data()
+        rle_bytes += data
+        pos += len(data)
+
+        # decoded = []
+        # p = 0
+        # while p < len(data):
+        #     l = data[p]
+        #     p += 1
+        #     if l & 0x80:
+        #         decoded += data[p : p + 2] * (l & 0x7F)
+        #         p += 2
+        #     else:
+        #         decoded += data[p : p + l * 2]
+        #         p += l * 2
+        # for r in encoder.runs:
+        #     if r[0] == 0:
+        #         print("data: " + (", ".join(["%04X" % (t,) for t in r[1]])))
+        #     elif r[0] == 1:
+        #         print("run: %04X x %d" % (r[1], r[2]))
+        # print("original: " + " ".join(["%02X" % (b,) for b in img.data[i].tobytes()]))
+        # print("decoded:  " + " ".join(["%02X" % (b,) for b in bytes(decoded)]))
+        # assert bytes(decoded) == img.data[i].tobytes()
+    encoded = np.array(lines, np.uint16).tobytes() + rle_bytes
+    assert len(lines) == img.data.shape[0]
+    assert pos < 16000
+    return (TBM_FORMAT_RLE, encoded)
 
 
 def encode_mask_flat(img: Image) -> tuple[int, bytes]:
@@ -526,15 +620,11 @@ def encode_mask_key(img: Image) -> tuple[int, bytes]:
 
 
 def encode_mask_rle(img: Image) -> tuple[int, bytes]:
-    norms = normalizer(img)
-    zero = norms[0x0000][0]
-    normalize = np.vectorize(lambda x, m: norms[x][0] if m else zero, [np.uint16])
-    norm_data: np.ndarray = normalize(img.data, img.mask)
     lines = []
-    pos = 2 * norm_data.shape[0]
+    pos = 2 * img.data.shape[0]
     max_skip = 255
     rle_bytes = bytes()
-    for i in range(norm_data.shape[0]):
+    for i in range(img.data.shape[0]):
         data = []
         maybe_data = []
         j = 0
@@ -543,16 +633,14 @@ def encode_mask_rle(img: Image) -> tuple[int, bytes]:
         #     i,
         #     list(np.asarray(img.mask[i], np.uint8)),
         # )
-        while j < norm_data.shape[1]:
+        while j < img.data.shape[1]:
             skip = 0
             span = []
-            while (j < norm_data.shape[1]) and (skip < max_skip) and not img.mask[i][j]:
+            while (j < img.data.shape[1]) and (skip < max_skip) and not img.mask[i][j]:
                 skip += 1
                 j += 1
-            while (
-                (j < norm_data.shape[1]) and (len(span) < max_skip) and img.mask[i][j]
-            ):
-                span.append(norm_data[i][j])
+            while (j < img.data.shape[1]) and (len(span) < max_skip) and img.mask[i][j]:
+                span.append(img.data[i][j])
                 j += 1
             if len(span) > 0:
                 data += maybe_data
@@ -577,14 +665,14 @@ def encode_mask_rle(img: Image) -> tuple[int, bytes]:
         rle_bytes += bytes(data)
         pos += len(data)
     encoded = np.array(lines, np.uint16).tobytes() + rle_bytes
-    assert len(lines) == norm_data.shape[0]
+    assert len(lines) == img.data.shape[0]
     assert pos < 16000
     return (TBM_FORMAT_MASK_RLE, encoded)
 
 
 def encode_smallest(img: Image) -> tuple[int, bytes]:
     if img.mask.all():
-        encodings = [encode_flat]  # , encode_rle]
+        encodings = [encode_flat, encode_rle]
     else:
         encodings = [encode_mask_flat, encode_mask_key, encode_mask_rle]
     alts = [e(img) for e in encodings]
@@ -609,25 +697,33 @@ def write_tbm(args: Args, input_path: str, img: Image) -> bool | None:
                 "Output must be specified -- default would overwrite input file"
             )
             return None
+    norms = normalizer(img)
+    if args.key:
+        _, zero = parse_args_key(args.key)
+    else:
+        zero = 0
+    zero = norms[zero][0]
+    normalize = np.vectorize(lambda x, m: norms[x][0] if m else zero, [np.uint16])
+    img.data = normalize(img.data, img.mask)
+    if args.output_subtype == OUT_AUTO:
+        logger.info("Autodetecting smallest encoding")
+        fmt, encoded = encode_smallest(img)
+    if args.output_subtype == OUT_FLAT:
+        logger.info("Encoding plain TBM")
+        fmt, encoded = encode_flat(img)
+    elif args.output_subtype == OUT_MASK_FLAT:
+        logger.info("Encoding masked TBM")
+        fmt, encoded = encode_mask_flat(img)
+    elif args.output_subtype == OUT_MASK_KEY:
+        logger.info("Encoding key masked TBM")
+        fmt, encoded = encode_mask_key(img)
+    elif args.output_subtype == OUT_MASK_RLE:
+        logger.info("Encoding RLE masked TBM")
+        fmt, encoded = encode_mask_key(img)
     logger.info("Writing TBM '%s'", output_path)
     with open(output_path, "wb") as f:
         assert len(img.data.shape) == 2
         f.write(b"TBMa")
-        if args.output_subtype == OUT_AUTO:
-            logger.info("Autodetecting smallest encoding")
-            fmt, encoded = encode_smallest(img)
-        if args.output_subtype == OUT_FLAT:
-            logger.info("Encoding plain TBM")
-            fmt, encoded = encode_flat(img)
-        elif args.output_subtype == OUT_MASK_FLAT:
-            logger.info("Encoding masked TBM")
-            fmt, encoded = encode_mask_flat(img)
-        elif args.output_subtype == OUT_MASK_KEY:
-            logger.info("Encoding key masked TBM")
-            fmt, encoded = encode_mask_key(img)
-        elif args.output_subtype == OUT_MASK_RLE:
-            logger.info("Encoding RLE masked TBM")
-            fmt, encoded = encode_mask_key(img)
         f.write(
             struct.pack(
                 "<LBBH",
