@@ -1,5 +1,7 @@
 build/
-workspace/
+workspace/*
+!workspace/dosbox.conf
+!workspace/dosbox-build.conf
 old/
 imbibe/
 *.ERR

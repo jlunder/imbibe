@@ -102,6 +102,27 @@ private:
   __segment m_seg;
 };
 
+#if 0
+
+namespace shared_manager {
+
+segsize_t alloc_shared_handle();
+void ref(segsize_t handle);
+bool unref(segsize_t handle);
+
+} // namespace shared_manager
+
+template <class T> class default_shared_traits {
+public:
+  typedef segsize_t handle_type;
+  static void ref() {}
+  static void unref() {}
+};
+
+template <class T> class shared_traits : public default_shared_traits<T> {};
+
+template <class T, class Traits = shared_traits<T> > class shared {};
+
 #if defined(M_I86)
 
 // template <class T, size_t size> class array {
@@ -114,6 +135,8 @@ private:
 // public:
 //   T const &
 // };
+
+#endif
 
 #endif
 
