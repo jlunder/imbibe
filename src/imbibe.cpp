@@ -19,6 +19,10 @@ int harderr_handler(unsigned deverror, unsigned errcode,
   (void)deverror;
   (void)errcode;
   (void)devhdr;
+  // Fail the OS call that got us here and return the error to the caller,
+  // instead of showing a prompt to the user -- we're actually checking call
+  // results, and the screen will probabably be full of interactive app, so
+  // best not to interrupt with questions the user can't answer anyway.
   _hardresume(_HARDERR_FAIL);
   return 0;
 }
@@ -80,6 +84,18 @@ int main(int argc, char *argv[]) {
   (void)argv;
 
 #if !defined(SIMULATE)
+  // The DOS default is to show weird error prompts with questions like
+  // "Abort, Retry, Ignore, Fail" when there are hardware errors like disk
+  // read failures. We're not handling critical data where that prompt could
+  // save them from disaster, so this kind of interruption in our UI is not
+  // particularly justified.
+
+  // This installs an error handler that fails the DOS function; if we want
+  // to handle the error, that can be done in the normal call flow after
+  // function return. In practice we will probably just bail, the user can
+  // find better hardware to run our program on if it's that marginal (or
+  // more like, next time don't eject the disk while we're loading).
+
   _harderr(harderr_handler);
 #endif
 

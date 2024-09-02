@@ -24,6 +24,7 @@ CC_OPT = $(CC_OPT_$(VERSION)) -2 -bt=dos -fpc -w5 -ze
 CC = wpp
 
 DOSBOX = dosbox-x
+DOSBOX_BUILD = dosbox-x -conf dosbox-build.conf
 
 IMBIBE_HEADERS = $(wildcard $(SRC_DIR)*.h)
 IMBIBE_SOURCES = $(wildcard $(SRC_DIR)*.cpp)
@@ -74,7 +75,8 @@ imbibe: $(OBJ_DIR)imbibe.exe $(IMBIBE_RESOURCES)
 	cd workspace && \
 	  $(DOSBOX) \
 	    -c "S:" \
-	    -c "`echo $< | tr '/' '\\' ` > RUN.LOG"
+	    -c "`echo $< | tr '/' '\\' ` > RUN.LOG" \
+	    -c "exit"
 
 %.tbm: %.bin support/mk_tbm.py Makefile
 	support/mk_tbm.py -v -o $@ $<
@@ -112,7 +114,7 @@ $(OBJ_DIR)%.exe: private LINK_LOG = $(@D)/l_$(patsubst %.exe,%.log,$(@F))
 $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(IMBIBE_OBJS) Makefile
 	rm -f $@
 	cd workspace && \
-	  $(DOSBOX) \
+	  $(DOSBOX_BUILD) \
 	    -c "S:" \
 	    -c "$(LINK) @$< > $(LINK_LOG)" \
 	    -c "exit"
@@ -125,7 +127,7 @@ $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(IMBIBE_OBJS) Makefile
 # 	rm -f $@
 # 	rm -f $(OBJ_DIR)U_IMBIBE.OBJ
 # 	cd workspace && \
-# 	  $(DOSBOX) \
+# 	  $(DOSBOX_BUILD) \
 # 	    -c "S:" \
 # 	    -c "$(CC) $(CC_OPT) $(UNITY_SRC) > $(UNITY_LOG)" \
 # 	    -c "$(LINK) @$< > $(LINK_LOG)" \
@@ -134,11 +136,11 @@ $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(IMBIBE_OBJS) Makefile
 # 	mv $(UPPER_TGT) $@
 
 $(OBJ_DIR)%.obj: private CC_LOG = $(patsubst %.obj,%.log,$@)
-$(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp $(SIM_OBJ_DIR)%.o | $(OBJ_DIR)
+$(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp #$(SIM_OBJ_DIR)%.o | $(OBJ_DIR)
 	rm -f $@
 	TEMP_OBJ=$(OBJ_DIR)`mktemp -u -p . ~XXXXXX.obj | cut -c 3- | tr a-z A-Z` ; \
 	  ( cd workspace && \
-	    $(DOSBOX) \
+	    $(DOSBOX_BUILD) \
 	      -c "S:" \
 	      -c "$(CC) $(CC_OPT) -fo=$$TEMP_OBJ $< > $(CC_LOG)" \
 	      -c "wdis $$TEMP_OBJ -s -l=$(patsubst %.obj,%.lst,$@) >> $(CC_LOG)" \

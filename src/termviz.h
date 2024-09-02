@@ -1,7 +1,28 @@
 #ifndef __TERMVIZ_H_INCLUDED
 #define __TERMVIZ_H_INCLUDED
 
-#include "imbibe.h"
+#include "base.h"
+
+#define fourcc(arr)                                                            \
+  ((uint32_t)arr[0] | ((uint32_t)arr[1] << 8) | ((uint32_t)arr[2] << 16) |     \
+   ((uint32_t)arr[3] << 24))
+
+#define assert_margin(x, mag)                                                  \
+  assert(((x) >= -((mag) / 4)) && ((x) <= (mag) / 4))
+
+typedef int16_t coord_t;
+typedef uint8_t color_t;
+typedef uint8_t attribute_t;
+typedef uint16_t termel_t;
+typedef int16_t anim_time_t;
+typedef int32_t large_anim_time_t;
+
+#define COORD_MIN INT16_MIN
+#define COORD_MAX INT16_MAX
+#define ANIM_TIME_MAX INT16_MAX
+#define ANIM_TIME_MIN INT16_MIN
+#define LARGE_ANIM_TIME_MAX INT32_MAX
+#define LARGE_ANIM_TIME_MIN INT32_MIN
 
 class color {
 public:
