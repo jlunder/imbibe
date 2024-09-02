@@ -4,6 +4,7 @@
 #if defined(__WATCOMC__)
 #define __STDC_LIMIT_MACROS
 #pragma warning 549 9
+#pragma warning 446 9
 #endif
 
 #include <assert.h>
@@ -125,10 +126,14 @@ extern unsigned _dos_lseek(int handle, long offset, int whence,
 #endif
 
 namespace sim {
+
 extern void step_poll();
 extern void step_idle();
 extern void step_animate(uint32_t anim_ms);
+
 } // namespace sim
+
+#include "ptr.h"
 
 #define LENGTHOF(a) (sizeof(a) / sizeof(a[0]))
 
