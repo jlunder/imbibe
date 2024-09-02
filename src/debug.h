@@ -14,6 +14,7 @@
     failsafe_textmode();                                                       \
     cprintf("fatal error: ");                                                  \
     cprintf(__VA_ARGS__);                                                      \
+    cprintf("\r\n");                                                           \
     abort();                                                                   \
   } while (false)
 

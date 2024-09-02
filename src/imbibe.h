@@ -10,7 +10,7 @@
 #include <string.h>
 
 #include "debug.h"
-#include "ptr.h"
+#include "memory.h"
 #include "termviz.h"
 
 namespace sim {

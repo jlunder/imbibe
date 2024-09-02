@@ -136,7 +136,7 @@ $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(IMBIBE_OBJS) Makefile
 # 	mv $(UPPER_TGT) $@
 
 $(OBJ_DIR)%.obj: private CC_LOG = $(patsubst %.obj,%.log,$@)
-$(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp #$(SIM_OBJ_DIR)%.o | $(OBJ_DIR)
+$(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp $(SIM_OBJ_DIR)%.o Makefile | $(OBJ_DIR)
 	rm -f $@
 	TEMP_OBJ=$(OBJ_DIR)`mktemp -u -p . ~XXXXXX.obj | cut -c 3- | tr a-z A-Z` ; \
 	  ( cd workspace && \
