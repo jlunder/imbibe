@@ -11,6 +11,7 @@
 #define RESOURCE_NAME_LEN_MAX 63
 
 namespace resource_manager {
+
 void setup();
 void teardown();
 void teardown_exiting();
@@ -21,6 +22,7 @@ extern im_ptr<bitmap> fetch_bitmap(imstring const &name);
 extern unpacker fetch_tbm(imstring const &name);
 void flush(imstring const &name);
 void flush_all();
+
 } // namespace resource_manager
 
 #endif // __RESOURCE_MANAGER_H_INCLUDED

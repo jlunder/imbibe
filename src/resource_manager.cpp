@@ -11,6 +11,7 @@
   disable_logf("RESOURCE_MANAGER: " __VA_ARGS__)
 
 namespace resource_manager {
+
 static const uint16_t s_hash_capacity = 128;
 static const uint16_t s_index_initial_capacity = 8;
 static const uint16_t s_empty_index = UINT16_MAX;
@@ -48,10 +49,10 @@ uint16_t fletcher16_str(char const __far *s);
 uint16_t find_or_load_data(imstring const &name);
 void load_data_at_hash(imstring const &name, uint16_t hash, uint16_t hint);
 void reclaim_loaded_data(void __far *data);
+
 } // namespace resource_manager
 
 #if 0 // !defined(SIMULATE)
-
 
 extern uint16_t asm_fletcher16_str(char const __far * s);
 #pragma aux asm_fletcher16_str =                                               \
