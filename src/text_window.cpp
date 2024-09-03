@@ -23,7 +23,7 @@ enum {
   cursor_invisible = 0x20,
 };
 
-extern void read_screen_buffer(bitmap &b);
+extern void read_screen_buffer(bitmap *out_b);
 extern void set_video_mode(uint8_t mode);
 extern void set_cursor_style(uint8_t visible, uint8_t start_row,
                              uint8_t end_row);
@@ -69,21 +69,23 @@ extern void asm_bios_set_cursor_style(uint8_t start_opts, uint8_t end);
     "   int     10h               "                                            \
     "   pop     bp                " parm[ch][cl] modify[ax] nomemory;
 
-inline void aux_text_window::read_screen_buffer(bitmap &b) {
+inline void aux_text_window::read_screen_buffer(bitmap *out_b) {
   asm_video_details details = asm_bios_get_video_details();
   logf_text_window("read details: mode %d, %d cols, page %d\n", details.mode,
                    details.cols, details.page);
   if (details.mode == 2 || details.mode == 3) {
-    b.assign(aux_text_window::s_screen_width, aux_text_window::s_screen_height);
+    out_b->assign(aux_text_window::s_screen_width,
+                  aux_text_window::s_screen_height);
     uint16_t offset = details.page * 4096 / sizeof(termel_t);
-    uint16_t size = b.width() * b.height();
+    uint16_t size = out_b->width() * out_b->height();
     logf_text_window("computed page offset: %u\n", offset);
-    memcpy(b.data(), aux_text_window::s_screen_buffer + offset,
+    memcpy(out_b->data(), aux_text_window::s_screen_buffer + offset,
            size * sizeof(termel_t));
   } else {
-    termel_t *data = b.data();
-    b.assign(aux_text_window::s_screen_width, aux_text_window::s_screen_height,
-             termel::from(' ', color::white, color::black));
+    termel_t *data = out_b->data();
+    out_b->assign(aux_text_window::s_screen_width,
+                  aux_text_window::s_screen_height,
+                  termel::from(' ', color::white, color::black));
   }
 }
 
@@ -103,9 +105,10 @@ inline void aux_text_window::set_cursor_style(uint8_t visible,
 
 #else
 
-inline void aux_text_window::read_screen_buffer(bitmap &b) {
-  b.assign(aux_text_window::s_screen_width, aux_text_window::s_screen_height,
-           termel::from(' ', color::white, color::black));
+inline void aux_text_window::read_screen_buffer(bitmap *out_b) {
+  out_b->assign(aux_text_window::s_screen_width,
+                aux_text_window::s_screen_height,
+                termel::from(' ', color::white, color::black));
 }
 
 inline void aux_text_window::set_video_mode(uint8_t mode) { assert(mode == 3); }
@@ -129,7 +132,7 @@ text_window::text_window()
 
 void text_window::setup(bitmap *capture_screen) {
   if (capture_screen) {
-    aux_text_window::read_screen_buffer(*capture_screen);
+    aux_text_window::read_screen_buffer(capture_screen);
   }
   aux_text_window::set_video_mode(aux_text_window::s_text_mode_color_80_25);
   aux_text_window::set_cursor_style(aux_text_window::cursor_invisible, 0, 7);
@@ -184,11 +187,11 @@ void text_window::repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
       }
     }
 #endif
-    graphics g(m_backbuffer);
+    graphics g(&m_backbuffer);
     graphics::subregion_state s;
-    g.enter_subregion(s, 0, 0, x1, y1, x2, y2);
+    g.enter_subregion(0, 0, x1, y1, x2, y2, &s);
     if (!g.subregion_trivial()) {
-      paint_element(g, *m_element);
+      paint_element(&g, m_element);
     }
     // graphics will be discarded, don't need to leave_subregion()
   } else {
@@ -196,51 +199,51 @@ void text_window::repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2) {
   }
 }
 
-void text_window::add_element(element &e) {
+void text_window::add_element(element *e) {
   assert(m_element == NULL);
-  m_element = &e;
-  repaint(e.frame_x1(), e.frame_y1(), e.frame_x2(), e.frame_y2());
+  m_element = e;
+  repaint(e->frame_x1(), e->frame_y1(), e->frame_x2(), e->frame_y2());
 }
 
-void text_window::remove_element(element &e) {
+void text_window::remove_element(element *e) {
   (void)e;
-  assert(&e == m_element);
+  assert(e == m_element);
   m_element = NULL;
 }
 
-void text_window::element_frame_changed(element &e, coord_t old_x1,
+void text_window::element_frame_changed(element *e, coord_t old_x1,
                                         coord_t old_y1, coord_t old_x2,
                                         coord_t old_y2, coord_t old_z) {
   (void)old_z;
-  assert(&e == m_element);
-  repaint(min(old_x1, e.frame_x1()), min(old_y1, e.frame_y1()),
-          max(old_x2, e.frame_x2()), max(old_y2, e.frame_y2()));
+  assert(e == m_element);
+  repaint(min(old_x1, e->frame_x1()), min(old_y1, e->frame_y1()),
+          max(old_x2, e->frame_x2()), max(old_y2, e->frame_y2()));
 }
 
-void text_window::paint_element(graphics &g, element &e) {
-  assert(e.visible());
+void text_window::paint_element(graphics *g, element *e) {
+  assert(e->visible());
 
   graphics::subregion_state s;
 
-  g.enter_subregion(s, e.frame_x1(), e.frame_y1(), e.frame_x1(), e.frame_y1(),
-                    e.frame_x2(), e.frame_y2());
-  if (!g.subregion_trivial()) {
-    logf_text_window("text_window paint %p\n", &e);
-    e.paint(g);
+  g->enter_subregion(e->frame_x1(), e->frame_y1(), e->frame_x1(), e->frame_y1(),
+                     e->frame_x2(), e->frame_y2(), &s);
+  if (!g->subregion_trivial()) {
+    logf_text_window("text_window paint %p\n", e);
+    e->paint(g);
   }
   if (m_dirty) {
-    m_dirty_bb_x1 = min(m_dirty_bb_x1, g.clip_x1());
-    m_dirty_bb_y1 = min(m_dirty_bb_y1, g.clip_y1());
-    m_dirty_bb_x2 = max(m_dirty_bb_x2, g.clip_x2());
-    m_dirty_bb_y2 = max(m_dirty_bb_y2, g.clip_y2());
+    m_dirty_bb_x1 = min(m_dirty_bb_x1, g->clip_x1());
+    m_dirty_bb_y1 = min(m_dirty_bb_y1, g->clip_y1());
+    m_dirty_bb_x2 = max(m_dirty_bb_x2, g->clip_x2());
+    m_dirty_bb_y2 = max(m_dirty_bb_y2, g->clip_y2());
   } else {
     m_dirty = true;
-    m_dirty_bb_x1 = g.clip_x1();
-    m_dirty_bb_y1 = g.clip_y1();
-    m_dirty_bb_x2 = g.clip_x2();
-    m_dirty_bb_y2 = g.clip_y2();
+    m_dirty_bb_x1 = g->clip_x1();
+    m_dirty_bb_y1 = g->clip_y1();
+    m_dirty_bb_x2 = g->clip_x2();
+    m_dirty_bb_y2 = g->clip_y2();
   }
-  g.leave_subregion(s);
+  g->leave_subregion(&s);
 }
 
 void text_window::locked_repaint(coord_t x1, coord_t y1, coord_t x2,

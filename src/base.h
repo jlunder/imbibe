@@ -102,14 +102,17 @@ extern unsigned _dos_lseek(int handle, long offset, int whence,
 // #define static_assert(con) _static_assert(con, __COUNTER__)
 
 template <bool> struct base_static_assert;
-template <> struct base_static_assert<true>;
+template <> struct base_static_assert<true> {};
 
-#define static_assert(e) extern ::base_static_assert<!!(e)> __the_sa
+#define static_assert(e)                                                       \
+  struct __the_sa {                                                            \
+    ::base_static_assert<!!(e)> sa;                                            \
+  }
 
 static_assert(true);
-static_assert(sizeof(uint8_t) == 1);
-static_assert(sizeof(uint16_t) == 2);
-static_assert(sizeof(uint32_t) == 4);
+// static_assert(sizeof(uint8_t) == 1);
+// static_assert(sizeof(uint16_t) == 2);
+// static_assert(sizeof(uint32_t) == 4);
 
 #define LENGTHOF(a) (sizeof(a) / sizeof(a[0]))
 

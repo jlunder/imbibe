@@ -8,11 +8,16 @@
 #include "tbm.h"
 
 intro_element::intro_element() {
-  unpacker logo_tbm(resource_manager::fetch_tbm("logo.tbm"));
-  tbm::dimensions(logo_tbm, m_logo_width, m_logo_height);
+  tbm logo_tbm(resource_manager::fetch_tbm("logo.tbm"));
+  tbm_header h;
+  h = logo_tbm.header();
+  m_logo_width = h.width;
+  m_logo_height = h.height;
   m_logo.set_tbm(logo_tbm);
-  unpacker cover_tbm(resource_manager::fetch_tbm("cover.tbm"));
-  tbm::dimensions(cover_tbm, m_cover_width, m_cover_height);
+  tbm cover_tbm(resource_manager::fetch_tbm("cover.tbm"));
+  h = cover_tbm.header();
+  m_cover_width = h.width;
+  m_cover_height = h.height;
   m_cover.set_tbm(cover_tbm);
   m_active = false;
 }
@@ -22,7 +27,7 @@ intro_element::~intro_element() {}
 void intro_element::layout(coord_t window_width, coord_t window_height) {
   set_frame(0, 0, window_width, window_height);
   m_capture_background.set_frame(0, 0, window_width, window_height, 0);
-  m_capture_background.set_owner(*this);
+  m_capture_background.set_owner(this);
   m_capture_background.show();
   coord_t logo_x = (window_width - m_logo_width) / 2;
   coord_t logo_y = (window_height - m_logo_height) / 2;
@@ -30,9 +35,9 @@ void intro_element::layout(coord_t window_width, coord_t window_height) {
                    logo_y + m_logo_height, 1);
   m_cover.set_frame(0, window_height, m_cover_width,
                     window_height + m_cover_height, 2);
-  m_logo.set_owner(*this);
+  m_logo.set_owner(this);
   m_logo.show();
-  m_cover.set_owner(*this);
+  m_cover.set_owner(this);
   m_cover.show();
 }
 

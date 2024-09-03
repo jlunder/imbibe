@@ -25,20 +25,19 @@ void menu_element::layout(coord_t window_width, coord_t window_height) {
   // tbm::dimensions(footer_tbm, m_footer_width, m_footer_height);
   // m_footer.set_tbm(footer_tbm);
 
-  unpacker background_tbm(resource_manager::fetch_tbm("menu-bg.tbm"));
-  coord_t background_width;
-  tbm::dimensions(background_tbm, background_width, m_scroll_height);
+  tbm background_tbm(resource_manager::fetch_tbm("menu-bg.tbm"));
+  m_scroll_height = background_tbm.header().height;
   m_background.set_tbm(background_tbm);
   m_background.set_frame(0, 0, window_width, window_height, 0);
 
   // m_header.set_frame(0, 0, window_width, m_header_height, 1);
   // m_footer.set_frame(0, window_height - m_footer_height, window_width,
   //                    window_height, 2);
-  // m_header.set_owner(*this);
+  // m_header.set_owner(this);
   // m_header.show();
-  // m_footer.set_owner(*this);
+  // m_footer.set_owner(this);
   // m_footer.show();
-  m_background.set_owner(*this);
+  m_background.set_owner(this);
   m_background.show();
 }
 

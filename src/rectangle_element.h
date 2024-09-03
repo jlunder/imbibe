@@ -11,7 +11,7 @@
 class rectangle_element : public element {
 public:
   rectangle_element();
-  virtual void paint(graphics &g);
+  virtual void paint(graphics *g);
 
   void set_brush(termel_t n_brush);
 

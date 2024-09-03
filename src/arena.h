@@ -23,6 +23,8 @@ public:
   static void cur_free(void __far *p) { s_cur->free(p); }
   static void __far *temp_alloc(segsize_t size) { return s_temp->alloc(size); }
   static void temp_free(void __far *p) { s_temp->free(p); }
+  static void __far *c_alloc(segsize_t size) { return s_c->alloc(size); }
+  static void c_free(void __far *p) { s_c->free(p); }
 
 private:
   static arena *s_cur;
@@ -36,9 +38,11 @@ private:
 
 inline void *operator new(size_t size, arena *mem) { return mem->alloc(size); }
 
+#if !defined(__WATCOMC__)
 // Not generally accessible; called by the compiler to cover up constructor
 // exceptions thrown during allocation
 inline void operator delete(void *p, arena *mem) { return mem->free(p); }
+#endif
 
 class with_arena {
 public:
@@ -105,16 +109,17 @@ public:
   virtual void free(void __far *p);
 
   mark_t mark() {
+#ifdef SIMULATE
+    mark_t result = {m_top, m_live_count, (segsize_t)m_allocated.size()};
+#else
     mark_t result = {m_top, m_live_count};
-#ifndef NDEBUG
-    result.marked_allocated = m_allocated.size();
 #endif
     return result;
   }
   void reset(mark_t n_mark) {
     assert(n_mark.marked_top <= m_top);
     assert(n_mark.marked_live == m_live_count);
-#ifndef NDEBUG
+#ifdef SIMULATE
     assert(n_mark.marked_allocated < m_allocated.size());
     for (segsize_t i = n_mark.marked_allocated; i < m_allocated.size(); ++i) {
       assert(!m_allocated[i]);

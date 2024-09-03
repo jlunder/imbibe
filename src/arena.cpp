@@ -8,6 +8,9 @@ arena __far *arena::s_c = NULL;
 
 namespace aux_arena {
 
+extern c_arena the_c_arena;
+extern with_arena with_c;
+
 c_arena the_c_arena;
 with_arena with_c(&the_c_arena);
 

@@ -104,8 +104,8 @@ void application::setup() {
 
   bitmap *capture = new(arena::c()) bitmap();
   s_win->setup(capture);
-  s_display_width = s_win->backbuffer().width();
-  s_display_height = s_win->backbuffer().height();
+  s_display_width = s_win->backbuffer()->width();
+  s_display_height = s_win->backbuffer()->height();
 
   s_main->set_frame(0, 0, s_display_width, s_display_height);
   s_menu_screen->set_frame_depth(1);
@@ -115,13 +115,13 @@ void application::setup() {
   s_quit_prompt->set_frame_depth(20);
   s_outro_screen->set_frame_depth(30);
 
-  s_main->set_owner(*s_win);
-  s_menu_screen->set_owner(*s_main);
-  s_submenu_screen->set_owner(*s_main);
-  s_viewer_screen->set_owner(*s_main);
-  s_intro_screen->set_owner(*s_main);
-  s_quit_prompt->set_owner(*s_main);
-  s_outro_screen->set_owner(*s_main);
+  s_main->set_owner(s_win);
+  s_menu_screen->set_owner(s_main);
+  s_submenu_screen->set_owner(s_main);
+  s_viewer_screen->set_owner(s_main);
+  s_intro_screen->set_owner(s_main);
+  s_quit_prompt->set_owner(s_main);
+  s_outro_screen->set_owner(s_main);
 
   s_intro_screen->set_capture(im_ptr<bitmap>(capture));
 

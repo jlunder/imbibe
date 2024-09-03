@@ -3,8 +3,10 @@
 
 #include "imbibe.h"
 
+#include "immutable.h"
+#include "unpacker.h"
+
 class bitmap;
-class unpacker;
 
 class tbm_flags {
 public:
@@ -40,14 +42,32 @@ _Packed struct __packed__ tbm_span {
   uint8_t termel_count;
 };
 
-namespace tbm {
+class tbm {
+public:
+  tbm() : m_raw() { assert(!m_raw); }
+  tbm(immutable const &n_raw, segsize_t raw_size);
+  ~tbm() {}
 
-static const size_t s_tbm_area_max = 1u << 14;
+  bool valid() const { return m_raw; }
 
-bool validate(unpacker const &tbm_data);
-void dimensions(unpacker const &tbm_data, coord_t &width, coord_t &height);
-void to_bitmap(unpacker const &tbm_data, bitmap &b);
+  void to_bitmap(bitmap *out_b) const;
 
-} // namespace tbm
+  tbm_header const __far &header() const {
+    assert(valid());
+    return *(tbm_header const __far *)((iff_header const __far *)m_raw.data() +
+                                       1);
+  }
+  void const __far *data() const { return (void const __far *)(&header() + 1); }
+  unpacker data_unpacker() const {
+    assert(valid());
+    iff_header const __far *ih = (iff_header const __far *)m_raw.data();
+    tbm_header const __far *th = (tbm_header const __far *)(ih + 1);
+    return unpacker((void const __far *)(th + 1),
+                    (segsize_t)(ih->data_size - sizeof(tbm_header)));
+  }
+
+private:
+  immutable m_raw;
+};
 
 #endif // __TBM_H_INCLUDED

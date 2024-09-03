@@ -119,12 +119,17 @@ public:
 #endif
   }
 
+  void mem(arena *n_mem) {
+    assert(!m_mem || (n_mem == m_mem));
+    m_mem = n_mem;
+  }
+
   void reserve(size_type n) {
     assert(n <= c_size_max);
     if (n <= m_capacity) {
       return;
     }
-    with_arena with(ensure_mem());
+    with_arena with(m_mem);
     T *n_data = aux_vector::allocate<T>(n);
     assert(m_data || ((m_size == 0) && (m_capacity == 0)));
     if (m_data) {
@@ -146,8 +151,8 @@ public:
 
   void resize(size_type n, T const &x) {
     assert(n <= c_size_max);
-    with_arena with(ensure_mem());
     reserve(n);
+    with_arena with(m_mem);
     if (n > m_size) {
       aux_vector::copy_construct<T>(x, m_data + m_size, n - m_size);
     } else if (n < m_size) {
@@ -209,8 +214,11 @@ public:
     size_type n = last - first;
     assert(m_size <= c_size_max - n);
     clear();
+    if(n == 0) {
+      return;
+    }
     reserve(n);
-    with_arena with(ensure_mem());
+    with_arena with(m_mem);
     aux_vector::copy_construct<T>(first, m_data, n);
     m_size = n;
   }
@@ -218,8 +226,11 @@ public:
   void assign(size_type n, T const &x) {
     assert(n < c_size_max);
     clear();
+    if(n == 0) {
+      return;
+    }
     reserve(n);
-    with_arena with(ensure_mem());
+    with_arena with(m_mem);
     aux_vector::copy_construct<T>(x, m_data, n);
     m_size = n;
   }
@@ -236,7 +247,7 @@ public:
     size_type i = it - m_data;
     assert(i <= m_size);
     size_type m = m_size - i;
-    with_arena with(ensure_mem());
+    with_arena with(m_mem);
     if (m_capacity >= m_size + n) {
       aux_vector::move<T>(it, it + n, m);
       aux_vector::copy_construct(x, it, n);
@@ -267,7 +278,7 @@ public:
     size_type i = it - m_data;
     assert(i <= m_size);
     size_type m = m_size - i;
-    with_arena with(ensure_mem());
+    with_arena with(m_mem);
     if (m_capacity >= m_size + n) {
       aux_vector::move<T>(it, it + n, m);
       aux_vector::copy_construct(first, it, n);
@@ -345,13 +356,6 @@ private:
     assert(r < c_size_max);
     assert(r >= n);
     return r;
-  }
-
-  arena *ensure_mem() {
-    if (!m_mem) {
-      m_mem = arena::c();
-    }
-    return m_mem;
   }
 };
 
