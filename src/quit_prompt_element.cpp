@@ -9,8 +9,10 @@
 #include "unpacker.h"
 
 quit_prompt_element::quit_prompt_element() {
-  unpacker quit_tbm(resource_manager::fetch_tbm("quit.tbm"));
-  tbm::dimensions(quit_tbm, m_quit_width, m_quit_height);
+  tbm quit_tbm(resource_manager::fetch_tbm("quit.tbm"));
+  tbm_header h = quit_tbm.header();
+  m_quit_width = h.width;
+  m_quit_height = h.height;
   m_quit.set_tbm(quit_tbm);
   m_active = false;
 }
@@ -23,7 +25,7 @@ void quit_prompt_element::layout(coord_t window_width, coord_t window_height) {
   coord_t quit_y = (window_height - m_quit_height) / 2;
   m_quit.set_frame(quit_x, quit_y, quit_x + m_quit_width,
                    quit_y + m_quit_height);
-  m_quit.set_owner(*this);
+  m_quit.set_owner(this);
   m_quit.show();
 }
 

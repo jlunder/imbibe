@@ -22,9 +22,9 @@ public:
   coord_t frame_width() const { return m_x2 - m_x1; }
   coord_t frame_height() const { return m_y2 - m_y1; }
   bool has_owner() const { return (bool)m_owner; }
-  window &owner() {
+  window *owner() {
     assert(m_owner != NULL);
-    return *m_owner;
+    return m_owner;
   }
   bool visible() const { return m_visible; }
   void set_frame_pos(coord_t x1, coord_t y1);
@@ -34,14 +34,14 @@ public:
     set_frame(x1, y1, x2, y2, m_z);
   }
   void set_frame(coord_t x1, coord_t y1, coord_t x2, coord_t y2, coord_t z);
-  void set_owner(window &n_owner);
+  void set_owner(window *n_owner);
   void set_visible(bool n_visible);
   void show() { set_visible(true); }
   void hide() { set_visible(false); }
   void request_repaint();
   void request_repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2);
 
-  virtual void paint(graphics &g) = 0;
+  virtual void paint(graphics *g) = 0;
 
 private:
   coord_t m_x1;

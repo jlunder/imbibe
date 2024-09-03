@@ -15,8 +15,8 @@ public:
   virtual ~bitmap_element();
   void set_b(im_ptr<bitmap> n_b);
   void set_fade(uint8_t n_fade);
-  bitmap const &b() const { return *m_b; }
-  virtual void paint(graphics &g);
+  im_ptr<bitmap> b() const { return m_b; }
+  virtual void paint(graphics *g);
 
 private:
   im_ptr<bitmap> m_b;

@@ -7,51 +7,32 @@
 
 class immutable {
 public:
-  static uint16_t const max_reclaimable = UINT8_MAX;
-
   enum prealloc_t { prealloc };
   typedef void (*reclaim_func_t)(void __far *p);
 
-  immutable() : m_seg(0), m_index(0), m_offset(0) {}
+  immutable() : m_seg(0), m_index(0), m_ofs(0) {}
 
-  immutable(prealloc_t policy, void const *p) {
-    (void)policy;
-    if (p) {
-      void const *norm_p = normalize_segmented(p);
-      m_seg = FP_SEG(norm_p);
-      assert(m_seg != 0);
-      m_index = 0;
-      assert(FP_OFF(norm_p) < 0x10);
-      m_offset = (uint8_t)FP_OFF(norm_p);
-    } else {
-      m_seg = 0;
-      m_index = 0;
-      m_offset = 0;
-    }
+  immutable(prealloc_t policy, void const *p) : m_index(0) {
+    assign(policy, p);
   }
 
-  immutable(reclaim_func_t f, void const *p) {
-    if (p) {
-      void const *norm_p = normalize_segmented(p);
-      m_seg = FP_SEG(norm_p);
-      assert(m_seg != 0);
-      assert(FP_OFF(norm_p) < 0x10);
-      m_offset = (uint8_t)FP_OFF(norm_p);
-      assert(denormalize_segmented(FP_SEG(p), MK_FP(m_seg, m_offset)) == p);
-      init(f, p);
-    } else {
-      m_seg = 0;
-      m_index = 0;
-      m_offset = 0;
-    }
-  }
+  immutable(reclaim_func_t f, void const *p) : m_index(0) { assign(f, p); }
 
-  immutable(const immutable &other)
-      : m_seg(other.m_seg), m_index(other.m_index), m_offset(other.m_offset) {
+#ifdef M_I86
+  immutable(immutable const &other) {
+    set_handle(other.handle());
     if (m_index != 0) {
       ref();
     }
   }
+#else
+  immutable(immutable const &other)
+      : m_seg(other.m_seg), m_index(other.m_index), m_ofs(other.m_ofs) {
+    if (m_index != 0) {
+      ref();
+    }
+  }
+#endif
 
   ~immutable() {
     if (m_index != 0) {
@@ -59,32 +40,30 @@ public:
     }
   }
 
+  void assign(prealloc_t policy, void const *p);
+  void assign(reclaim_func_t f, void const *p);
+
   operator bool() const { return !!m_seg; }
-  immutable &operator=(immutable const &other) {
+
+  immutable &operator=(immutable const &other);
+
+  immutable &operator=(void const *p) {
+    assert(p == NULL);
     if (m_index != 0) {
-      if (m_index == other.m_index) {
-        return *this;
-      }
       unref();
     }
-    m_seg = other.m_seg;
-    m_index = other.m_index;
-    m_offset = other.m_offset;
-    if (m_index != 0) {
-      ref();
-    }
+    m_index = 0;
     return *this;
   }
 
-  bool operator==(immutable const &other) {
-#ifdef SIMULATE
-    return (m_index && (m_index == other.m_index)) ||
-           ((m_seg == other.m_seg) && (m_offset == other.m_offset));
+#ifdef M_I86
+  bool operator==(immutable const &other) { return handle() == other.handle(); }
 #else
-    assert(sizeof(immutable) == sizeof(uint32_t));
-    return *(uint32_t *)this == *(uint32_t *)&other;
-#endif
+  bool operator==(immutable const &other) {
+    return (m_seg == other.m_seg) && (m_index == other.m_index) &&
+           (m_ofs == other.m_ofs);
   }
+#endif
 
   bool operator==(void *other) {
     assert(other == NULL);
@@ -92,17 +71,99 @@ public:
   }
 
   void const __far *data() const {
-    return MK_FP(m_seg, (void *)(uintptr_t)m_offset);
+    return MK_FP(m_seg, (void *)(uintptr_t)m_ofs);
   }
 
 private:
   __segment m_seg;
   uint8_t m_index;
-  uint8_t m_offset;
+  uint8_t m_ofs;
 
   void init(reclaim_func_t f, void const *orig_p);
   void ref();
   void unref();
+
+#ifdef M_I86
+  explicit immutable(uint32_t n_handle) {
+    static_assert(sizeof(immutable) == sizeof(uint32_t));
+    set_handle(n_handle);
+    if (m_index != 0) {
+      ref();
+    }
+  }
+
+  uint32_t handle() const { return *(uint32_t *)this; }
+  void set_handle(uint32_t n_handle) { *(uint32_t *)this = n_handle; }
+#endif
+
+  friend class weak_immutable;
+};
+
+class weak_immutable {
+public:
+  weak_immutable() : m_seg(0), m_index(0), m_ofs(0) {}
+#ifdef M_I86
+  weak_immutable(immutable const &strong) { set_handle(strong.handle()); }
+  weak_immutable(weak_immutable const &other) { set_handle(other.handle()); }
+#else
+  weak_immutable(immutable const &strong)
+      : m_seg(strong.m_seg), m_index(strong.m_index), m_ofs(strong.m_ofs) {}
+  weak_immutable(weak_immutable const &other)
+      : m_seg(other.m_seg), m_index(other.m_index), m_ofs(other.m_ofs) {}
+#endif
+
+  immutable lock();
+
+  weak_immutable &operator=(immutable const &strong) {
+#ifdef M_I86
+    set_handle(strong.handle());
+#else
+    m_seg = strong.m_seg;
+    m_index = strong.m_index;
+    m_ofs = strong.m_ofs;
+#endif
+    return *this;
+  }
+
+  weak_immutable &operator=(weak_immutable const &other) {
+#ifdef M_I86
+    set_handle(other.handle());
+#else
+    m_seg = other.m_seg;
+    m_index = other.m_index;
+    m_ofs = other.m_ofs;
+#endif
+    return *this;
+  }
+
+  weak_immutable &operator=(void const *p) {
+    assert(p == NULL);
+#ifdef M_I86
+    set_handle(0);
+#else
+    m_seg = 0;
+    m_index = 0;
+    m_ofs = 0;
+#endif
+    return *this;
+  }
+
+#ifndef NDEBUG
+  // This is conservative: false means false, true is ambiguous; it's only
+  // really safe if you want to overapproximate "were we explicitly set null"
+  // and therefore it's only really appropriate inside assert()
+  operator bool() const { return (m_index != 0) || m_seg; }
+#endif
+
+private:
+  __segment m_seg;
+  uint8_t m_index;
+  uint8_t m_ofs;
+
+#ifdef M_I86
+  uint32_t handle() const { return *(uint32_t *)this; }
+  void set_handle(uint32_t n_handle) { *(uint32_t *)this = n_handle; }
+#endif
 };
 
 // Shared pointer for generic read-only data blocks; this is optimized for

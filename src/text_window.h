@@ -19,19 +19,19 @@ public:
 
   void present();
 
-  bitmap &backbuffer() { return m_backbuffer; }
+  bitmap *backbuffer() { return &m_backbuffer; }
 
   virtual void lock_repaint();
   virtual void unlock_repaint();
   virtual void repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2);
-  virtual void add_element(element &e);
-  virtual void remove_element(element &e);
-  virtual void element_frame_changed(element &e, coord_t old_x1, coord_t old_y1,
+  virtual void add_element(element *e);
+  virtual void remove_element(element *e);
+  virtual void element_frame_changed(element *e, coord_t old_x1, coord_t old_y1,
                                      coord_t old_x2, coord_t old_y2,
                                      coord_t old_z);
 
 private:
-  void paint_element(graphics &g, element &e);
+  void paint_element(graphics *g, element *e);
   void locked_repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2);
   void locked_repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2,
                       coord_t z);

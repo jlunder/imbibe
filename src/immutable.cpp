@@ -2,8 +2,15 @@
 
 #include "immutable.h"
 
+namespace aux_immutable {
+
+static uint16_t const max_reclaimable = UINT8_MAX;
+
 struct immutable_tracking_t {
   immutable::reclaim_func_t reclaimer;
+#ifndef NDEBUG
+  void const __far *orig_ptr;
+#endif
   __segment orig_seg;
   union {
     uint16_t live_refs;
@@ -11,7 +18,63 @@ struct immutable_tracking_t {
   };
 };
 
-immutable_tracking_t immutable_index[immutable::max_reclaimable + 1];
+immutable_tracking_t immutable_index[max_reclaimable + 1];
+
+} // namespace aux_immutable
+
+void immutable::assign(prealloc_t policy, void const *p) {
+  (void)policy;
+  if (m_index) {
+    unref();
+  }
+  if (p) {
+    void const *norm_p = normalize_segmented(p);
+    m_seg = FP_SEG(norm_p);
+    assert(m_seg != 0);
+    m_index = 0;
+    assert(FP_OFF(norm_p) < 0x10);
+    m_ofs = (uint8_t)FP_OFF(norm_p);
+  } else {
+    m_seg = 0;
+    m_index = 0;
+    m_ofs = 0;
+  }
+}
+
+void immutable::assign(reclaim_func_t f, void const *p) {
+  if (m_index) {
+    unref();
+  }
+  if (p) {
+    void const *norm_p = normalize_segmented(p);
+    m_seg = FP_SEG(norm_p);
+    assert(m_seg != 0);
+    assert(FP_OFF(norm_p) < 0x10);
+    m_ofs = (uint8_t)FP_OFF(norm_p);
+    assert(denormalize_segmented(FP_SEG(p), MK_FP(m_seg, m_ofs)) == p);
+    init(f, p);
+  } else {
+    m_seg = 0;
+    m_index = 0;
+    m_ofs = 0;
+  }
+}
+
+immutable &immutable::operator=(immutable const &other) {
+  if (m_index != 0) {
+    if (m_index == other.m_index) {
+      return *this;
+    }
+    unref();
+  }
+  m_seg = other.m_seg;
+  m_index = other.m_index;
+  m_ofs = other.m_ofs;
+  if (m_index != 0) {
+    ref();
+  }
+  return *this;
+}
 
 void immutable::init(reclaim_func_t f, void const *orig_p) {
   if (!f) {
@@ -19,45 +82,53 @@ void immutable::init(reclaim_func_t f, void const *orig_p) {
     return;
   }
 
-  immutable_tracking_t &zero_tracking = immutable_index[0];
+  aux_immutable::immutable_tracking_t &zero_tracking =
+      aux_immutable::immutable_index[0];
   assert(zero_tracking.reclaimer == NULL);
   if (zero_tracking.next_unrefd == 0) {
     uint16_t last_link = 0;
     // Maybe uninitialized? Rebuild the chain.
-    for (uint16_t i = 1; i < LENGTHOF(immutable_index); ++i) {
-      if (immutable_index[i].reclaimer == NULL) {
-        immutable_index[last_link].next_unrefd = i;
+    for (uint16_t i = 1; i < LENGTHOF(aux_immutable::immutable_index); ++i) {
+      if (aux_immutable::immutable_index[i].reclaimer == NULL) {
+        aux_immutable::immutable_index[last_link].next_unrefd = i;
         last_link = i;
-        assert(immutable_index[i].next_unrefd == 0);
+        assert(aux_immutable::immutable_index[i].next_unrefd == 0);
       }
     }
   }
   // If we still don't have a next_unrefd, we need a bigger index
   assert(zero_tracking.next_unrefd != 0);
-  assert(zero_tracking.next_unrefd < max_reclaimable);
-  m_index = (uint8_t)zero_tracking.next_unrefd;
+  assert(zero_tracking.next_unrefd < aux_immutable::max_reclaimable);
+  segsize_t index = zero_tracking.next_unrefd;
 
-  immutable_tracking_t &tracking = immutable_index[m_index];
+  aux_immutable::immutable_tracking_t &tracking =
+      aux_immutable::immutable_index[index];
   zero_tracking.next_unrefd = tracking.next_unrefd;
   tracking.live_refs = 1;
   tracking.reclaimer = f;
+#ifndef NDEBUG
+  tracking.orig_ptr = orig_p;
+#endif
   tracking.orig_seg = FP_SEG(orig_p);
+
+  m_index = (uint8_t)index;
 }
 
 void immutable::ref() {
   assert(m_index > 0);
-  assert(m_index < max_reclaimable);
-  assert(immutable_index[m_index].reclaimer != NULL);
-  assert(immutable_index[m_index].live_refs > 0);
+  assert(m_index < aux_immutable::max_reclaimable);
+  assert(aux_immutable::immutable_index[m_index].reclaimer != NULL);
+  assert(aux_immutable::immutable_index[m_index].live_refs > 0);
 
-  ++immutable_index[m_index].live_refs;
+  ++aux_immutable::immutable_index[m_index].live_refs;
 }
 
 void immutable::unref() {
   assert(m_index > 0);
-  assert(m_index < max_reclaimable);
+  assert(m_index < aux_immutable::max_reclaimable);
 
-  immutable_tracking_t &tracking = immutable_index[m_index];
+  aux_immutable::immutable_tracking_t &tracking =
+      aux_immutable::immutable_index[m_index];
   assert(tracking.reclaimer != NULL);
   assert(tracking.live_refs > 0);
 
@@ -67,11 +138,37 @@ void immutable::unref() {
     // Reclaim the data
     void const *norm_p = data();
     void const *p = denormalize_segmented(tracking.orig_seg, norm_p);
+#ifndef NDEBUG
+    assert(p == tracking.orig_ptr);
+    tracking.orig_ptr = NULL;
+#endif
     tracking.reclaimer((void *)p);
 
     // Add the index entry back into the unrefd chain
     tracking.reclaimer = NULL;
-    tracking.next_unrefd = immutable_index[0].next_unrefd;
-    immutable_index[0].next_unrefd = m_index;
+    tracking.next_unrefd = aux_immutable::immutable_index[0].next_unrefd;
+    aux_immutable::immutable_index[0].next_unrefd = m_index;
   }
+}
+
+immutable weak_immutable::lock() {
+  if (m_index == 0) {
+    return immutable();
+  }
+
+  assert(m_index > 0);
+  assert(m_index < aux_immutable::max_reclaimable);
+  aux_immutable::immutable_tracking_t &tracking =
+      aux_immutable::immutable_index[m_index];
+  assert(tracking.reclaimer);
+  assert(tracking.live_refs > 0);
+#ifndef NDEBUG
+  assert(denormalize_segmented(tracking.orig_seg, MK_FP(m_seg, m_ofs)) ==
+         tracking.orig_ptr);
+#endif
+
+  if (!tracking.reclaimer || (tracking.live_refs == 0)) {
+    *this = weak_immutable();
+  }
+  return immutable();
 }

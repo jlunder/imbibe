@@ -23,7 +23,7 @@ void element::set_frame_pos(coord_t x1, coord_t y1) {
   m_x2 = x1 + (old_x2 - old_x1);
   m_y2 = y1 + (old_y2 - old_y1);
   if (m_visible && m_owner) {
-    m_owner->element_frame_changed(*this, old_x1, old_y1, old_x2, old_y2, m_z);
+    m_owner->element_frame_changed(this, old_x1, old_y1, old_x2, old_y2, m_z);
   }
 }
 
@@ -44,7 +44,7 @@ void element::set_frame_size(coord_t width, coord_t height) {
   assert_margin(m_x2, COORD_MAX);
   assert_margin(m_y2, COORD_MAX);
   if (m_visible && m_owner) {
-    m_owner->element_frame_changed(*this, m_x1, m_y2, old_x2, old_y2, m_z);
+    m_owner->element_frame_changed(this, m_x1, m_y2, old_x2, old_y2, m_z);
   }
 }
 
@@ -58,7 +58,7 @@ void element::set_frame_depth(coord_t z) {
   coord_t old_z = m_z;
   m_z = z;
   if (m_visible && m_owner) {
-    m_owner->element_frame_changed(*this, m_x1, m_y1, m_x2, m_y2, old_z);
+    m_owner->element_frame_changed(this, m_x1, m_y1, m_x2, m_y2, old_z);
   }
 }
 
@@ -87,22 +87,21 @@ void element::set_frame(coord_t x1, coord_t y1, coord_t x2, coord_t y2,
   m_y2 = y2;
   m_z = z;
   if (m_visible && m_owner) {
-    m_owner->element_frame_changed(*this, old_x1, old_y1, old_x2, old_y2,
-                                   old_z);
+    m_owner->element_frame_changed(this, old_x1, old_y1, old_x2, old_y2, old_z);
   }
 }
 
-void element::set_owner(window &n_owner) {
+void element::set_owner(window *n_owner) {
 #ifndef NDEBUG
   owner_changing();
 #endif
 
   if (m_visible && m_owner) {
-    m_owner->remove_element(*this);
+    m_owner->remove_element(this);
   }
-  m_owner = &n_owner;
+  m_owner = n_owner;
   if (m_visible && m_owner) {
-    m_owner->add_element(*this);
+    m_owner->add_element(this);
   }
 }
 
@@ -114,11 +113,11 @@ void element::set_visible(bool n_visible) {
   if (n_visible) {
     m_visible = true;
     if (m_owner) {
-      m_owner->add_element(*this);
+      m_owner->add_element(this);
     }
   } else {
     if (m_owner) {
-      m_owner->remove_element(*this);
+      m_owner->remove_element(this);
     }
     m_visible = false;
   }

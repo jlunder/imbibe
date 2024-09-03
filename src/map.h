@@ -52,6 +52,10 @@ public:
     insert(first, last);
   }
 
+  void mem(arena * n_mem) {
+    m_data.mem(n_mem);
+  }
+
   iterator begin() { return m_data.begin(); }
   const_iterator begin() const { return m_data.begin(); }
   iterator end() { return m_data.end(); }

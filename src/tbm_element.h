@@ -4,7 +4,7 @@
 #include "imbibe.h"
 
 #include "element.h"
-#include "unpacker.h"
+#include "tbm.h"
 
 class graphics;
 
@@ -12,12 +12,12 @@ class tbm_element : public element {
 public:
   tbm_element();
   virtual ~tbm_element();
-  void set_tbm(unpacker const &n_tbm);
+  void set_tbm(tbm const &n_t);
   void set_fade(uint8_t n_fade);
-  virtual void paint(graphics &g);
+  virtual void paint(graphics *g);
 
 private:
-  unpacker m_tbm;
+  tbm m_t;
   uint8_t m_fade;
 };
 

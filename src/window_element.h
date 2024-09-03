@@ -8,20 +8,21 @@
 
 class window_element : public element, public window {
 public:
+  window_element();
   virtual ~window_element() {
 #ifndef NDEBUG
     assert(m_lock_count == 0);
 #endif
   }
 
-  virtual void paint(graphics &g);
+  virtual void paint(graphics *g);
 
   virtual void lock_repaint();
   virtual void unlock_repaint();
   virtual void repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2);
-  virtual void add_element(element &e);
-  virtual void remove_element(element &e);
-  virtual void element_frame_changed(element &e, coord_t old_x1, coord_t old_y1,
+  virtual void add_element(element *e);
+  virtual void remove_element(element *e);
+  virtual void element_frame_changed(element *e, coord_t old_x1, coord_t old_y1,
                                      coord_t old_x2, coord_t old_y2,
                                      coord_t old_z);
 
@@ -37,7 +38,7 @@ private:
 
   element_list m_elements;
 
-  void paint_element(graphics &g, element &e);
+  void paint_element(graphics *g, element *e);
 
   coord_t m_offset_x;
   coord_t m_offset_y;
