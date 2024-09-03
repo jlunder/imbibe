@@ -52,7 +52,8 @@ void reclaim_loaded_data(void __far *data);
 
 } // namespace resource_manager
 
-#if 0 // !defined(SIMULATE)
+// #ifndef SIMULATE
+#if 0
 
 extern uint16_t asm_fletcher16_str(char const __far * s);
 #pragma aux asm_fletcher16_str =                                               \
@@ -99,7 +100,7 @@ uint16_t resource_manager::fletcher16_str(char const __far *s) {
   }
   return (s2 << 8) | s1;
 #endif
-  // #if defined(SIMULATE)
+  // #ifdef SIMULATE
   //   return (s2 << 8) | s1;
   // #else
   //   uint16_t result = asm_fletcher16_str(s);

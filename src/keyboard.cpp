@@ -103,7 +103,7 @@ UpArr  4800     4838     8D00     9800
 
 #define logf_key_manager(...) disable_logf("KEYBOARD: " __VA_ARGS__)
 
-#if !defined(SIMULATE)
+#ifndef SIMULATE
 
 extern bool asm_bios_key_event_available();
 #pragma aux asm_bios_key_event_available =                                     \

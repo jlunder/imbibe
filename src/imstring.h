@@ -59,13 +59,13 @@ public:
   static void teardown_exiting();
 
 private:
-#if !defined(SIMULATE)
+#ifndef SIMULATE
   static __segment s_dynamic_seg;
 #endif
 
   char const __far *m_str;
 
-#if defined(SIMULATE)
+#ifdef SIMULATE
   static bool is_dynamic(char const __far *str);
 #else
   static bool is_dynamic(char const __far *str) {

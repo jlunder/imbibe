@@ -30,7 +30,7 @@ extern void set_cursor_style(uint8_t visible, uint8_t start_row,
 
 } // namespace aux_text_window
 
-#if !defined(SIMULATE)
+#ifndef SIMULATE
 
 /*
   "   mov     ah, 003h          " \

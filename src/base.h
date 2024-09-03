@@ -8,6 +8,7 @@
 #endif
 
 #include <assert.h>
+#include <malloc.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -54,6 +55,8 @@ extern uint16_t dummy_screen[16384];
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <new>
+
 #define cprintf(...) fprintf(stderr, __VA_ARGS__)
 
 inline void failsafe_textmode() {}
@@ -69,13 +72,9 @@ extern unsigned _dos_read(int handle, void *buf, unsigned count,
 extern unsigned _dos_lseek(int handle, long offset, int whence,
                            unsigned long __far *where);
 
-extern unsigned _dos_allocmem(unsigned size, unsigned *seg);
-extern unsigned _dos_freemem(unsigned seg);
-
-inline void *operator new(size_t size, void *p) {
-  (void)size;
-  return p;
-}
+extern void __far *_fmalloc(size_t size);
+extern void __far *_fexpand(void __far *p, size_t size);
+extern void _ffree(void __far *p);
 
 #define SIMULATE
 

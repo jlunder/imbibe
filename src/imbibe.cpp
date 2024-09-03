@@ -12,7 +12,7 @@
 
 #define logf_imbibe(...) disable_logf("IMBIBE: " __VA_ARGS__)
 
-#if !defined(SIMULATE)
+#ifndef SIMULATE
 
 int harderr_handler(unsigned deverror, unsigned errcode,
                     unsigned __far *devhdr) {
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
 
-#if !defined(SIMULATE)
+#ifndef SIMULATE
   // The DOS default is to show weird error prompts with questions like
   // "Abort, Retry, Ignore, Fail" when there are hardware errors like disk
   // read failures. We're not handling critical data where that prompt could
@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-#if defined(SIMULATE)
+#ifdef SIMULATE
 
 namespace sim {
 
@@ -263,17 +263,28 @@ unsigned _dos_lseek(int handle, long offset, int whence,
   return 0;
 }
 
-unsigned _dos_allocmem(unsigned size, unsigned *seg) {
-  (void)size;
-  (void)seg;
-  assert(!"TODO");
-  return 1;
+void __far *_fmalloc(size_t size) {
+  assert(size > 0);
+  size_t *header_p = (size_t *)::malloc(size + sizeof(size_t));
+  *header_p = size;
+  return (void __far *)(header_p + 1);
 }
 
-unsigned _dos_freemem(unsigned seg) {
-  (void)seg;
-  assert(!"TODO");
-  return 1;
+void __far *_fexpand(void __far *p, size_t size) {
+  assert(p);
+  size_t *header_p = (size_t *)p - 1;
+  assert(size <= *header_p);
+  if (size > *header_p) {
+    return NULL;
+  }
+  *header_p = size;
+  return p;
+}
+
+void _ffree(void __far *p) {
+  assert(p);
+  size_t *header_p = (size_t *)p - 1;
+  ::free(header_p);
 }
 
 #else

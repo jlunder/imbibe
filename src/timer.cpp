@@ -31,7 +31,7 @@ extern void asm_timer_outwb(uint16_t port, uint16_t value);
 extern uint16_t asm_timer_inb(uint16_t port);
 extern uint16_t asm_timer_inwb(uint16_t port);
 
-#if !defined(SIMULATE)
+#ifndef SIMULATE
 
 #pragma aux asm_timer_enter_crit = "pushf"                                     \
                                    "cli" modify exact[] nomemory;
