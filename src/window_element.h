@@ -19,17 +19,15 @@ public:
 
   virtual void lock_repaint();
   virtual void unlock_repaint();
-  virtual void repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2);
+  virtual void repaint(rect const &r);
   virtual void add_element(element *e);
   virtual void remove_element(element *e);
-  virtual void element_frame_changed(element *e, coord_t old_x1, coord_t old_y1,
-                                     coord_t old_x2, coord_t old_y2,
+  virtual void element_frame_changed(element *e, rect const &old_frame,
                                      coord_t old_z);
 
-  coord_t offset_x() { return m_offset_x; }
-  coord_t offset_y() { return m_offset_y; }
+  point offset() { return m_offset; }
 
-  void set_offset_pos(coord_t offset_x, coord_t offset_y);
+  void set_offset(point n_offset);
 
 private:
   typedef map<coord_t, element *> element_list;
@@ -40,8 +38,7 @@ private:
 
   void paint_element(graphics *g, element *e);
 
-  coord_t m_offset_x;
-  coord_t m_offset_y;
+  point m_offset;
 
 #ifndef NDEBUG
   int8_t m_lock_count;

@@ -23,36 +23,27 @@ public:
 
   virtual void lock_repaint();
   virtual void unlock_repaint();
-  virtual void repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2);
+  virtual void repaint(rect const &r);
   virtual void add_element(element *e);
   virtual void remove_element(element *e);
-  virtual void element_frame_changed(element *e, coord_t old_x1, coord_t old_y1,
-                                     coord_t old_x2, coord_t old_y2,
+  virtual void element_frame_changed(element *e, rect const &old_frame,
                                      coord_t old_z);
 
 private:
   void paint_element(graphics *g, element *e);
-  void locked_repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2);
-  void locked_repaint(coord_t x1, coord_t y1, coord_t x2, coord_t y2,
-                      coord_t z);
+  void locked_repaint(rect const &r);
+  void locked_repaint(rect const &r, coord_t z);
 
   element *m_element;
   bitmap m_backbuffer;
   int8_t m_lock_count;
   bool m_need_repaint;
-  coord_t m_repaint_x1;
-  coord_t m_repaint_y1;
-  coord_t m_repaint_x2;
-  coord_t m_repaint_y2;
+  rect m_repaint;
   bool m_dirty;
-  coord_t m_dirty_bb_x1;
-  coord_t m_dirty_bb_y1;
-  coord_t m_dirty_bb_x2;
-  coord_t m_dirty_bb_y2;
+  rect m_dirty_bb;
 
   static void present_copy(termel_t const *backbuffer, coord_t width,
-                           coord_t height, coord_t x1, coord_t y1, coord_t x2,
-                           coord_t y2);
+                           coord_t height, rect const &r);
 };
 
 extern text_window text_window_instance;

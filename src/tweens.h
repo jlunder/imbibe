@@ -47,7 +47,7 @@ private:
   anim_time_t m_duration;
 };
 
-class timer_tween : public tween {
+class countdown_tween : public tween {
 public:
   void reset(anim_time_t n_duration, anim_time_t n_delay = 0) {
     aux_reset(n_duration, n_delay);
@@ -119,6 +119,12 @@ public:
     } else {
       m_value = m_from + m_delta;
     }
+  }
+
+  T update_delta(anim_time_t delta_time) {
+    T last_value = value();
+    update(delta_time);
+    return value() - last_value();
   }
 
   T value() const { return m_value; }

@@ -19,6 +19,25 @@ public:
   virtual bool active() const;
 
 private:
+  struct option_entry {
+    rect hot;
+    point viz;
+    uint16_t offset;
+  };
+
+  struct menu_info {
+    option_entry * entries;
+    uint8_t data[];
+  };
+
+  // m_selecting_index;
+  // m_deselecting_index;
+  // m_selecting_transition;
+  // m_deselecting_transition;
+  // m_transition_right;
+
+  //im_ptr<
+
   // tbm_element m_header;
   // coord_t m_header_width;
   // coord_t m_header_height;

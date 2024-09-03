@@ -37,7 +37,7 @@ void bitmap_element::paint(graphics *g) {
   logf_bitmap_element("paint element %p, bitmap %p, fade %d, corner %04X\n",
                       this, m_b, m_fade, *m_b->data());
   if (!m_b) {
-    g->draw_rectangle(0, 0, frame_width(), frame_height(),
+    g->draw_rectangle(0, 0, frame().width(), frame().height(),
                      termel::from('!', color::hi_blue, color::red, true));
   } else if (m_fade >= termviz::fade_steps - 1) {
     g->draw_bitmap(0, 0, *m_b);

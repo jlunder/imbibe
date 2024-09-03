@@ -5,6 +5,7 @@
 #define __STDC_LIMIT_MACROS
 #pragma warning 549 9
 #pragma warning 446 9
+#pragma warning  14 9
 #endif
 
 #include <assert.h>

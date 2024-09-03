@@ -11,71 +11,52 @@
 namespace aux_graphics {
 
 struct clip_params {
-  coord_t dest_x;
-  coord_t dest_y;
-  coord_t source_x1;
-  coord_t source_y1;
-  coord_t source_x2;
-  coord_t source_y2;
+  point dest;
+  rect source;
 
-  bool compute_clip(graphics const *g, coord_t x1, coord_t y1, coord_t x2,
-                    coord_t y2);
+  bool compute_clip(graphics const *g, rect const &r);
 };
 
-bool clip_params::compute_clip(graphics const *g, coord_t x1, coord_t y1,
-                               coord_t x2, coord_t y2) {
-  assert(g->clip_x1() >= 0);
-  assert(g->clip_x1() <= g->clip_x2());
-  assert(g->clip_x2() <= g->b()->width());
-  assert(g->clip_y1() >= 0);
-  assert(g->clip_y1() <= g->clip_y2());
-  assert(g->clip_y2() <= g->b()->height());
-  assert_margin(x1, COORD_MAX);
-  assert_margin(y1, COORD_MAX);
-  assert_margin(x2, COORD_MAX);
-  assert_margin(y2, COORD_MAX);
+bool clip_params::compute_clip(graphics const *g, rect const &r) {
+  rect g_clip = g->clip();
+  assert(g_clip.reasonable());
+  assert(g_clip.x1 >= 0);
+  assert(g_clip.x2 <= g->b()->width());
+  assert(g_clip.y1 >= 0);
+  assert(g_clip.y2 <= g->b()->height());
+  assert(r.reasonable());
 
-  dest_x = g->origin_x() + x1;
-  dest_y = g->origin_y() + y1;
-  source_x1 = 0;
-  source_y1 = 0;
-  source_x2 = x2 - x1;
-  source_y2 = y2 - y1;
+  dest = g->origin() + point(r.x1, r.y1);
+  source.assign(0, 0, r.width(), r.height());
 
-  if ((dest_y + source_y2) > g->clip_y2()) {
-    source_y2 = g->clip_y2() - dest_y;
+  if ((dest.y + source.y2) > g_clip.y2) {
+    source.y2 = g_clip.y2 - dest.y;
   }
-  if (dest_y < g->clip_y1()) {
-    source_y1 = g->clip_y1() - dest_y;
-    dest_y = g->clip_y1();
+  if (dest.y < g_clip.y1) {
+    source.y1 = g_clip.y1 - dest.y;
+    dest.y = g_clip.y1;
   }
-  if (source_y2 <= source_y1) {
+  if (source.y2 <= source.y1) {
     return false;
   }
 
-  if ((dest_x + source_x2) > g->clip_x2()) {
-    source_x2 = g->clip_x2() - dest_x;
+  if ((dest.x + source.x2) > g_clip.x2) {
+    source.x2 = g_clip.x2 - dest.x;
   }
-  if (dest_x < g->clip_x1()) {
-    source_x1 = g->clip_x1() - dest_x;
-    dest_x = g->clip_x1();
+  if (dest.x < g_clip.x1) {
+    source.x1 = g_clip.x1 - dest.x;
+    dest.x = g_clip.x1;
   }
-  if (source_x2 <= source_x1) {
+  if (source.x2 <= source.x1) {
     return false;
   }
 
-  assert(dest_x >= 0);
-  assert(dest_x < g->b()->width());
-  assert(dest_x + (source_x2 - source_x1) <= g->b()->width());
-  assert(dest_y >= 0);
-  assert(dest_y < g->b()->height());
-  assert(dest_y + (source_y2 - source_y1) <= g->b()->height());
-  assert(source_x1 >= 0);
-  assert(source_x1 < source_x2);
-  assert(source_x2 <= (x2 - x1));
-  assert(source_y1 >= 0);
-  assert(source_y1 < source_y2);
-  assert(source_y2 <= (y2 - y1));
+  assert(rect(0, 0, g->b()->width(), g->b()->height()).contains(dest));
+  assert((rect(0, 0, g->b()->width(), g->b()->height()) &
+          (dest + rect(0, 0, source.width(), source.height()))) ==
+         (dest + rect(0, 0, source.width(), source.height())));
+  assert(source.reasonable());
+  assert((source & rect(0, 0, r.width(), r.height())) == source);
 
   return true;
 }
@@ -150,14 +131,14 @@ bool bitmap_transform_params::compute_transform(graphics *g, coord_t x,
                                                 coord_t y, coord_t width,
                                                 coord_t height,
                                                 termel_t const __far *data) {
-  if (!clip_params::compute_clip(g, x, y, x + width, y + height)) {
+  if (!clip_params::compute_clip(g, rect(x, y, x + width, y + height))) {
     return false;
   }
 
-  termels_per_line = (source_x2 - source_x1);
-  lines = source_y2 - source_y1;
-  source_p = data + source_y1 * width + source_x1;
-  dest_p = g->b()->data() + dest_y * g->b()->width() + dest_x;
+  termels_per_line = (source.x2 - source.x1);
+  lines = source.y2 - source.y1;
+  source_p = data + source.y1 * width + source.x1;
+  dest_p = g->b()->data() + dest.y * g->b()->width() + dest.x;
   source_stride = width;
   dest_stride = g->b()->width();
 
@@ -188,20 +169,20 @@ void draw_tbm(graphics *g, coord_t x, coord_t y, tbm const &t, TLineOp op) {
     }
   } else if ((tbm_h.flags & tbm_flags::flags_format) == tbm_flags::fmt_rle) {
     aux_graphics::clip_params p;
-    if (!p.compute_clip(g, x, y, x + tbm_h.width, y + tbm_h.height)) {
+    if (!p.compute_clip(g, rect(x, y, x + tbm_h.width, y + tbm_h.height))) {
       return;
     }
-    assert(p.source_y1 < tbm_h.height);
-    assert(p.source_y2 <= tbm_h.height);
+    assert(p.source.y1 < tbm_h.height);
+    assert(p.source.y2 <= tbm_h.height);
     draw_rle_tbm(g, p, t, op);
   } else if ((tbm_h.flags & tbm_flags::flags_format) ==
              tbm_flags::fmt_mask_rle) {
     aux_graphics::clip_params p;
-    if (!p.compute_clip(g, x, y, x + tbm_h.width, y + tbm_h.height)) {
+    if (!p.compute_clip(g, rect(x, y, x + tbm_h.width, y + tbm_h.height))) {
       return;
     }
-    assert(p.source_y1 < tbm_h.height);
-    assert(p.source_y2 <= tbm_h.height);
+    assert(p.source.y1 < tbm_h.height);
+    assert(p.source.y2 <= tbm_h.height);
     draw_mask_rle_tbm(g, p, t, op);
   }
 }
@@ -210,38 +191,38 @@ template <class TLineOp>
 void draw_rle_tbm(graphics *g, aux_graphics::clip_params const &p, tbm const &t,
                   TLineOp op) {
   unpacker d(t.data_unpacker());
-  uint16_t const *lines = d.unpack_array<uint16_t>(p.source_y1);
-  termel_t *dest_p = g->b()->data() + p.dest_y * g->b()->width() + p.dest_x;
+  uint16_t const *lines = d.unpack_array<uint16_t>(p.source.y1);
+  termel_t *dest_p = g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
   uint16_t dest_stride = g->b()->width();
-  for (coord_t i = p.source_y1; i < p.source_y2; ++i) {
+  for (coord_t i = p.source.y1; i < p.source.y2; ++i) {
     if (lines[i] == 0) {
       continue;
     }
     d.seek_to(lines[i]);
 
     coord_t run_end;
-    for (coord_t run_start = p.source_x1; run_start < p.source_x2;
+    for (coord_t run_start = p.source.x1; run_start < p.source.x2;
          run_start = run_end) {
       uint8_t run_info = d.unpack<uint8_t>();
       uint8_t run_length = ((run_info - 1) & 0x7F) + 1;
       run_end = run_start + run_length;
-      if (run_end > p.source_x2) {
-        run_end = p.source_x2;
+      if (run_end > p.source.x2) {
+        run_end = p.source.x2;
       }
       if ((run_info & 0x80) == 0) {
         termel_t const __far *run_data = d.unpack_array<termel_t>(run_length);
-        if (run_start < p.source_x1) {
-          run_data += p.source_x1 - run_start;
-          run_start = p.source_x1;
+        if (run_start < p.source.x1) {
+          run_data += p.source.x1 - run_start;
+          run_start = p.source.x1;
         }
-        op.transfer_line(dest_p + run_start - p.source_x1, run_data,
+        op.transfer_line(dest_p + run_start - p.source.x1, run_data,
                          run_end - run_start);
       } else {
         termel_t run_tm = d.unpack<termel_t>();
-        if (run_start < p.source_x1) {
-          run_start = p.source_x1;
+        if (run_start < p.source.x1) {
+          run_start = p.source.x1;
         }
-        op.fill_line(dest_p + run_start - p.source_x1, run_tm,
+        op.fill_line(dest_p + run_start - p.source.x1, run_tm,
                      run_end - run_start);
       }
     }
@@ -251,12 +232,12 @@ void draw_rle_tbm(graphics *g, aux_graphics::clip_params const &p, tbm const &t,
 
 template <class TLineOp>
 void draw_mask_rle_tbm(graphics *g, aux_graphics::clip_params const &p,
-                       tbm const & t, TLineOp op) {
+                       tbm const &t, TLineOp op) {
   unpacker d(t.data_unpacker());
-  uint16_t const *lines = d.unpack_array<uint16_t>(p.source_y1);
-  termel_t *dest_p = g->b()->data() + p.dest_y * g->b()->width() + p.dest_x;
+  uint16_t const *lines = d.unpack_array<uint16_t>(p.source.y1);
+  termel_t *dest_p = g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
   uint16_t dest_stride = g->b()->width();
-  for (coord_t i = p.source_y1; i < p.source_y2; ++i) {
+  for (coord_t i = p.source.y1; i < p.source.y2; ++i) {
     if (lines[i] == 0) {
       continue;
     }
@@ -269,24 +250,24 @@ void draw_mask_rle_tbm(graphics *g, aux_graphics::clip_params const &p,
         break;
       }
       span_start += span.skip;
-      if (span_start >= p.source_x2) {
+      if (span_start >= p.source.x2) {
         break;
       }
       termel_t const __far *span_data =
           d.unpack_array<termel_t>(span.termel_count);
       span_end = span_start + span.termel_count;
-      if (span_end > p.source_x1) {
-        if (span_start < p.source_x1) {
-          span_data += p.source_x1 - span_start;
-          span_start = p.source_x1;
+      if (span_end > p.source.x1) {
+        if (span_start < p.source.x1) {
+          span_data += p.source.x1 - span_start;
+          span_start = p.source.x1;
         }
-        if (span_end > p.source_x2) {
-          span_end = p.source_x2;
+        if (span_end > p.source.x2) {
+          span_end = p.source.x2;
         }
-        op.transfer_line(dest_p + span_start - p.source_x1, span_data,
+        op.transfer_line(dest_p + span_start - p.source.x1, span_data,
                          span_end - span_start);
       }
-      if (span_end >= p.source_x2) {
+      if (span_end >= p.source.x2) {
         break;
       }
     }
@@ -297,48 +278,32 @@ void draw_mask_rle_tbm(graphics *g, aux_graphics::clip_params const &p,
 } // namespace aux_graphics
 
 graphics::graphics(bitmap *n_b)
-    : m_b(n_b), m_x(0), m_y(0), m_clip_x1(0), m_clip_y1(0),
-      m_clip_x2(n_b->width()), m_clip_y2(n_b->height()) {
+    : m_b(n_b), m_origin(0, 0), m_clip(0, 0, n_b->width(), n_b->height()) {
 #ifndef NDEBUG
   m_subregion_depth = 0;
 #endif
 }
 
-void graphics::enter_subregion(coord_t x, coord_t y, coord_t clip_x1,
-                               coord_t clip_y1, coord_t clip_x2,
-                               coord_t clip_y2, subregion_state *save) {
-  assert_margin(x, COORD_MAX);
-  assert_margin(y, COORD_MAX);
-  assert_margin(clip_x1, COORD_MAX);
-  assert_margin(clip_y1, COORD_MAX);
-  assert_margin(clip_x2, COORD_MAX);
-  assert_margin(clip_y2, COORD_MAX);
-  assert(clip_x1 <= clip_x2);
-  assert(clip_y1 <= clip_y2);
+void graphics::enter_subregion(point sub_o, rect const &sub_clip,
+                               subregion_state *save) {
+  assert(sub_o.reasonable());
+  assert(sub_clip.reasonable());
 
   logf_graphics("graphics %p enter_subregion %d, %d, %d, %d, %d, %d\n", this, x,
-                y, clip_x1, clip_y1, clip_x2, clip_y2);
+                y, sub_clip.x1, sub_clip.y1, sub_clip.x2, sub_clip.y2);
 
-  save->m_x = m_x;
-  save->m_y = m_y;
-  save->m_clip_x1 = m_clip_x1;
-  save->m_clip_y1 = m_clip_y1;
-  save->m_clip_x2 = m_clip_x2;
-  save->m_clip_y2 = m_clip_y2;
+  save->m_origin = m_origin;
+  save->m_clip = m_clip;
 #ifndef NDEBUG
   save->m_subregion_depth = m_subregion_depth;
   ++m_subregion_depth;
 #endif
 
-  m_clip_x1 = max<coord_t>(m_clip_x1, m_x + clip_x1);
-  m_clip_y1 = max<coord_t>(m_clip_y1, m_y + clip_y1);
-  m_clip_x2 = min<coord_t>(m_clip_x2, m_x + clip_x2);
-  m_clip_y2 = min<coord_t>(m_clip_y2, m_y + clip_y2);
-  m_x += x;
-  m_y += y;
+  m_clip &= m_origin + sub_clip;
+  m_origin += sub_o;
 
-  logf_graphics("  clip %d, %d, %d, %d\n", m_clip_x1, m_clip_y1, m_clip_x2,
-                m_clip_y2);
+  logf_graphics("  clip %d, %d, %d, %d\n", m_clip.x1, m_clip.y1, m_clip.x2,
+                m_clip.y2);
 }
 
 void graphics::leave_subregion(subregion_state const *restore) {
@@ -346,47 +311,32 @@ void graphics::leave_subregion(subregion_state const *restore) {
   --m_subregion_depth;
   assert(restore->m_subregion_depth == m_subregion_depth);
 #endif
-  m_x = restore->m_x;
-  m_y = restore->m_y;
-  m_clip_x1 = restore->m_clip_x1;
-  m_clip_y1 = restore->m_clip_y1;
-  m_clip_x2 = restore->m_clip_x2;
-  m_clip_y2 = restore->m_clip_y2;
+  m_origin = restore->m_origin;
+  m_clip = restore->m_clip;
 
   logf_graphics("graphics %p leave_subregion\n", this);
-  logf_graphics("  clip %d, %d, %d, %d\n", m_clip_x1, m_clip_y1, m_clip_x2,
-                m_clip_y2);
+  logf_graphics("  clip %d, %d, %d, %d\n", m_clip.x1, m_clip.y1, m_clip.x2,
+                m_clip.y2);
 }
 
-void graphics::draw_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t y2,
-                              termel_t p) {
-  assert(clip_x1() >= 0);
-  assert(clip_y1() >= 0);
-  assert(clip_x2() >= 0);
-  assert(clip_y2() >= 0);
-  assert_margin(x1, COORD_MAX);
-  assert_margin(y1, COORD_MAX);
-  assert_margin(x2, COORD_MAX);
-  assert_margin(y2, COORD_MAX);
+void graphics::draw_rectangle(rect const & r, termel_t p) {
+  assert(m_clip.x1 >= 0);
+  assert(m_clip.y1 >= 0);
+  assert(m_clip.reasonable());
+  assert(r.reasonable());
 
-  coord_t cx1 = max<coord_t>(origin_x() + x1, clip_x1());
-  coord_t cx2 = min<coord_t>(origin_x() + x2, clip_x2());
-  if (cx1 >= cx2) {
-    return;
-  }
-  coord_t cy1 = max<coord_t>(origin_y() + y1, clip_y1());
-  coord_t cy2 = min<coord_t>(origin_y() + y2, clip_y2());
-  if (cy1 >= cy2) {
+  rect cr = m_clip & (m_origin + r);
+  if (cr.trivial()) {
     return;
   }
 
   logf_graphics("clipped draw_rectangle %d, %d, %d, %d; %c, %02X\n", cx1, cy1,
                 cx2, cy2, p.character(), p.attribute().value());
 
-  uint16_t rows = cy2 - cy1;
+  uint16_t rows = cr.height();
   uint16_t stride = m_b->width();
-  uint16_t cols = cx2 - cx1;
-  termel_t *pp = m_b->data() + cy1 * stride + cx1;
+  uint16_t cols = cr.width();
+  termel_t *pp = m_b->data() + cr.y1 * stride + cr.x1;
   for (uint16_t r = 0; r < rows; ++r) {
     for (uint16_t c = 0; c < cols; ++c) {
       pp[c] = p;
@@ -397,25 +347,25 @@ void graphics::draw_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t y2,
 
 void graphics::draw_text(coord_t x, coord_t y, attribute_t attr,
                          char const *s) {
-  assert(clip_x1() >= 0);
-  assert(clip_y1() >= 0);
-  assert(clip_x2() >= 0);
-  assert(clip_y2() >= 0);
+  assert(m_clip.x1 >= 0);
+  assert(m_clip.y1 >= 0);
+  assert(m_clip.x2 >= 0);
+  assert(m_clip.y2 >= 0);
   coord_t i;
   coord_t s_len = strlen(s);
 
-  x += origin_x();
-  y += origin_y();
+  x += m_origin.x;
+  y += m_origin.y;
 
-  if ((y < clip_y2()) && (y >= clip_y1())) {
-    if ((x < clip_x2()) && (x + s_len > clip_x1())) {
-      if (x < clip_x1()) {
-        s += clip_x1() - x;
-        s_len -= clip_x1() - x;
-        x = clip_x1();
+  if ((y < m_clip.y2) && (y >= m_clip.y1)) {
+    if ((x < m_clip.x2) && (x + s_len > m_clip.x1)) {
+      if (x < m_clip.x1) {
+        s += m_clip.x1 - x;
+        s_len -= m_clip.x1 - x;
+        x = m_clip.x1;
       }
-      if (x + s_len > clip_x2()) {
-        s_len = clip_x2() - x;
+      if (x + s_len > m_clip.x2) {
+        s_len = m_clip.x2 - x;
       }
       for (i = 0; i < s_len; ++i) {
         m_b->set_at(x + i, y, termel::from(*s, attr));

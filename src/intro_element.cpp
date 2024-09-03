@@ -75,7 +75,7 @@ void intro_element::animate(anim_time_t delta_ms) {
 bool intro_element::active() const { return m_active; }
 
 bool intro_element::opaque() const {
-  return m_cover.frame_y2() >= frame_height();
+  return m_cover.frame().y2 >= frame().height();
 }
 
 void intro_element::set_capture(im_ptr<bitmap> n_capture) {
@@ -84,7 +84,7 @@ void intro_element::set_capture(im_ptr<bitmap> n_capture) {
 
 void intro_element::play_intro() {
   m_logo_fade.reset(0, termviz::fade_steps - 1, 500);
-  m_cover_y.reset(frame_height(), -m_cover.frame_height(), 8000, 1000);
+  m_cover_y.reset(frame().height(), -m_cover.frame().height(), 8000, 1000);
   m_active = true;
 }
 
