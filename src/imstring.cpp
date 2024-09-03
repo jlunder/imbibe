@@ -23,11 +23,11 @@
 //   uint16_t s_first_free_ref;
 // }
 
-#if !defined(SIMULATE)
+#ifndef SIMULATE
 __segment imstring::s_dynamic_seg;
 #endif
 
-#if defined(SIMULATE)
+#ifdef SIMULATE
 bool imstring::is_dynamic(char const __far *str) {
   // TODO
   (void)str;

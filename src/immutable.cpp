@@ -66,7 +66,7 @@ void immutable::unref() {
   } else {
     // Reclaim the data
     void const *norm_p = data();
-    void const *p = denormalize(tracking.orig_seg, norm_p);
+    void const *p = denormalize_segmented(tracking.orig_seg, norm_p);
     tracking.reclaimer((void *)p);
 
     // Add the index entry back into the unrefd chain

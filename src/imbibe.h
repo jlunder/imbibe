@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "arena.h"
 #include "debug.h"
 #include "memory.h"
 #include "termviz.h"

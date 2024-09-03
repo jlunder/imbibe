@@ -102,7 +102,7 @@ void application::setup() {
   s_outro_screen.setup();
   s_quit_prompt.setup();
 
-  bitmap *capture = new bitmap();
+  bitmap *capture = new(arena::c()) bitmap();
   s_win->setup(capture);
   s_display_width = s_win->backbuffer().width();
   s_display_height = s_win->backbuffer().height();
