@@ -17,8 +17,6 @@ quit_prompt_element::quit_prompt_element() {
   m_active = false;
 }
 
-quit_prompt_element::~quit_prompt_element() {}
-
 void quit_prompt_element::layout(coord_t window_width, coord_t window_height) {
   set_frame(0, 0, window_width, window_height);
   coord_t quit_x = (window_width - m_quit_width) / 2;

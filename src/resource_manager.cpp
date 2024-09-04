@@ -122,8 +122,8 @@ void resource_manager::setup() {
   blank.index = s_empty_index;
   assert(s_name_hash.empty());
   assert(s_index.empty());
-  s_name_hash.mem(arena::c());
-  s_index.mem(arena::c());
+  // s_name_hash.mem(arena::c());
+  // s_index.mem(arena::c());
   s_name_hash.assign(s_hash_capacity, blank);
   s_hash_mask = s_hash_capacity - 1;
   s_first_free_index = s_empty_index;

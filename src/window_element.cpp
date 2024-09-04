@@ -4,7 +4,7 @@
 
 #define logf_window_element(...) disable_logf("WINDOW_ELEMENT: " __VA_ARGS__)
 
-window_element::window_element() { m_elements.mem(arena::cur()); }
+window_element::window_element() {}
 
 void window_element::paint(graphics *g) {
 #ifndef NDEBUG

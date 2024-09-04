@@ -10,8 +10,6 @@
 tbm_element::tbm_element()
     : element(), m_t(), m_fade(termviz::fade_steps - 1) {}
 
-tbm_element::~tbm_element() {}
-
 void tbm_element::set_tbm(tbm const & t) {
   m_t = t;
   request_repaint();

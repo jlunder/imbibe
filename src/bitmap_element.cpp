@@ -12,8 +12,6 @@
 bitmap_element::bitmap_element()
     : element(), m_b(), m_fade(termviz::fade_steps - 1) {}
 
-bitmap_element::~bitmap_element() {}
-
 void bitmap_element::set_b(bitmap const &n_b) {
   m_b = n_b;
   request_repaint();

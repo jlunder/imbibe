@@ -43,7 +43,7 @@ public:
 
   int compare_to(imstring const &other) { return compare(*this, other); }
 
-  // operator char const * () const { return c_str(); }
+  // operator char const __far *() const { return c_str(); }
 
   static int compare(imstring const &x, imstring const &y) {
     return _fstrcmp(x.c_str(), y.c_str());

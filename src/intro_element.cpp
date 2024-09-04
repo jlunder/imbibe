@@ -21,8 +21,6 @@ intro_element::intro_element() {
   m_active = false;
 }
 
-intro_element::~intro_element() {}
-
 void intro_element::layout(coord_t window_width, coord_t window_height) {
   set_frame(0, 0, window_width, window_height);
   m_capture_background.set_frame(0, 0, window_width, window_height, 0);

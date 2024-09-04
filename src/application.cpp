@@ -85,6 +85,8 @@ void update_transitions();
 } // namespace application
 
 void application::setup() {
+  logf_application("imbibe 0.1 loading...\n");
+
   s_last_mode = mode_none;
   s_mode = mode_intro;
   s_last_submenu_category = s_submenu_category = NULL;
@@ -133,7 +135,7 @@ void application::setup() {
   s_quit_prompt->layout(s_display_width, s_display_height);
   s_outro_screen->layout(s_display_width, s_display_height);
 
-  logf_application("imbibe 0.1 loaded\n");
+  logf_application("imbibe loaded -- enjoy!\n");
 }
 
 void application::teardown() {

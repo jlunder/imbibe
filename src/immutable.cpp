@@ -28,12 +28,16 @@ void immutable::assign(prealloc_t policy, void const __far *p) {
     unref();
   }
   if (p) {
-    void const __far *norm_p = normalize_segmented(p);
+    void const __far *norm_p = p;
+    if ((uint16_t)FP_OFF(p) > UINT8_MAX) {
+      norm_p = normalize_segmented(p);
+      assert(FP_OFF(norm_p) < 0x10);
+    }
     m_seg = FP_SEG(norm_p);
     assert(m_seg != 0);
     m_index = 0;
-    assert(FP_OFF(norm_p) < 0x10);
     m_ofs = (uint8_t)FP_OFF(norm_p);
+    assert(denormalize_segmented(FP_SEG(p), MK_FP(m_seg, m_ofs)) == p);
   } else {
     m_seg = 0;
     m_index = 0;
@@ -46,13 +50,16 @@ void immutable::assign(reclaim_func_t f, void const __far *p) {
     unref();
   }
   if (p) {
-    void const __far *norm_p = normalize_segmented(p);
+    void const __far *norm_p = p;
+    if ((uint16_t)FP_OFF(p) > UINT8_MAX) {
+      norm_p = normalize_segmented(p);
+      assert(FP_OFF(norm_p) < 0x10);
+    }
     m_seg = FP_SEG(norm_p);
     assert(m_seg != 0);
-    assert(FP_OFF(norm_p) < 0x10);
     m_ofs = (uint8_t)FP_OFF(norm_p);
-    assert(denormalize_segmented(FP_SEG(p), MK_FP(m_seg, m_ofs)) == p);
     init(f, p);
+    assert(denormalize_segmented(FP_SEG(p), MK_FP(m_seg, m_ofs)) == p);
   } else {
     m_seg = 0;
     m_index = 0;

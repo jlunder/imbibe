@@ -58,6 +58,7 @@ public:
 
   void const __far *peek_untyped(segsize_t sz) const {
     assert(sz <= remain());
+    (void)sz;
     return &m_seg[m_cur];
   }
 

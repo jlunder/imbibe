@@ -21,17 +21,15 @@ static const segsize_t options_length = LENGTHOF(option_defs);
 } // namespace aux_menu_element
 // first hotspot lines 11-17
 
-menu_element::menu_element()
-    : m_data_arena(10000, "menu_element"), m_menu_options(&m_data_arena) {}
-
-menu_element::~menu_element() {}
+menu_element::menu_element() : m_data_arena(), m_menu_options() {}
+//    : m_data_arena(10000, "menu_element"), m_menu_options(&m_data_arena) {}
 
 void menu_element::layout(coord_t window_width, coord_t window_height) {
   (void)window_width;
   (void)window_height;
   coord_t width;
   {
-    with_arena a(&m_data_arena);
+    // with_arena a(&m_data_arena);
     m_background = resource_manager::fetch_tbm("menu-bg.tbm");
     width = m_background.header().width;
     m_menu_options.reserve(aux_menu_element::options_length);
@@ -53,7 +51,7 @@ void menu_element::layout(coord_t window_width, coord_t window_height) {
     }
   }
   set_frame(0, 0, m_background.header().width, m_background.header().height);
-  m_data_arena.trim();
+  // m_data_arena.trim();
   m_scroll_y.reset(0, 0, 0);
 }
 

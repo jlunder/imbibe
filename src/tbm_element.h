@@ -11,7 +11,7 @@ class graphics;
 class tbm_element : public element {
 public:
   tbm_element();
-  virtual ~tbm_element();
+  virtual ~tbm_element() {}
   void set_tbm(tbm const &n_t);
   void set_fade(uint8_t n_fade);
   virtual void paint(graphics *g);

@@ -17,7 +17,8 @@ namespace aux_text_window {
 static const coord_t s_screen_width = 80;
 static const coord_t s_screen_height = 25;
 static const uint8_t s_text_mode_color_80_25 = 3;
-static const termel_t *s_screen_buffer = (termel_t *)MK_FP(0xB800, (void *)0);
+static const termel_t __far *s_screen_buffer =
+    (termel_t __far *)MK_FP(0xB800, (void *)0);
 
 enum {
   cursor_visible = 0x00,
@@ -80,10 +81,10 @@ inline void aux_text_window::read_screen_buffer(bitmap *out_b) {
     uint16_t offset = details.page * 4096 / sizeof(termel_t);
     uint16_t size = out_b->width() * out_b->height();
     logf_text_window("computed page offset: %u\n", offset);
-    memcpy(out_b->data(), aux_text_window::s_screen_buffer + offset,
-           size * sizeof(termel_t));
+    _fmemcpy(out_b->data(), aux_text_window::s_screen_buffer + offset,
+             size * sizeof(termel_t));
   } else {
-    termel_t *data = out_b->data();
+    termel_t __far *data = out_b->data();
     out_b->assign(aux_text_window::s_screen_width,
                   aux_text_window::s_screen_height,
                   termel::from(' ', color::white, color::black));
@@ -124,12 +125,10 @@ inline void aux_text_window::set_cursor_style(uint8_t visible,
 
 #endif
 
-text_window text_window_instance;
-
 text_window::text_window()
     : window(), m_element(NULL), m_backbuffer(aux_text_window::s_screen_width,
                                               aux_text_window::s_screen_height),
-      m_lock_count(0), m_need_repaint(false) {}
+      m_capture(), m_lock_count(0), m_need_repaint(false), m_dirty(false) {}
 
 void text_window::setup(bool capture_screen) {
   if (capture_screen) {

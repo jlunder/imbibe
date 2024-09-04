@@ -38,6 +38,7 @@ void c_arena::free(void const __far *p) {
 }
 
 stack_arena::stack_arena(segsize_t n_capacity, char const __far *n_name) {
+  assert(n_capacity > 0);
   m_allocation = ::_fmalloc(n_capacity + PAGE_SIZE - 1);
   segsize_t overshoot_offset = FP_OFF(m_allocation) + PAGE_SIZE - 1;
   segsize_t adjusted_offset = overshoot_offset - (overshoot_offset % PAGE_SIZE);
@@ -48,7 +49,7 @@ stack_arena::stack_arena(segsize_t n_capacity, char const __far *n_name) {
   void __far *aligned = MK_FP(FP_SEG(m_allocation), adjusted_offset);
   void __far *normalized = normalize_segmented(aligned);
   assert(FP_OFF(normalized) == 0);
-  m_seg = segp<uint8_t>(FP_SEG(m_allocation));
+  m_seg = segp<uint8_t>(FP_SEG(normalized));
   m_top = 0;
   m_capacity = n_capacity;
   m_live_count = 0;
@@ -57,7 +58,9 @@ stack_arena::stack_arena(segsize_t n_capacity, char const __far *n_name) {
 
 stack_arena::~stack_arena() {
   assert(m_live_count == 0);
-  _ffree(m_allocation);
+  if (m_capacity > 0) {
+    ::_ffree(m_allocation);
+  }
 }
 
 void __far *stack_arena::alloc(segsize_t size) {
@@ -107,7 +110,16 @@ void stack_arena::free(void const __far *p) {
 
 void stack_arena::trim() {
   assert(m_capacity >= m_top);
-  void __far *result = _fexpand(m_allocation, m_top + PAGE_SIZE - 1);
-  (void)result;
-  assert(result == m_allocation);
+  if (m_capacity == 0) {
+    return;
+  }
+  if (m_top == 0) {
+    ::_ffree(m_allocation);
+    m_allocation = NULL;
+  } else {
+    void __far *result = _fexpand(m_allocation, m_top + PAGE_SIZE - 1);
+    (void)result;
+    assert(result == m_allocation);
+  }
+  m_capacity = m_top;
 }

@@ -24,9 +24,6 @@ inline void const __far *normalize_segmented(void const __far *p) {
 #ifdef SIMULATE
   void const __far *norm_p = p;
 #else
-  if ((uint16_t)FP_OFF(p) <= UINT8_MAX) {
-    return p;
-  }
   void const __far *norm_p =
       MK_FP(FP_SEG(p) + (FP_OFF(p) >> 4), FP_OFF(p) & 0xF);
 #endif

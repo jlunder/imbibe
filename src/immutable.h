@@ -1,5 +1,5 @@
-#ifndef __RODATA_H_INCLUDED
-#define __RODATA_H_INCLUDED
+#ifndef __IMMUTABLE_H_INCLUDED
+#define __IMMUTABLE_H_INCLUDED
 
 #include "imbibe.h"
 
@@ -49,6 +49,7 @@ public:
 
   immutable &operator=(void const *p) {
     assert(p == NULL);
+    (void)p;
     if (m_index != 0) {
       unref();
     }
@@ -65,8 +66,9 @@ public:
   }
 #endif
 
-  bool operator==(void *other) {
-    assert(other == NULL);
+  bool operator==(void *p) {
+    assert(p == NULL);
+    (void)p;
     return !operator bool();
   }
 
@@ -138,6 +140,7 @@ public:
 
   weak_immutable &operator=(void const *p) {
     assert(p == NULL);
+    (void)p;
 #ifdef M_I86
     set_handle(0);
 #else
@@ -166,41 +169,4 @@ private:
 #endif
 };
 
-#if 0
-
-// Shared pointer for generic read-only data blocks; this is optimized for
-// the case where sometimes the block is statically allocated and doesn't
-// need to be freed. If your data is always static, just use bare pointers --
-// and if it's never static, use actual shared_ptr.
-template <class T> class im_ptr : private immutable {
-public:
-  static const prealloc_t prealloc = immutable::prealloc;
-
-  static im_ptr null() { im_ptr(prealloc, NULL); }
-
-  explicit im_ptr() : immutable() {}
-  explicit im_ptr(T const *n_p) : immutable(n_p ? reclaim : NULL, n_p) {}
-  explicit im_ptr(immutable::prealloc_t policy, T const *n_p)
-      : immutable(policy, n_p) {}
-  explicit im_ptr(immutable::reclaim_func_t custom_reclaim, T const *n_p)
-      : immutable(custom_reclaim, n_p) {}
-
-  T const __far *get() const { return (T const *)data(); }
-  T const __far &operator*() const { return *(T const *)data(); }
-  T const __far *operator->() const { return (T const *)data(); }
-  operator bool() const { return immutable::operator bool(); }
-
-  bool operator==(im_ptr const &other) { return immutable::operator==(other); }
-
-  bool operator==(void *other) { return immutable::operator==(other); }
-
-private:
-  static void reclaim(void __far *p) {
-    ((T __far *)p)->~T();
-    arena::cur_free(p);
-  }
-};
-
-#endif
-
-#endif // __RODATA_H_INCLUDED
+#endif // __IMMUTABLE_H_INCLUDED

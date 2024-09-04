@@ -8,14 +8,14 @@
 namespace aux_vector {
 template <class T> inline T *allocate(uint_fast16_t n) {
   assert(n > 0);
-  T *p = (T *)arena::cur_alloc(n * sizeof(T));
+  T *p = (T *)::malloc(n * sizeof(T));
   assert(p);
   return p;
 }
 
 template <class T> inline void free(T *p) {
   assert(p);
-  arena::cur_free(p);
+  ::free(p);
 }
 
 template <class T> inline void construct(T *p, uint_fast16_t n) {
@@ -88,21 +88,9 @@ public:
 
   static size_type const c_size_max = (UINT16_MAX - 31) / sizeof(T);
 
-  vector() : m_mem(arena::cur()), m_size(0), m_capacity(0), m_data(NULL) {}
+  vector() : m_size(0), m_capacity(0), m_data(NULL) {}
 
-  vector(vector const &x)
-      : m_mem(arena::cur()), m_size(x.m_size), m_capacity(x.m_capacity) {
-    with_arena with(m_mem);
-    m_data = aux_vector::allocate<T>(m_capacity);
-    aux_vector::copy_construct<T>(x.begin(), m_data, m_size);
-  }
-
-  explicit vector(arena *n_mem)
-      : m_mem(n_mem), m_size(0), m_capacity(0), m_data(NULL) {}
-
-  vector(arena *n_mem, vector const &x)
-      : m_mem(n_mem), m_size(x.m_size), m_capacity(x.m_capacity) {
-    with_arena with(m_mem);
+  vector(vector const &x) : m_size(x.m_size), m_capacity(x.m_capacity) {
     m_data = aux_vector::allocate<T>(m_capacity);
     aux_vector::copy_construct<T>(x.begin(), m_data, m_size);
   }
@@ -110,7 +98,6 @@ public:
   ~vector() {
     assert((m_size == 0) || m_data);
     if (m_data) {
-      with_arena with(m_mem);
       aux_vector::destroy<T>(m_data, m_size);
       aux_vector::free<T>(m_data);
     }
@@ -119,17 +106,11 @@ public:
 #endif
   }
 
-  void mem(arena *n_mem) {
-    assert(m_capacity == 0);
-    m_mem = n_mem;
-  }
-
   void reserve(size_type n) {
     assert(n <= c_size_max);
     if (n <= m_capacity) {
       return;
     }
-    with_arena with(m_mem);
     T *n_data = aux_vector::allocate<T>(n);
     assert(m_data || ((m_size == 0) && (m_capacity == 0)));
     if (m_data) {
@@ -141,8 +122,6 @@ public:
     m_capacity = n;
   }
 
-  arena *mem() const { return m_mem; }
-
   size_type capacity() const { return m_capacity; }
   iterator begin() { return m_data; }
   const_iterator begin() const { return m_data; }
@@ -152,7 +131,6 @@ public:
   void resize(size_type n, T const &x) {
     assert(n <= c_size_max);
     reserve(n);
-    with_arena with(m_mem);
     if (n > m_size) {
       aux_vector::copy_construct<T>(x, m_data + m_size, n - m_size);
     } else if (n < m_size) {
@@ -218,7 +196,6 @@ public:
       return;
     }
     reserve(n);
-    with_arena with(m_mem);
     aux_vector::copy_construct<T>(first, m_data, n);
     m_size = n;
   }
@@ -230,7 +207,6 @@ public:
       return;
     }
     reserve(n);
-    with_arena with(m_mem);
     aux_vector::copy_construct<T>(x, m_data, n);
     m_size = n;
   }
@@ -247,7 +223,6 @@ public:
     size_type i = it - m_data;
     assert(i <= m_size);
     size_type m = m_size - i;
-    with_arena with(m_mem);
     if (m_capacity >= m_size + n) {
       aux_vector::move<T>(it, it + n, m);
       aux_vector::copy_construct(x, it, n);
@@ -278,7 +253,6 @@ public:
     size_type i = it - m_data;
     assert(i <= m_size);
     size_type m = m_size - i;
-    with_arena with(m_mem);
     if (m_capacity >= m_size + n) {
       aux_vector::move<T>(it, it + n, m);
       aux_vector::copy_construct(first, it, n);
@@ -323,7 +297,6 @@ public:
       *p = *q;
     }
     m_size -= n;
-    assert(m_mem);
     aux_vector::destroy<T>(last, n);
   }
 
@@ -331,7 +304,6 @@ public:
     if (m_size == 0) {
       return;
     }
-    assert(m_mem);
     aux_vector::destroy<T>(m_data, m_size);
     m_size = 0;
   }
@@ -342,7 +314,6 @@ public:
   }
 
 private:
-  arena *m_mem;
   size_type m_size;
   size_type m_capacity;
   T *m_data;

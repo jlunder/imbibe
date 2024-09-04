@@ -11,7 +11,7 @@
 class intro_element : public screen_element {
 public:
   intro_element();
-  virtual ~intro_element();
+  virtual ~intro_element() {}
   virtual void layout(coord_t window_width, coord_t window_height);
   virtual void poll();
   virtual bool handle_key(uint16_t key);

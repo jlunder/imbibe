@@ -48,6 +48,4 @@ private:
                            coord_t height, rect const &r);
 };
 
-extern text_window text_window_instance;
-
 #endif // __TEXT_WINDOW_H_INCLUDED
