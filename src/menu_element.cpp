@@ -8,13 +8,15 @@
 #include "tbm.h"
 #include "termviz.h"
 
+#define logf_menu_element(...) disable_logf("MENU_ELEMENT: " __VA_ARGS__)
+
 namespace aux_menu_element {
 
 static struct {
   char const *name;
-} option_defs[] = {{"menu-sel0.tbm"}, {"menu-sel1.tbm"}, {"menu-sel2.tbm"},
-                   {"menu-sel3.tbm"}, {"menu-sel4.tbm"}, {"menu-sel5.tbm"},
-                   {"menu-sel6.tbm"}};
+} option_defs[] = {{"menu-se0.tbm"}, {"menu-se1.tbm"}, {"menu-se2.tbm"},
+                   {"menu-se3.tbm"}, {"menu-se4.tbm"}, {"menu-se5.tbm"},
+                   {"menu-se6.tbm"}};
 
 static const segsize_t options_length = LENGTHOF(option_defs);
 
@@ -43,6 +45,10 @@ void menu_element::layout(coord_t window_width, coord_t window_height) {
       o->selected_pos = point(0, sel_y);
       o->selected_overlay =
           resource_manager::fetch_tbm(aux_menu_element::option_defs[i].name);
+      logf_menu_element("loaded TBM %s: %d x %d\n",
+                        aux_menu_element::option_defs[i].name,
+                        (int)o->selected_overlay.header().width,
+                        (int)o->selected_overlay.header().height);
       o->hide_transition.reset(width, width, 0);
       o->show_transition.reset(width, width, 0);
       hot_y1 += 16;

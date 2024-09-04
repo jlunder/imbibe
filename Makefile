@@ -37,13 +37,13 @@ IMBIBE_RESOURCES = \
 	testdata/cover.tbm \
 	testdata/logo.tbm \
 	testdata/menu-bg.tbm \
-	testdata/menu-sel0.tbm \
-	testdata/menu-sel1.tbm \
-	testdata/menu-sel2.tbm \
-	testdata/menu-sel3.tbm \
-	testdata/menu-sel4.tbm \
-	testdata/menu-sel5.tbm \
-	testdata/menu-sel6.tbm \
+	testdata/menu-se0.tbm \
+	testdata/menu-se1.tbm \
+	testdata/menu-se2.tbm \
+	testdata/menu-se3.tbm \
+	testdata/menu-se4.tbm \
+	testdata/menu-se5.tbm \
+	testdata/menu-se6.tbm \
 	testdata/quit.tbm
 
 .PHONY: all clean deps dirs imbibe
