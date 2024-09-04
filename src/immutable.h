@@ -20,16 +20,16 @@ public:
     assign(f, p);
   }
 
-#ifdef M_I86
-  immutable(immutable const &other) {
-    set_handle(other.handle());
+#if BUILD_POSIX_SIM
+  immutable(immutable const &other)
+      : m_seg(other.m_seg), m_index(other.m_index), m_ofs(other.m_ofs) {
     if (m_index != 0) {
       ref();
     }
   }
 #else
-  immutable(immutable const &other)
-      : m_seg(other.m_seg), m_index(other.m_index), m_ofs(other.m_ofs) {
+  immutable(immutable const &other) {
+    set_handle(other.handle());
     if (m_index != 0) {
       ref();
     }
@@ -59,13 +59,15 @@ public:
     return *this;
   }
 
-#ifdef M_I86
+#if BUILD_MSDOS
   bool operator==(immutable const &other) { return handle() == other.handle(); }
-#else
+#elif BUILD_POSIX_SIM
   bool operator==(immutable const &other) {
     return (m_seg == other.m_seg) && (m_index == other.m_index) &&
            (m_ofs == other.m_ofs);
   }
+#else
+#error New platform support needed?
 #endif
 
   bool operator==(void const *p) {
@@ -85,7 +87,7 @@ private:
   void ref();
   void unref();
 
-#ifdef M_I86
+#if BUILD_MSDOS
   explicit immutable(uint32_t n_handle) {
     static_assert(sizeof(immutable) == sizeof(uint32_t));
     set_handle(n_handle);
@@ -106,36 +108,42 @@ private:
 class weak_immutable {
 public:
   weak_immutable() : m_seg(0), m_index(0), m_ofs(0) {}
-#ifdef M_I86
+#if BUILD_MSDOS
   weak_immutable(immutable const &strong) { set_handle(strong.handle()); }
   weak_immutable(weak_immutable const &other) { set_handle(other.handle()); }
-#else
+#elif BUILD_POSIX_SIM
   weak_immutable(immutable const &strong)
       : m_seg(strong.m_seg), m_index(strong.m_index), m_ofs(strong.m_ofs) {}
   weak_immutable(weak_immutable const &other)
       : m_seg(other.m_seg), m_index(other.m_index), m_ofs(other.m_ofs) {}
+#else
+#error New platform support needed?
 #endif
 
   immutable lock();
 
   weak_immutable &operator=(immutable const &strong) {
-#ifdef M_I86
+#if BUILD_MSDOS
     set_handle(strong.handle());
-#else
+#elif BUILD_POSIX_SIM
     m_seg = strong.m_seg;
     m_index = strong.m_index;
     m_ofs = strong.m_ofs;
+#else
+#error New platform support needed?
 #endif
     return *this;
   }
 
   weak_immutable &operator=(weak_immutable const &other) {
-#ifdef M_I86
+#if BUILD_MSDOS
     set_handle(other.handle());
-#else
+#elif BUILD_POSIX_SIM
     m_seg = other.m_seg;
     m_index = other.m_index;
     m_ofs = other.m_ofs;
+#else
+#error New platform support needed?
 #endif
     return *this;
   }
@@ -143,17 +151,19 @@ public:
   weak_immutable &operator=(void const *p) {
     assert(p == NULL);
     (void)p;
-#ifdef M_I86
+#if BUILD_MSDOS
     set_handle(0);
-#else
+#elif BUILD_POSIX_SIM
     m_seg = 0;
     m_index = 0;
     m_ofs = 0;
+#else
+#error New platform support needed?
 #endif
     return *this;
   }
 
-#ifndef NDEBUG
+#if BUILD_DEBUG
   // This is conservative: false means false, true is ambiguous; it's only
   // really safe if you want to overapproximate "were we explicitly set null"
   // and therefore it's only really appropriate inside assert()
@@ -165,7 +175,7 @@ private:
   uint8_t m_index;
   uint8_t m_ofs;
 
-#ifdef M_I86
+#if BUILD_MSDOS
   uint32_t handle() const { return *reinterpret_cast<uint32_t const *>(this); }
   void set_handle(uint32_t n_handle) {
     *reinterpret_cast<uint32_t *>(this) = n_handle;

@@ -13,7 +13,7 @@ public:
   private:
     point m_origin;
     rect m_clip;
-#ifndef NDEBUG
+#if BUILD_DEBUG
     coord_t m_subregion_depth;
 #endif
 
@@ -51,7 +51,7 @@ private:
   point m_origin;
   rect m_clip;
 
-#ifndef NDEBUG
+#if BUILD_DEBUG
   coord_t m_subregion_depth;
 #endif
 };

@@ -282,7 +282,7 @@ void draw_mask_rle_tbm(graphics *g, aux_graphics::clip_params const &p,
 
 graphics::graphics(bitmap *n_b)
     : m_b(n_b), m_origin(0, 0), m_clip(0, 0, n_b->width(), n_b->height()) {
-#ifndef NDEBUG
+#if BUILD_DEBUG
   m_subregion_depth = 0;
 #endif
 }
@@ -297,7 +297,7 @@ void graphics::enter_subregion(point sub_o, rect const &sub_clip,
 
   save->m_origin = m_origin;
   save->m_clip = m_clip;
-#ifndef NDEBUG
+#if BUILD_DEBUG
   save->m_subregion_depth = m_subregion_depth;
   ++m_subregion_depth;
 #endif
@@ -310,7 +310,7 @@ void graphics::enter_subregion(point sub_o, rect const &sub_clip,
 }
 
 void graphics::leave_subregion(subregion_state const *restore) {
-#ifndef NDEBUG
+#if BUILD_DEBUG
   --m_subregion_depth;
   assert(restore->m_subregion_depth == m_subregion_depth);
 #endif

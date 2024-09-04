@@ -18,7 +18,7 @@ public:
     if (is_dynamic(m_str)) {
       unref_dynamic(*this);
     }
-#ifndef NDEBUG
+#if BUILD_DEBUG
     m_str = NULL;
 #endif
   }
@@ -59,13 +59,13 @@ public:
   static void teardown_exiting();
 
 private:
-#ifndef SIMULATE
+#if !BUILD_POSIX_SIM
   static __segment s_dynamic_seg;
 #endif
 
   char const __far *m_str;
 
-#ifdef SIMULATE
+#if BUILD_POSIX_SIM
   static bool is_dynamic(char const __far *str);
 #else
   static bool is_dynamic(char const __far *str) {

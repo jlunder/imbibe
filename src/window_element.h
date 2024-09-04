@@ -10,7 +10,7 @@ class window_element : public element, public window {
 public:
   window_element();
   virtual ~window_element() {
-#ifndef NDEBUG
+#if BUILD_DEBUG
     assert(m_lock_count == 0);
 #endif
   }
@@ -40,7 +40,7 @@ private:
 
   point m_offset;
 
-#ifndef NDEBUG
+#if BUILD_DEBUG
   int8_t m_lock_count;
 
   virtual void owner_changing() { assert(m_lock_count == 0); }

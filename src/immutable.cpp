@@ -8,7 +8,7 @@ static uint16_t const max_reclaimable = UINT8_MAX;
 
 struct immutable_tracking_t {
   immutable::reclaim_func_t reclaimer;
-#ifndef NDEBUG
+#if BUILD_DEBUG
   void const __far *orig_ptr;
 #endif
   __segment orig_seg;
@@ -118,7 +118,7 @@ void immutable::init(reclaim_func_t f, void const __far *orig_p) {
   zero_tracking.next_unrefd = tracking.next_unrefd;
   tracking.live_refs = 1;
   tracking.reclaimer = f;
-#ifndef NDEBUG
+#if BUILD_DEBUG
   tracking.orig_ptr = orig_p;
 #endif
   tracking.orig_seg = FP_SEG(orig_p);
@@ -152,7 +152,7 @@ void immutable::unref() {
     // Reclaim the data
     void const __far *norm_p = data();
     void const __far *p = denormalize_segmented(tracking.orig_seg, norm_p);
-#ifndef NDEBUG
+#if BUILD_DEBUG
     assert(p == tracking.orig_ptr);
     tracking.orig_ptr = NULL;
 #endif
@@ -178,7 +178,7 @@ immutable weak_immutable::lock() {
       aux_immutable::immutable_index[m_index];
   assert(tracking.reclaimer);
   assert(tracking.live_refs > 0);
-#ifndef NDEBUG
+#if BUILD_DEBUG
   assert(denormalize_segmented(tracking.orig_seg, MK_FP(m_seg, m_ofs)) ==
          tracking.orig_ptr);
 #endif

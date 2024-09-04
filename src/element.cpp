@@ -74,7 +74,7 @@ void element::set_frame(rect const &n_frame, coord_t z) {
 }
 
 void element::set_owner(window *n_owner) {
-#ifndef NDEBUG
+#if BUILD_DEBUG
   owner_changing();
 #endif
 

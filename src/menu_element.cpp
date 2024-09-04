@@ -68,6 +68,29 @@ bool menu_element::handle_key(uint16_t key) {
   case key_code::escape:
     application::do_quit_from_anywhere();
     return true;
+
+  case key_code::up:
+  case key_code::pgup:
+    m_selected_option = max<segsize_t>(m_selected_option, 1) - 1;
+    break;
+
+  case key_code::down:
+  case key_code::pgdown:
+    m_selected_option = min(m_selected_option + 1, m_menu_options.size() - 1);
+    break;
+
+  case key_code::home:
+    m_selected_option = 0;
+    break;
+
+  case key_code::end:
+    m_selected_option = m_menu_options.size() - 1;
+    break;
+
+  case key_code::right:
+  case key_code::enter:
+  case ' ':
+    break;
   }
   return false;
 }
@@ -75,6 +98,10 @@ bool menu_element::handle_key(uint16_t key) {
 bool menu_element::active() const { return true; }
 
 void menu_element::animate(anim_time_t delta_ms) {
+  if (m_selected_option != m_last_selected_option) {
+    request_repaint();
+    m_last_selected_option = m_selected_option;
+  }
   for (segsize_t i = 0; i < m_menu_options.size(); ++i) {
     m_menu_options[i].hide_transition.update(delta_ms);
     m_menu_options[i].show_transition.update(delta_ms);

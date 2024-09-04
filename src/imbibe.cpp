@@ -12,7 +12,7 @@
 
 #define logf_imbibe(...) disable_logf("IMBIBE: " __VA_ARGS__)
 
-#ifndef SIMULATE
+#if !BUILD_POSIX_SIM
 
 int harderr_handler(unsigned deverror, unsigned errcode,
                     unsigned __far *devhdr) {
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
 
-#ifndef SIMULATE
+#if !BUILD_POSIX_SIM
   // The DOS default is to show weird error prompts with questions like
   // "Abort, Retry, Ignore, Fail" when there are hardware errors like disk
   // read failures. We're not handling critical data where that prompt could
@@ -106,22 +106,14 @@ int main(int argc, char *argv[]) {
   application::run_loop();
   application::teardown();
 
-#ifdef NDEBUG
   resource_manager::teardown_exiting();
-#else
-  resource_manager::teardown();
-#endif
   timer::teardown();
-#ifdef NDEBUG
   imstring::teardown_exiting();
-#else
-  imstring::teardown();
-#endif
 
   return 0;
 }
 
-#ifdef SIMULATE
+#if BUILD_POSIX_SIM
 
 namespace sim {
 

@@ -30,7 +30,7 @@ void bitmap_element::set_fade(uint8_t n_fade) {
 void bitmap_element::paint(graphics *g) {
   logf_bitmap_element("paint element %p, fade %d, corner %04X\n", this, m_fade,
                       *m_b.data());
-#ifndef NDEBUG
+#if BUILD_DEBUG
   g->draw_rectangle(0, 0, frame().width(), frame().height(),
                     termel::from('!', color::hi_blue, color::red, true));
 #endif

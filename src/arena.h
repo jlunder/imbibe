@@ -5,7 +5,7 @@
 
 #include "memory.h"
 
-#ifdef SIMULATE
+#if BUILD_POSIX_SIM
 #include <vector>
 #endif
 
@@ -39,7 +39,7 @@ private:
 // inline void __far *operator new(size_t size, arena *mem) { return
 // mem->alloc(size); }
 
-// #if !defined(__WATCOMC__)
+// #if !BUILD_MSDOS_WATCOMC
 // // Not generally accessible; called by the compiler to cover up constructor
 // // exceptions thrown during allocation
 // inline void operator delete(void *p, arena *mem) { return mem->free(p); }
@@ -49,7 +49,7 @@ class with_arena {
 public:
   explicit with_arena(arena *n_cur) : m_saved_cur(arena::s_cur) {
     arena::s_cur = n_cur;
-#ifndef NDEBUG
+#if BUILD_DEBUG
     m_set_cur = n_cur;
 #endif
   }
@@ -60,7 +60,7 @@ public:
 
 private:
   arena *m_saved_cur;
-#ifndef NDEBUG
+#if BUILD_DEBUG
   arena *m_set_cur;
 #endif
 };
@@ -69,7 +69,7 @@ class with_temp_arena {
 public:
   explicit with_temp_arena(arena *n_temp) : m_saved_temp(arena::s_temp) {
     arena::s_temp = n_temp;
-#ifndef NDEBUG
+#if BUILD_DEBUG
     m_set_temp = n_temp;
 #endif
   }
@@ -80,7 +80,7 @@ public:
 
 private:
   arena *m_saved_temp;
-#ifndef NDEBUG
+#if BUILD_DEBUG
   arena *m_set_temp;
 #endif
 };
@@ -98,7 +98,7 @@ public:
   struct mark_t {
     segsize_t marked_top;
     segsize_t marked_live;
-#ifndef NDEBUG
+#if BUILD_DEBUG
     segsize_t marked_allocated;
 #endif
   };
@@ -110,7 +110,7 @@ public:
   virtual void free(void __far *p);
 
   mark_t mark() {
-#ifdef SIMULATE
+#if BUILD_POSIX_SIM
     mark_t result = {m_top, m_live_count, (segsize_t)m_allocated.size()};
 #else
     mark_t result = {m_top, m_live_count};
@@ -120,7 +120,7 @@ public:
   void reset(mark_t n_mark) {
     assert(n_mark.marked_top <= m_top);
     assert(n_mark.marked_live == m_live_count);
-#ifdef SIMULATE
+#if BUILD_POSIX_SIM
     assert(n_mark.marked_allocated < m_allocated.size());
     for (segsize_t i = n_mark.marked_allocated; i < m_allocated.size(); ++i) {
       assert(!m_allocated[i]);
@@ -140,7 +140,7 @@ private:
   segsize_t m_live_count;
   void __far *m_allocation;
   char const *m_name;
-#ifdef SIMULATE
+#if BUILD_POSIX_SIM
   std::vector<void *> m_allocated;
 #endif
 };

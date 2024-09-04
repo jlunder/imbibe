@@ -7,7 +7,7 @@
 window_element::window_element() {}
 
 void window_element::paint(graphics *g) {
-#ifndef NDEBUG
+#if BUILD_DEBUG
   assert(m_lock_count == 0);
 #endif
   for (element_list_iterator i = m_elements.begin(); i != m_elements.end();
@@ -28,7 +28,7 @@ void window_element::paint(graphics *g) {
 }
 
 void window_element::lock_repaint() {
-#ifndef NDEBUG
+#if BUILD_DEBUG
   ++m_lock_count;
 #endif
   assert(has_owner());
@@ -36,7 +36,7 @@ void window_element::lock_repaint() {
 }
 
 void window_element::unlock_repaint() {
-#ifndef NDEBUG
+#if BUILD_DEBUG
   --m_lock_count;
   assert(m_lock_count >= 0);
 #endif
@@ -63,7 +63,7 @@ void window_element::remove_element(element *e) {
     assert(i != m_elements.end());
   }
   m_elements.erase(i);
-#ifndef NDEBUG
+#if BUILD_DEBUG
   for (element_list_iterator j = m_elements.begin(); j != m_elements.end();
        ++j) {
     assert(j->ref != e);
@@ -82,7 +82,7 @@ void window_element::element_frame_changed(element *e, rect const &old_frame,
       assert(i != m_elements.end());
     }
     m_elements.erase(i);
-#ifndef NDEBUG
+#if BUILD_DEBUG
     for (element_list_iterator j = m_elements.begin(); j != m_elements.end();
          ++j) {
       assert(j->ref != e);

@@ -71,18 +71,20 @@ void __far *stack_arena::alloc(segsize_t size) {
   segsize_t result = m_top;
   m_top += size;
   ++m_live_count;
-#ifdef SIMULATE
+#if BUILD_MSDOS
+  return reinterpret_cast<void __far *>(m_seg + result);
+#elif BUILD_POSIX_SIM
   (void)result;
   void *p = ::malloc(size);
   m_allocated.push_back(p);
   return p;
 #else
-  return reinterpret_cast<void __far *>(m_seg + result);
+#error New platform support needed?
 #endif
 }
 
 void stack_arena::free(void __far *p) {
-#ifdef SIMULATE
+#if BUILD_POSIX_SIM
   bool found = false;
   for (std::vector<void *>::iterator i = m_allocated.begin();
        i != m_allocated.end(); ++i) {

@@ -1,11 +1,69 @@
 #ifndef __BASE_H_INCLUDED
 #define __BASE_H_INCLUDED
 
+#if defined(NDEBUG)
+#define BUILD_DEBUG 0
+#else
+#define BUILD_DEBUG 1
+#endif
+
 #if defined(__WATCOMC__)
+
 #define __STDC_LIMIT_MACROS
 #pragma warning 549 9
 #pragma warning 446 9
 #pragma warning 14 9
+
+#if !defined(M_I86) || !defined(MSDOS)
+#error Inconsistent (unsupported) platform macros defined
+#endif
+
+#define BUILD_MSDOS 1
+#define BUILD_MSDOS_GCC_IA16 0
+#define BUILD_MSDOS_WATCOMC 1
+#define BUILD_POSIX_SIM 0
+
+#elif defined(__ia16__)
+
+#if !defined(_M_I86)
+#error Inconsistent (unsupported) platform macros defined
+#endif
+
+#define BUILD_MSDOS 1
+#define BUILD_MSDOS_GCC_IA16 1
+#define BUILD_MSDOS_WATCOMC 0
+#define BUILD_POSIX_SIM 0
+
+#else
+
+#define BUILD_MSDOS 0
+#define BUILD_MSDOS_GCC_IA16 0
+#define BUILD_MSDOS_WATCOMC 0
+#define BUILD_POSIX_SIM 1
+
+#endif
+
+#if BUILD_POSIX_SIM
+
+#define BUILD_NEAR_DATA 0
+#define BUILD_FAR_DATA 0
+
+#elif (defined(__TINY__) || defined(__SMALL__) || defined(__MEDIUM__)) &&      \
+    !(defined(__COMPACT__) || defined(__LARGE__) || defined(__HUGE__))
+
+#define BUILD_NEAR_DATA 1
+#define BUILD_FAR_DATA 0
+
+#elif !(defined(__TINY__) || defined(__SMALL__) || defined(__MEDIUM__)) &&     \
+    (defined(__COMPACT__) || defined(__LARGE__) || defined(__HUGE__))
+
+#define BUILD_NEAR_DATA 0
+#define BUILD_FAR_DATA 1
+
+#else
+
+#error Pointer model platform macros not defined or not consistent
+
 #endif
 
 #include <assert.h>
@@ -13,11 +71,37 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#if defined(_M_I86) && !defined(M_I86)
+#define M_I86
+#define MSDOS
+#endif
+
 #if (defined(M_I86) && !defined(MSDOS)) || (!defined(M_I86) && defined(MSDOS))
 #error Inconsistent (unsupported) platform macros defined!
 #endif
 
-#if !defined(M_I86) || !defined(MSDOS)
+#if BUILD_MSDOS
+
+#include <conio.h>
+#include <dos.h>
+#include <i86.h>
+
+extern void failsafe_textmode();
+
+#pragma aux failsafe_textmode = "mov ax, 03h"                                  \
+                                "int 010h" modify[ax] nomemory
+
+// seemingly missing from dos.h??
+extern unsigned _dos_lseek(int handle, long offset, int whence,
+                           unsigned long __far *where);
+
+#define __packed__
+
+#define PRpF "%Fp"
+#define PRpN "%Np"
+#define PRp "%p"
+
+#elif BUILD_POSIX_SIM
 
 #define __near
 #define __far volatile
@@ -80,29 +164,8 @@ extern int _fstrcmp(char const __far *x, char const __far *y);
 extern size_t _fstrlen(char const __far *s);
 extern void _fmemcpy(void __far *dest, void const __far *src, size_t size);
 
-#define SIMULATE
-
 #else
-
-#include <conio.h>
-#include <dos.h>
-#include <i86.h>
-
-extern void failsafe_textmode();
-
-#pragma aux failsafe_textmode = "mov ax, 03h"                                  \
-                                "int 010h" modify[ax] nomemory
-
-// seemingly missing from dos.h??
-extern unsigned _dos_lseek(int handle, long offset, int whence,
-                           unsigned long __far *where);
-
-#define __packed__
-
-#define PRpF "%Fp"
-#define PRpN "%Np"
-#define PRp "%p"
-
+#error New platform support needed?
 #endif
 
 // #define __static_assert(con, id) static int assert_ ## id [2 * !!(con) - 1];

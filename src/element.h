@@ -46,7 +46,7 @@ private:
   window *m_owner;
   bool m_visible;
 
-#ifndef NDEBUG
+#if BUILD_DEBUG
   virtual void owner_changing() {}
 #endif
 };

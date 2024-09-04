@@ -23,11 +23,11 @@
 //   uint16_t s_first_free_ref;
 // }
 
-#ifndef SIMULATE
+#if !BUILD_POSIX_SIM
 __segment imstring::s_dynamic_seg;
 #endif
 
-#ifdef SIMULATE
+#if BUILD_POSIX_SIM
 bool imstring::is_dynamic(char const __far *str) {
   // TODO
   (void)str;
@@ -72,4 +72,7 @@ void imstring::teardown() {
 
 void imstring::teardown_exiting() {
   // do nothing, drop allocated memory on the floor
+#if BUILD_DEBUG
+  teardown();
+#endif
 }

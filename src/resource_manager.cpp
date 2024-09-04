@@ -59,7 +59,7 @@ void __far *data_from_reclaim_header(reclaim_header __far *header) {
 
 } // namespace resource_manager
 
-// #ifndef SIMULATE
+// #if !BUILD_POSIX_SIM
 #if 0
 
 extern hash_t asm_fletcher16_str(char const __far * s);
@@ -90,7 +90,7 @@ extern hash_t asm_fletcher16_str(char const __far * s);
 #endif
 
 resource_manager::hash_t resource_manager::fletcher16_str(char const __far *s) {
-#if 1 // !defined(NDEBUG) || defined(SIMULATE)
+#if 1 // BUILD_DEBUG || BUILD_POSIX_SIM
   uint16_t s1 = 0;
   uint16_t s2 = 0;
   for (char const __far *p = s; *p; ++p) {
@@ -107,12 +107,14 @@ resource_manager::hash_t resource_manager::fletcher16_str(char const __far *s) {
   }
   return (s2 << 8) | s1;
 #endif
-  // #ifdef SIMULATE
-  //   return (s2 << 8) | s1;
-  // #else
+  // #if BUILD_MSDOS
   //   uint16_t result = asm_fletcher16_str(s);
   //   assert(result == ((s2 << 8) | s1));
   //   return result;
+  // #elif BUILD_POSIX_SIM
+  //   return (s2 << 8) | s1;
+  // #else
+  // #error New platform support needed?
   // #endif
 }
 
@@ -137,7 +139,7 @@ void resource_manager::teardown() {
 
 void resource_manager::teardown_exiting() {
   // it's okay to leak everything here
-#ifndef NDEBUG
+#if BUILD_DEBUG
   teardown();
 #endif
 }
@@ -337,7 +339,7 @@ void resource_manager::reclaim_loaded_data(void __far *data) {
   segsize_t index = header->index;
   index_entry &entry = s_index[index];
 
-#ifndef NDEBUG
+#if BUILD_DEBUG
   header->index = s_empty_index;
 #endif
 
@@ -414,7 +416,7 @@ void resource_manager::reclaim_loaded_data(void __far *data) {
 
   (reinterpret_cast<bitmap *>(header + 1))->~bitmap();
 
-#ifndef NDEBUG
+#if BUILD_DEBUG
   header->index = s_empty_index;
   header->name = NULL;
 #endif

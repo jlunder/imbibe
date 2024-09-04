@@ -101,7 +101,7 @@ public:
       aux_vector::destroy<T>(m_data, m_size);
       aux_vector::free<T>(m_data);
     }
-#ifndef NDEBUG
+#if BUILD_DEBUG
     m_data = NULL;
 #endif
   }

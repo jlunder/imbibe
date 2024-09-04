@@ -32,7 +32,7 @@ extern void set_cursor_style(uint8_t visible, uint8_t start_row,
 
 } // namespace aux_text_window
 
-#ifndef SIMULATE
+#if !BUILD_POSIX_SIM
 
 /*
   "   mov     ah, 003h          " \
@@ -172,7 +172,7 @@ void text_window::repaint(rect const &r) {
   }
 
   if (m_lock_count == 0) {
-#ifndef NDEBUG
+#if BUILD_DEBUG
     // Make a hideous background to highlight unpainted areas
     static termel_t const ugly_px =
         termel::from('x', color::hi_cyan, color::hi_magenta);

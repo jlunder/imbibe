@@ -21,7 +21,7 @@ typedef uint16_t segsize_t;
 typedef int16_t segdiff_t;
 
 inline void const __far *normalize_segmented(void const __far *p) {
-#ifdef SIMULATE
+#if BUILD_POSIX_SIM
   void const __far *norm_p = p;
 #else
   void const __far *norm_p =
@@ -39,7 +39,7 @@ inline void __far *normalize_segmented(void __far *p) {
 
 inline void const __far *denormalize_segmented(__segment orig_seg,
                                                void const __far *norm_p) {
-#ifdef SIMULATE
+#if BUILD_POSIX_SIM
   void const __far *p = norm_p;
 #else
   void const __far *p =
@@ -164,43 +164,5 @@ template <class T> bool operator==(__segment x, segp<T> y) {
 template <class T> bool operator!=(__segment x, segp<T> y) {
   return x != y.seg();
 }
-
-#if 0
-
-namespace shared_manager {
-
-segsize_t alloc_shared_handle();
-void ref(segsize_t handle);
-bool unref(segsize_t handle);
-
-} // namespace shared_manager
-
-template <class T> class default_shared_traits {
-public:
-  typedef segsize_t handle_type;
-  static void ref() {}
-  static void unref() {}
-};
-
-template <class T> class shared_traits : public default_shared_traits<T> {};
-
-template <class T, class Traits = shared_traits<T> > class shared {};
-
-#if defined(M_I86)
-
-// template <class T, size_t size> class array {
-// public:
-// };
-
-#else
-
-// template <class T, size_t size> class array {
-// public:
-//   T const &
-// };
-
-#endif
-
-#endif
 
 #endif // __PTR_H_INCLUDED
