@@ -54,15 +54,19 @@ public:
 
   tbm_header const __far &header() const {
     assert(valid());
-    return *(tbm_header const __far *)((iff_header const __far *)m_raw.data() +
-                                       1);
+    return *reinterpret_cast<tbm_header const __far *>(
+        reinterpret_cast<iff_header const __far *>(m_raw.data()) + 1);
   }
-  void const __far *data() const { return (void const __far *)(&header() + 1); }
+  void const __far *data() const {
+    return reinterpret_cast<void const __far *>(&header() + 1);
+  }
   unpacker data_unpacker() const {
     assert(valid());
-    iff_header const __far *ih = (iff_header const __far *)m_raw.data();
-    tbm_header const __far *th = (tbm_header const __far *)(ih + 1);
-    return unpacker((void const __far *)(th + 1),
+    iff_header const __far *ih =
+        reinterpret_cast<iff_header const __far *>(m_raw.data());
+    tbm_header const __far *th =
+        reinterpret_cast<tbm_header const __far *>(ih + 1);
+    return unpacker(reinterpret_cast<void const __far *>(th + 1),
                     (segsize_t)(ih->data_size - sizeof(tbm_header)));
   }
 

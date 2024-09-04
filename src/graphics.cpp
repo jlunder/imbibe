@@ -149,8 +149,9 @@ bool prepare_plain_tbm_transform_params(graphics *g, tbm const &t, coord_t x,
                                         coord_t y, coord_t width,
                                         coord_t height,
                                         bitmap_transform_params &p) {
-  if (!p.compute_transform(g, x, y, width, height,
-                           (const termel_t *)t.data())) {
+  if (!p.compute_transform(
+          g, x, y, width, height,
+          reinterpret_cast<const termel_t __far *>(t.data()))) {
     return false;
   }
 
@@ -192,7 +193,8 @@ void draw_rle_tbm(graphics *g, aux_graphics::clip_params const &p, tbm const &t,
                   TLineOp op) {
   unpacker d(t.data_unpacker());
   uint16_t const __far *lines = d.unpack_array<uint16_t>(p.source.y1);
-  termel_t __far *dest_p = g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
+  termel_t __far *dest_p =
+      g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
   uint16_t dest_stride = g->b()->width();
   for (coord_t i = p.source.y1; i < p.source.y2; ++i) {
     if (lines[i] == 0) {
@@ -235,7 +237,8 @@ void draw_mask_rle_tbm(graphics *g, aux_graphics::clip_params const &p,
                        tbm const &t, TLineOp op) {
   unpacker d(t.data_unpacker());
   uint16_t const __far *lines = d.unpack_array<uint16_t>(p.source.y1);
-  termel_t __far *dest_p = g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
+  termel_t __far *dest_p =
+      g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
   uint16_t dest_stride = g->b()->width();
   for (coord_t i = p.source.y1; i < p.source.y2; ++i) {
     if (lines[i] == 0) {
@@ -319,7 +322,7 @@ void graphics::leave_subregion(subregion_state const *restore) {
                 m_clip.y2);
 }
 
-void graphics::draw_rectangle(rect const & r, termel_t p) {
+void graphics::draw_rectangle(rect const &r, termel_t p) {
   assert(m_clip.x1 >= 0);
   assert(m_clip.y1 >= 0);
   assert(m_clip.reasonable());

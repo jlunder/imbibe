@@ -14,11 +14,11 @@
 
 namespace aux_text_window {
 
-static const coord_t s_screen_width = 80;
-static const coord_t s_screen_height = 25;
-static const uint8_t s_text_mode_color_80_25 = 3;
-static const termel_t __far *s_screen_buffer =
-    (termel_t __far *)MK_FP(0xB800, (void *)0);
+static coord_t const s_screen_width = 80;
+static coord_t const s_screen_height = 25;
+static uint8_t const s_text_mode_color_80_25 = 3;
+static termel_t __far *const s_screen_buffer =
+    reinterpret_cast<termel_t __far *>(MK_FP(0xB800, 0));
 
 enum {
   cursor_visible = 0x00,
@@ -49,7 +49,7 @@ struct asm_video_details {
   uint8_t pad;
 };
 
-extern "C" asm_video_details asm_bios_get_video_details();
+extern asm_video_details asm_bios_get_video_details();
 #pragma aux asm_bios_get_video_details =                                       \
     "   mov ah, 00Fh              "                                            \
     "   push    bp                "                                            \
@@ -257,19 +257,21 @@ void text_window::present_copy(termel_t const __far *backbuffer, coord_t width,
 
   logf_text_window(
       "present_copy region (%d,%d-%d,%d) to " PRpF ", corner %04X -> %04X\n",
-      x1, y1, x2, y2, (void __far *)aux_text_window::s_screen_buffer,
+      x1, y1, x2, y2,
+      reinterpret_cast<void __far *>(aux_text_window::s_screen_buffer),
       *backbuffer, *aux_text_window::s_screen_buffer);
 
   coord_t i;
   coord_t bytes_per_line = r.width() * sizeof(termel_t);
   coord_t lines = min(r.y2, height) - min(r.y1, height);
-  uint8_t const *source_p = (uint8_t const *)(backbuffer + r.y1 * width + r.x1);
-  uint8_t *dest_p =
-      (uint8_t *)(aux_text_window::s_screen_buffer + r.y1 * width + r.x1);
+  uint8_t const __far *source_p =
+      reinterpret_cast<uint8_t const __far *>(backbuffer + r.y1 * width + r.x1);
+  uint8_t __far *dest_p = reinterpret_cast<uint8_t __far *>(
+      aux_text_window::s_screen_buffer + r.y1 * width + r.x1);
   uint16_t stride = width * sizeof(termel_t);
 
   for (i = 0; i < lines; ++i) {
-    memcpy(dest_p, source_p, bytes_per_line);
+    _fmemcpy(dest_p, source_p, bytes_per_line);
     dest_p += stride;
     source_p += stride;
   }

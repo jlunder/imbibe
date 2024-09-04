@@ -29,8 +29,9 @@ tbm::tbm(immutable const &n_raw, segsize_t raw_size) : m_raw(n_raw) {
     return;
   }
   assert(raw_size >= sizeof(iff_header));
-  assert(((iff_header const __far *)m_raw.data())->data_size <=
-         raw_size - sizeof(iff_header));
+  assert(
+      (reinterpret_cast<iff_header const __far *>(m_raw.data()))->data_size <=
+      raw_size - sizeof(iff_header));
 }
 
 bool tbm_aux::validate(unpacker const &tbm_data) {

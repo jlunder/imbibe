@@ -32,12 +32,12 @@ void __far *c_arena::alloc(segsize_t size) {
   return result;
 }
 
-void c_arena::free(void const __far *p) {
+void c_arena::free(void __far *p) {
   assert(p != NULL);
-  ::_ffree((void *)p);
+  ::_ffree(p);
 }
 
-stack_arena::stack_arena(segsize_t n_capacity, char const __far *n_name) {
+stack_arena::stack_arena(segsize_t n_capacity, char const *n_name) {
   assert(n_capacity > 0);
   m_allocation = ::_fmalloc(n_capacity + PAGE_SIZE - 1);
   segsize_t overshoot_offset = FP_OFF(m_allocation) + PAGE_SIZE - 1;
@@ -77,11 +77,11 @@ void __far *stack_arena::alloc(segsize_t size) {
   m_allocated.push_back(p);
   return p;
 #else
-  return (void __far *)(m_seg + result);
+  return reinterpret_cast<void __far *>(m_seg + result);
 #endif
 }
 
-void stack_arena::free(void const __far *p) {
+void stack_arena::free(void __far *p) {
 #ifdef SIMULATE
   bool found = false;
   for (std::vector<void *>::iterator i = m_allocated.begin();
@@ -94,7 +94,7 @@ void stack_arena::free(void const __far *p) {
   if (!found) {
     abortf("Free in arena '%s' not allocated there (or already freed)", m_name);
   }
-  ::free((void *)p);
+  ::free(const_cast<void *>(p));
 #else
   assert((__segment)FP_SEG(p) == m_seg);
   assert((segsize_t)FP_OFF(p) < m_top);

@@ -17,7 +17,7 @@ LINK_OPT = $(LINK_OPT_$(VERSION))
 LINK = wlink
 
 CC_OPT_RELEASE = -dNDEBUG -otaeilh -ms
-CC_OPT_DEBUG = -d2 -osaeih -ml
+CC_OPT_DEBUG = -d2 -osaeih -mm
 CC_OPT_PROFILE = $(CC_OPT_RELEASE) -d1
 CC_OPT = $(CC_OPT_$(VERSION)) -2 -bt=dos -fpc -w5 -ze
 
@@ -116,33 +116,33 @@ $(OBJ_DIR)u_imbibe.lnk: Makefile | $(OBJ_DIR)
 uc = $(shell echo $(1) | tr a-z A-Z)
 
 
-$(OBJ_DIR)%.exe: private UPPER_TGT = $(@D)/$(call uc,$(@F))
-$(OBJ_DIR)%.exe: private LINK_LOG = $(@D)/l_$(patsubst %.exe,%.log,$(@F))
-$(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(IMBIBE_OBJS) Makefile
-	rm -f $@
-	cd workspace && \
-	  $(DOSBOX_BUILD) \
-	    -c "S:" \
-	    -c "$(LINK) @$< > $(LINK_LOG)" \
-	    -c "exit"
-	mv $(UPPER_TGT) $@
-
 # $(OBJ_DIR)%.exe: private UPPER_TGT = $(@D)/$(call uc,$(@F))
-# $(OBJ_DIR)%.exe: private UNITY_SRC = $(@D)/u_$(patsubst %.exe,%.cpp,$(@F))
-# $(OBJ_DIR)%.exe: private UNITY_LOG = $(@D)/u_$(patsubst %.exe,%.log,$(@F))
-# $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)u_imbibe.lnk $(OBJ_DIR)u_imbibe.cpp | $(OBJ_DIR)
+# $(OBJ_DIR)%.exe: private LINK_LOG = $(@D)/l_$(patsubst %.exe,%.log,$(@F))
+# $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(IMBIBE_OBJS) Makefile
 # 	rm -f $@
-# 	rm -f $(OBJ_DIR)*.OBJ
-# 	TEMP_OBJ=$(OBJ_DIR)`mktemp -u -p . ~XXXXXX.obj | cut -c 3- | tr a-z A-Z` ; \
-# 	  ( cd workspace && \
-# 	    $(DOSBOX_BUILD) \
-# 	      -c "S:" \
-# 	      -c "$(CC) $(CC_OPT) -fo=$$TEMP_OBJ $(UNITY_SRC) > $(UNITY_LOG)" \
-# 	      -c "move $$TEMP_OBJ $(OBJ_DIR)u_imbibe.obj" \
-# 	      -c "$(LINK) @$< > $(LINK_LOG)" \
-# 	      -c "wdis $(patsubst %.cpp,%.obj,$(UNITY_SRC)) -s -l=$(patsubst %.cpp,%.lst,$(UNITY_SRC)) >> $(UNITY_LOG)" \
-# 	      -c "exit" )
+# 	cd workspace && \
+# 	  $(DOSBOX_BUILD) \
+# 	    -c "S:" \
+# 	    -c "$(LINK) @$< > $(LINK_LOG)" \
+# 	    -c "exit"
 # 	mv $(UPPER_TGT) $@
+
+$(OBJ_DIR)%.exe: private UPPER_TGT = $(@D)/$(call uc,$(@F))
+$(OBJ_DIR)%.exe: private UNITY_SRC = $(@D)/u_$(patsubst %.exe,%.cpp,$(@F))
+$(OBJ_DIR)%.exe: private UNITY_LOG = $(@D)/u_$(patsubst %.exe,%.log,$(@F))
+$(OBJ_DIR)imbibe.exe: $(OBJ_DIR)u_imbibe.lnk $(OBJ_DIR)u_imbibe.cpp | $(OBJ_DIR)
+	rm -f $@
+	rm -f $(OBJ_DIR)*.OBJ
+	TEMP_OBJ=$(OBJ_DIR)`mktemp -u -p . ~XXXXXX.obj | cut -c 3- | tr a-z A-Z` ; \
+	  ( cd workspace && \
+	    $(DOSBOX_BUILD) \
+	      -c "S:" \
+	      -c "$(CC) $(CC_OPT) -fo=$$TEMP_OBJ $(UNITY_SRC) > $(UNITY_LOG)" \
+	      -c "move $$TEMP_OBJ $(OBJ_DIR)u_imbibe.obj" \
+	      -c "$(LINK) @$< > $(LINK_LOG)" \
+	      -c "wdis $(patsubst %.cpp,%.obj,$(UNITY_SRC)) -s -l=$(patsubst %.cpp,%.lst,$(UNITY_SRC))" \
+	      -c "exit" )
+	mv $(UPPER_TGT) $@
 
 
 $(OBJ_DIR)%.obj: private CC_LOG = $(patsubst %.obj,%.log,$@)
@@ -153,7 +153,7 @@ $(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp $(SIM_OBJ_DIR)%.o Makefile | $(OBJ_DIR)
 	    $(DOSBOX_BUILD) \
 	      -c "S:" \
 	      -c "$(CC) $(CC_OPT) -fo=$$TEMP_OBJ $< > $(CC_LOG)" \
-	      -c "wdis $$TEMP_OBJ -s -l=$(patsubst %.obj,%.lst,$@) >> $(CC_LOG)" \
+	      -c "wdis $$TEMP_OBJ -s -l=$(patsubst %.obj,%.lst,$@)" \
 	      -c "exit" && \
 	    cd .. && \
 		mv "$$TEMP_OBJ" "$@" )

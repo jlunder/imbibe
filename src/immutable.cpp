@@ -158,7 +158,7 @@ void immutable::unref() {
 #endif
     logf_immutable("Reclaim " PRpF " denorm to " PRpF ", index %u\n", norm_p, p,
                    m_index);
-    tracking.reclaimer((void __far *)p);
+    tracking.reclaimer(const_cast<void __far *>(p));
 
     // Add the index entry back into the unrefd chain
     tracking.reclaimer = NULL;

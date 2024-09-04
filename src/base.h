@@ -29,21 +29,15 @@
 #define __based(o)
 #define __segment uintptr_t
 #define __segname(n)
-// __segname gets the named segment -- probably "_CODE", "_CONST", "_DATA"
+// __segname gets the named segment -- probably "_TEXT", "_CONST", "_DATA"
 #define __self
 
-/*
-#define FP_SEG(p) (((uintptr_t)(p) & ~0xFFF) >> 4)
-#define FP_OFF(p) ((uintptr_t)(p) & 0xFFF)
-#define MK_FP(s, o) \
-  ((uintptr_t)s == 0xB800 ? (void *)dummy_screen \
-    : (void *)(((uintptr_t)(s) << 4) + (uintptr_t)(o)))
-*/
-#define FP_SEG(p) ((uintptr_t)(p) & ~0xFLLU)
-#define FP_OFF(p) ((uintptr_t)(p) & 0xFLLU)
+#define FP_SEG(p) (reinterpret_cast<uintptr_t>(p) & ~0xFLLU)
+#define FP_OFF(p) (reinterpret_cast<uintptr_t>(p) & 0xFLLU)
 #define MK_FP(s, o)                                                            \
-  ((uintptr_t)(s) == 0xB800 ? (void *)(sim::dummy_screen)                      \
-                            : (void *)((uintptr_t)(s) + (uintptr_t)(o)))
+  ((uintptr_t)(s) == 0xB800                                                    \
+       ? reinterpret_cast<void __far *>(sim::dummy_screen)                     \
+       : reinterpret_cast<void __far *>((uintptr_t)(s) + (uintptr_t)(o)))
 
 #define PRpF "%p"
 #define PRpN "%p"

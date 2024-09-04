@@ -74,9 +74,7 @@ public:
     return !operator bool();
   }
 
-  void const __far *data() const {
-    return MK_FP(m_seg, (void *)(uintptr_t)m_ofs);
-  }
+  void const __far *data() const { return MK_FP(m_seg, m_ofs); }
 
 private:
   __segment m_seg;
@@ -96,8 +94,10 @@ private:
     }
   }
 
-  uint32_t handle() const { return *(uint32_t *)this; }
-  void set_handle(uint32_t n_handle) { *(uint32_t *)this = n_handle; }
+  uint32_t handle() const { return *reinterpret_cast<uint32_t const *>(this); }
+  void set_handle(uint32_t n_handle) {
+    *reinterpret_cast<uint32_t *>(this) = n_handle;
+  }
 #endif
 
   friend class weak_immutable;
@@ -166,8 +166,10 @@ private:
   uint8_t m_ofs;
 
 #ifdef M_I86
-  uint32_t handle() const { return *(uint32_t *)this; }
-  void set_handle(uint32_t n_handle) { *(uint32_t *)this = n_handle; }
+  uint32_t handle() const { return *reinterpret_cast<uint32_t const *>(this); }
+  void set_handle(uint32_t n_handle) {
+    *reinterpret_cast<uint32_t *>(this) = n_handle;
+  }
 #endif
 };
 

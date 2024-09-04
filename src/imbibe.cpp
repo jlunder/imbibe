@@ -228,7 +228,7 @@ void _chain_intr(void (*int_handler)()) {
 
 unsigned _dos_open(char const __far *path, unsigned mode, int __far *handle) {
   assert(handle);
-  *handle = open((char const *)path, mode);
+  *handle = open(const_cast<char const *>(path), mode);
   if (*handle < 0) {
     return 1;
   }
@@ -245,7 +245,7 @@ unsigned _dos_read(int handle, void __far *buf, unsigned count,
                    unsigned __far *bytes) {
   assert(handle >= 0);
   assert(buf);
-  ssize_t amount = read(handle, (void *)buf, count);
+  ssize_t amount = read(handle, const_cast<void *>(buf), count);
   if (amount < 0) {
     return 1;
   }
@@ -266,14 +266,15 @@ unsigned _dos_lseek(int handle, long offset, int whence,
 
 void __far *_fmalloc(size_t size) {
   assert(size > 0);
-  size_t *header_p = (size_t *)::malloc(size + sizeof(size_t));
+  size_t *header_p =
+      reinterpret_cast<size_t *>(::malloc(size + sizeof(size_t)));
   *header_p = size;
-  return (void __far *)(header_p + 1);
+  return reinterpret_cast<void __far *>(header_p + 1);
 }
 
 void __far *_fexpand(void __far *p, size_t size) {
   assert(p);
-  size_t *header_p = (size_t *)p - 1;
+  size_t *header_p = reinterpret_cast<size_t *>(const_cast<void *>(p)) - 1;
   assert(size <= *header_p);
   if (size > *header_p) {
     return NULL;
@@ -284,18 +285,20 @@ void __far *_fexpand(void __far *p, size_t size) {
 
 void _ffree(void __far *p) {
   assert(p);
-  size_t *header_p = (size_t *)p - 1;
+  size_t *header_p = reinterpret_cast<size_t *>(const_cast<void *>(p)) - 1;
   ::free(header_p);
 }
 
 int _fstrcmp(char const __far *x, char const __far *y) {
-  return strcmp((char const *)x, (char const *)y);
+  return strcmp(const_cast<char const *>(x), const_cast<char const *>(y));
 }
 
-size_t _fstrlen(char const __far *s) { return strlen((char const *)s); }
+size_t _fstrlen(char const __far *s) {
+  return strlen(const_cast<char const *>(s));
+}
 
 void _fmemcpy(void __far *dest, void const __far *src, size_t size) {
-  memcpy((void *)dest, (void const *)src, size);
+  memcpy(const_cast<void *>(dest), const_cast<void const *>(src), size);
 }
 
 #else

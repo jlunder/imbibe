@@ -7,15 +7,18 @@ class unpacker {
 public:
   unpacker() : m_seg(0) {}
   explicit unpacker(void const __far *n_ptr, segsize_t n_size)
-      : m_base((uint8_t const __near *)FP_OFF(n_ptr)),
-        m_end((uint8_t const __near *)(FP_OFF(n_ptr) + n_size)),
-        m_cur((uint8_t const __near *)FP_OFF(n_ptr)), m_seg(FP_SEG(n_ptr)) {
+      : m_base(reinterpret_cast<uint8_t const __near *>(FP_OFF(n_ptr))),
+        m_end(reinterpret_cast<uint8_t const __near *>(FP_OFF(n_ptr) + n_size)),
+        m_cur(reinterpret_cast<uint8_t const __near *>(FP_OFF(n_ptr))),
+        m_seg(FP_SEG(n_ptr)) {
     assert(m_end >= m_base);
     assert(m_end - m_base == n_size);
     assert(&m_seg[m_base + n_size / 2] == &m_seg[m_base] + n_size / 2);
   }
 
-  void const __far *base() { return (void const __far *)&m_seg[m_base]; }
+  void const __far *base() {
+    return reinterpret_cast<void const __far *>(&m_seg[m_base]);
+  }
 
   segsize_t size() const { return m_end - m_base; }
 
@@ -40,20 +43,20 @@ public:
 
   template <class T> T const __far &peek() const {
     assert(sizeof(T) < remain());
-    return *(T const __far *)&m_seg[m_cur];
+    return *reinterpret_cast<T const __far *>(&m_seg[m_cur]);
   }
 
   template <class T> T const __far *peek_array() const {
-    return (T const __far *)&m_seg[m_cur];
+    return reinterpret_cast<T const __far *>(&m_seg[m_cur]);
   }
 
   template <class T> T const __far *peek_array(segsize_t count) const {
     assert(sizeof(T) * (uint32_t)count <= remain());
-    return (T const __far *)&m_seg[m_cur];
+    return reinterpret_cast<T const __far *>(&m_seg[m_cur]);
   }
 
   void const __far *peek_untyped() const {
-    return (void const __far *)&m_seg[m_cur];
+    return reinterpret_cast<void const __far *>(&m_seg[m_cur]);
   }
 
   void const __far *peek_untyped(segsize_t sz) const {
@@ -86,21 +89,21 @@ public:
 
   template <class T> T const __far &unpack() {
     assert(sizeof(T) <= remain());
-    T const __far *p = (T const __far *)&m_seg[m_cur];
+    T const __far *p = reinterpret_cast<T const __far *>(&m_seg[m_cur]);
     m_cur += sizeof(T);
     return *p;
   }
 
   template <class T> T const __far *unpack_array(segsize_t count) {
     assert(sizeof(T) * (uint32_t)count <= remain());
-    T const __far *p = (T const __far *)&m_seg[m_cur];
+    T const __far *p = reinterpret_cast<T const __far *>(&m_seg[m_cur]);
     m_cur += sizeof(T) * count;
     return p;
   }
 
   void const __far *unpack_untyped(segsize_t sz) {
     assert(sz <= remain());
-    void const __far *p = (void const __far *)&m_seg[m_cur];
+    void const __far *p = reinterpret_cast<void const __far *>(&m_seg[m_cur]);
     m_cur += sz;
     return p;
   }

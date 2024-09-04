@@ -13,18 +13,18 @@ class arena {
 public:
   virtual ~arena() {}
   virtual void __far *alloc(segsize_t sz) = 0;
-  virtual void free(void const __far *p) = 0;
+  virtual void free(void __far *p) = 0;
 
   static arena *cur() { return s_cur; }
   static arena *temp() { return s_temp; }
   static arena *c() { return s_c; }
 
   static void __far *cur_alloc(segsize_t size) { return s_cur->alloc(size); }
-  static void cur_free(void const __far *p) { s_cur->free(p); }
+  static void cur_free(void __far *p) { s_cur->free(p); }
   static void __far *temp_alloc(segsize_t size) { return s_temp->alloc(size); }
-  static void temp_free(void const __far *p) { s_temp->free(p); }
+  static void temp_free(void __far *p) { s_temp->free(p); }
   static void __far *c_alloc(segsize_t size) { return s_c->alloc(size); }
-  static void c_free(void const __far *p) { s_c->free(p); }
+  static void c_free(void __far *p) { s_c->free(p); }
 
 private:
   static arena *s_cur;
@@ -90,7 +90,7 @@ public:
   c_arena();
   virtual ~c_arena();
   virtual void __far *alloc(segsize_t sz);
-  virtual void free(void const __far *p);
+  virtual void free(void __far *p);
 };
 
 class stack_arena : public arena {
@@ -104,10 +104,10 @@ public:
   };
 
   stack_arena() : m_seg(0), m_name("<uninit>") {}
-  explicit stack_arena(segsize_t n_capacity, char const __far *n_name);
+  explicit stack_arena(segsize_t n_capacity, char const *n_name);
   virtual ~stack_arena();
   virtual void __far *alloc(segsize_t size);
-  virtual void free(void const __far *p);
+  virtual void free(void __far *p);
 
   mark_t mark() {
 #ifdef SIMULATE
@@ -139,7 +139,7 @@ private:
   segsize_t m_capacity;
   segsize_t m_live_count;
   void __far *m_allocation;
-  char const __far *m_name;
+  char const *m_name;
 #ifdef SIMULATE
   std::vector<void *> m_allocated;
 #endif

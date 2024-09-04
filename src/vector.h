@@ -8,7 +8,7 @@
 namespace aux_vector {
 template <class T> inline T *allocate(uint_fast16_t n) {
   assert(n > 0);
-  T *p = (T *)::malloc(n * sizeof(T));
+  T *p = reinterpret_cast<T *>(::malloc(n * sizeof(T)));
   assert(p);
   return p;
 }

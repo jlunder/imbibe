@@ -50,11 +50,11 @@ void __far *load_data_from_file(imstring const &name, segsize_t *out_size);
 void reclaim_loaded_data(void __far *data);
 
 reclaim_header __far *reclaim_header_from_data(void __far *data) {
-  return (reclaim_header __far *)data - 1;
+  return reinterpret_cast<reclaim_header __far *>(data) - 1;
 }
 
 void __far *data_from_reclaim_header(reclaim_header __far *header) {
-  return (void __far *)(header + 1);
+  return reinterpret_cast<void __far *>(header + 1);
 }
 
 } // namespace resource_manager
@@ -271,8 +271,8 @@ void __far *resource_manager::load_data_from_file(imstring const &name,
     if (size == 0) {
       goto fail_return;
     }
-    reclaim_header __far *header = (reclaim_header __far *)arena::c_alloc(
-        (segsize_t)(sizeof(reclaim_header) + size));
+    reclaim_header __far *header = reinterpret_cast<reclaim_header __far *>(
+        arena::c_alloc((segsize_t)(sizeof(reclaim_header) + size)));
     if (header == NULL) {
       goto fail_return;
     }
@@ -374,7 +374,7 @@ im_ptr<tbm> resource_manager::fetch_tbm(imstring const &name) {
     if (!entry.resource) {
       logf_resource_manager("  !entry.resource\n");
       reclaim_header __far *header =
-          (reclaim_header __far *)::_fmalloc(sizeof(reclaim_header) + sizeof(bitmap));
+          reinterpret_cast<reclaim_header __far *>(::_fmalloc(sizeof(reclaim_header) + sizeof(bitmap)));
       logf_resource_manager("  header = "PRpF", .name = %s, .index = %u\n", header,
                             name.c_str(), (unsigned)index);
       header->name = name.c_str();
@@ -385,21 +385,21 @@ im_ptr<tbm> resource_manager::fetch_tbm(imstring const &name) {
       logf_resource_manager("  converting data at "PRpF" (%u bytes)\n", entry.data,
                             (unsigned)entry.size);
       tbm::to_bitmap(unpacker(entry.data, entry.size),
-                     *(bitmap *)entry.resource);
+                     *reinterpret_cast<bitmap *>(entry.resource));
       logf_resource_manager("  conversion complete: %d x %d\n",
-                            (int)((bitmap *)entry.resource)->width(),
-                            (int)((bitmap *)entry.resource)->height());
+                            (int)(reinterpret_cast<bitmap *>(entry.resource))->width(),
+                            (int)(reinterpret_cast<bitmap *>(entry.resource))->height());
       assert(entry.resource);
     }
     i = s_loaded_resources.insert(loaded_resources_map::value_type(
-        name, im_ptr<bitmap>(reclaim_loaded_data, (bitmap *)entry.resource)));
+        name, im_ptr<bitmap>(reclaim_loaded_data, reinterpret_cast<bitmap *>(entry.resource))));
     assert(i != s_loaded_resources.end());
   }
   return i->ref;
 }
 
 void resource_manager::reclaim_loaded_data(void __far *data) {
-  reclaim_header __far *header = ((reclaim_header __far *)data) - 1;
+  reclaim_header __far *header = (reinterpret_cast<reclaim_header __far *>(data)) - 1;
   assert(header->index < s_index.size());
 
   char const *name = header->name;
@@ -409,10 +409,10 @@ void resource_manager::reclaim_loaded_data(void __far *data) {
   logf_resource_manager(
       "reclaim_loaded_data "PRpF": header="PRpF", entry.resource="PRpF", .name=%s\n", data,
       header, entry.resource, entry.name.c_str());
-  assert((void *)entry.resource == data);
+  assert(reinterpret_cast<void *>(entry.resource) == data);
   assert(entry.name == imstring(name));
 
-  ((bitmap *)(header + 1))->~bitmap();
+  (reinterpret_cast<bitmap *>(header + 1))->~bitmap();
 
 #ifndef NDEBUG
   header->index = s_empty_index;
@@ -420,7 +420,7 @@ void resource_manager::reclaim_loaded_data(void __far *data) {
 #endif
 
   ::ffree(header);
-  ::ffree((void *)entry.data);
+  ::ffree(reinterpret_cast<void __far *>(entry.data));
 
   entry.resource = NULL;
   entry.data = NULL;

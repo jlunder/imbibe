@@ -38,8 +38,8 @@ bitmap &bitmap::assign(coord_t n_width, coord_t n_height) {
          (uint32_t)UINT16_MAX - 31);
   m_width = n_width;
   m_height = n_height;
-  m_data =
-      (termel_t __far *)::arena::c_alloc(n_width * n_height * sizeof(termel_t));
+  m_data = reinterpret_cast<termel_t __far *>(
+      ::arena::c_alloc(n_width * n_height * sizeof(termel_t)));
   assert(m_data);
   assert(!immutable());
 
@@ -68,7 +68,7 @@ bitmap &bitmap::assign(coord_t n_width, coord_t n_height,
   assert_margin(n_height, COORD_MAX);
   m_width = n_width;
   m_height = n_height | 0x8000;
-  m_data = (termel_t *)n_data;
+  m_data = const_cast<termel_t __far *>(n_data);
 
   return *this;
 }
@@ -87,7 +87,7 @@ bitmap &bitmap::assign(bitmap const &n_bitmap) {
     assert(immutable());
   } else {
     m_data =
-        (termel_t __far *)arena::c_alloc(m_width * m_height * sizeof(termel_t));
+        reinterpret_cast<termel_t __far *>(arena::c_alloc(m_width * m_height * sizeof(termel_t)));
     assert(m_data);
     _fmemcpy(m_data, n_bitmap.m_data, m_width * m_height * sizeof(termel_t));
     assert(!immutable());

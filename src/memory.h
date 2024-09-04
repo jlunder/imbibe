@@ -33,7 +33,8 @@ inline void const __far *normalize_segmented(void const __far *p) {
 }
 
 inline void __far *normalize_segmented(void __far *p) {
-  return (void __far *)normalize_segmented((void const __far *)p);
+  return const_cast<void __far *>(
+      normalize_segmented(reinterpret_cast<void const __far *>(p)));
 }
 
 inline void const __far *denormalize_segmented(__segment orig_seg,
@@ -52,15 +53,15 @@ inline void const __far *denormalize_segmented(__segment orig_seg,
 
 inline void __far *denormalize_segmented(__segment orig_seg,
                                          void __far *norm_p) {
-  return (void __far *)denormalize_segmented(orig_seg,
-                                             (void const __far *)norm_p);
+  return const_cast<void __far *>(denormalize_segmented(
+      orig_seg, reinterpret_cast<void const __far *>(norm_p)));
 }
 
 template <class T> class ofsp {
 public:
   ofsp() {}
   ofsp(ofsp const &other) : m_ofs(other.m_ofs) {}
-  explicit ofsp(segsize_t i) : m_ofs(((T __near *)0) + i) {}
+  explicit ofsp(segsize_t i) : m_ofs((static_cast<T __near *>(0)) + i) {}
   explicit ofsp(T __near *n_ofs) : m_ofs(n_ofs) {}
   template <class U> explicit ofsp(ofsp<U> other) : m_ofs(other.m_ofs) {
     assert(static_cast<U __near *>(m_ofs) == other.m_ofs);
