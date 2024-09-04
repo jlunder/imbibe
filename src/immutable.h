@@ -12,11 +12,13 @@ public:
 
   immutable() : m_seg(0), m_index(0), m_ofs(0) {}
 
-  immutable(prealloc_t policy, void const *p) : m_index(0) {
+  immutable(prealloc_t policy, void const __far *p) : m_index(0) {
     assign(policy, p);
   }
 
-  immutable(reclaim_func_t f, void const *p) : m_index(0) { assign(f, p); }
+  immutable(reclaim_func_t f, void const __far *p) : m_index(0) {
+    assign(f, p);
+  }
 
 #ifdef M_I86
   immutable(immutable const &other) {
@@ -66,7 +68,7 @@ public:
   }
 #endif
 
-  bool operator==(void *p) {
+  bool operator==(void const *p) {
     assert(p == NULL);
     (void)p;
     return !operator bool();

@@ -38,6 +38,8 @@ void immutable::assign(prealloc_t policy, void const __far *p) {
     m_index = 0;
     m_ofs = (uint8_t)FP_OFF(norm_p);
     assert(denormalize_segmented(FP_SEG(p), MK_FP(m_seg, m_ofs)) == p);
+    logf_immutable("Acquiring untracked " PRpF " normalized to " PRpF "\n", p,
+                   norm_p);
   } else {
     m_seg = 0;
     m_index = 0;
@@ -60,6 +62,9 @@ void immutable::assign(reclaim_func_t f, void const __far *p) {
     m_ofs = (uint8_t)FP_OFF(norm_p);
     init(f, p);
     assert(denormalize_segmented(FP_SEG(p), MK_FP(m_seg, m_ofs)) == p);
+    logf_immutable("Acquiring tracked " PRpF " normalized to " PRpF
+                   ", index %u\n",
+                   p, norm_p, m_index);
   } else {
     m_seg = 0;
     m_index = 0;
@@ -127,6 +132,7 @@ void immutable::ref() {
   assert(aux_immutable::immutable_index[m_index].reclaimer != NULL);
   assert(aux_immutable::immutable_index[m_index].live_refs > 0);
 
+  logf_immutable("Ref " PRpF ", index %u\n", data(), m_index);
   ++aux_immutable::immutable_index[m_index].live_refs;
 }
 
@@ -139,6 +145,7 @@ void immutable::unref() {
   assert(tracking.reclaimer != NULL);
   assert(tracking.live_refs > 0);
 
+  logf_immutable("Unref " PRpF ", index %u\n", data(), m_index);
   if (tracking.live_refs > 1) {
     --tracking.live_refs;
   } else {
@@ -149,7 +156,9 @@ void immutable::unref() {
     assert(p == tracking.orig_ptr);
     tracking.orig_ptr = NULL;
 #endif
-    tracking.reclaimer((void *)p);
+    logf_immutable("Reclaim " PRpF " denorm to " PRpF ", index %u\n", norm_p, p,
+                   m_index);
+    tracking.reclaimer((void __far *)p);
 
     // Add the index entry back into the unrefd chain
     tracking.reclaimer = NULL;

@@ -45,6 +45,10 @@
   ((uintptr_t)(s) == 0xB800 ? (void *)(sim::dummy_screen)                      \
                             : (void *)((uintptr_t)(s) + (uintptr_t)(o)))
 
+#define PRpF "%p"
+#define PRpN "%p"
+#define PRp "%p"
+
 namespace sim {
 extern uint16_t dummy_screen[16384];
 }
@@ -100,6 +104,10 @@ extern unsigned _dos_lseek(int handle, long offset, int whence,
                            unsigned long __far *where);
 
 #define __packed__
+
+#define PRpF "%Fp"
+#define PRpN "%Np"
+#define PRp "%p"
 
 #endif
 

@@ -278,6 +278,8 @@ void __far *resource_manager::load_data_from_file(imstring const &name,
     }
     temp_data = data_from_reclaim_header(header);
     temp_size = (segsize_t)size;
+    logf_resource_manager("load data " PRpF " -> header " PRpF " = %u\n",
+                          temp_data, header, header->index);
   }
 
   {
@@ -328,6 +330,8 @@ fail_return:
 
 void resource_manager::reclaim_loaded_data(void __far *data) {
   reclaim_header __far *header = reclaim_header_from_data(data);
+  logf_resource_manager("reclaim " PRpF " -> header " PRpF " = %u\n", data,
+                        header, header->index);
   assert(header->index < s_index.size());
 
   segsize_t index = header->index;
@@ -369,16 +373,16 @@ im_ptr<tbm> resource_manager::fetch_tbm(imstring const &name) {
     assert(entry.data);
     if (!entry.resource) {
       logf_resource_manager("  !entry.resource\n");
-      reclaim_header *header =
-          (reclaim_header *)::malloc(sizeof(reclaim_header) + sizeof(bitmap));
-      logf_resource_manager("  header = %p, .name = %s, .index = %u\n", header,
+      reclaim_header __far *header =
+          (reclaim_header __far *)::_fmalloc(sizeof(reclaim_header) + sizeof(bitmap));
+      logf_resource_manager("  header = "PRpF", .name = %s, .index = %u\n", header,
                             name.c_str(), (unsigned)index);
       header->name = name.c_str();
       header->index = index;
       entry.resource = header + 1;
-      logf_resource_manager("  entry.resource = %p\n", header);
+      logf_resource_manager("  entry.resource = "PRpF"\n", header);
       new (entry.resource) bitmap;
-      logf_resource_manager("  converting data at %p (%u bytes)\n", entry.data,
+      logf_resource_manager("  converting data at "PRpF" (%u bytes)\n", entry.data,
                             (unsigned)entry.size);
       tbm::to_bitmap(unpacker(entry.data, entry.size),
                      *(bitmap *)entry.resource);
@@ -395,7 +399,7 @@ im_ptr<tbm> resource_manager::fetch_tbm(imstring const &name) {
 }
 
 void resource_manager::reclaim_loaded_data(void __far *data) {
-  reclaim_header *header = ((reclaim_header __far *)data) - 1;
+  reclaim_header __far *header = ((reclaim_header __far *)data) - 1;
   assert(header->index < s_index.size());
 
   char const *name = header->name;
@@ -403,7 +407,7 @@ void resource_manager::reclaim_loaded_data(void __far *data) {
   segsize_t index = header->index;
   index_entry &entry = s_index[index];
   logf_resource_manager(
-      "reclaim_loaded_data %p: header=%p, entry.resource=%p, .name=%s\n", data,
+      "reclaim_loaded_data "PRpF": header="PRpF", entry.resource="PRpF", .name=%s\n", data,
       header, entry.resource, entry.name.c_str());
   assert((void *)entry.resource == data);
   assert(entry.name == imstring(name));
@@ -415,8 +419,8 @@ void resource_manager::reclaim_loaded_data(void __far *data) {
   header->name = NULL;
 #endif
 
-  ::free(header);
-  ::free((void *)entry.data);
+  ::ffree(header);
+  ::ffree((void *)entry.data);
 
   entry.resource = NULL;
   entry.data = NULL;

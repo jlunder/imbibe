@@ -17,7 +17,7 @@ LINK_OPT = $(LINK_OPT_$(VERSION))
 LINK = wlink
 
 CC_OPT_RELEASE = -dNDEBUG -otaeilh -ms
-CC_OPT_DEBUG = -d2 -osaeih -mm
+CC_OPT_DEBUG = -d2 -osaeih -ml
 CC_OPT_PROFILE = $(CC_OPT_RELEASE) -d1
 CC_OPT = $(CC_OPT_$(VERSION)) -2 -bt=dos -fpc -w5 -ze
 

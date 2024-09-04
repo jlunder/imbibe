@@ -27,7 +27,7 @@ inline void const __far *normalize_segmented(void const __far *p) {
   void const __far *norm_p =
       MK_FP(FP_SEG(p) + (FP_OFF(p) >> 4), FP_OFF(p) & 0xF);
 #endif
-  // logf("normalized %p to %p\n", p, norm_p);
+  // logf("normalized "PRpF" to "PRpF"\n", p, norm_p);
   assert(FP_SEG(norm_p) - FP_SEG(p) < 0x8000);
   return norm_p;
 }
@@ -44,7 +44,7 @@ inline void const __far *denormalize_segmented(__segment orig_seg,
   void const __far *p =
       MK_FP(orig_seg, FP_OFF(norm_p) + ((FP_SEG(norm_p) - orig_seg) << 4));
 #endif
-  // logf("denormalized %p to %p\n", norm_p, p);
+  // logf("denormalized "PRpF" to "PRpF"\n", norm_p, p);
   assert(FP_SEG(p) == orig_seg);
   assert(FP_SEG(norm_p) - orig_seg < 0x8000);
   return p;

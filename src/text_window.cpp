@@ -256,9 +256,9 @@ void text_window::present_copy(termel_t const __far *backbuffer, coord_t width,
   assert(r.y2 <= height);
 
   logf_text_window(
-      "present_copy region (%d,%d-%d,%d) to %p, corner %04X -> %04X\n", x1, y1,
-      x2, y2, (void *)aux_text_window::s_screen_buffer, *backbuffer,
-      *aux_text_window::s_screen_buffer);
+      "present_copy region (%d,%d-%d,%d) to " PRpF ", corner %04X -> %04X\n",
+      x1, y1, x2, y2, (void __far *)aux_text_window::s_screen_buffer,
+      *backbuffer, *aux_text_window::s_screen_buffer);
 
   coord_t i;
   coord_t bytes_per_line = r.width() * sizeof(termel_t);

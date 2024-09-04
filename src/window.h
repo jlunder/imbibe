@@ -10,6 +10,8 @@ class window;
 
 class window {
 public:
+  virtual ~window() {}
+
   virtual void lock_repaint() = 0;
   virtual void unlock_repaint() = 0;
   virtual void repaint(rect const &r) = 0;
