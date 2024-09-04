@@ -131,9 +131,9 @@ text_window::text_window()
                                               aux_text_window::s_screen_height),
       m_lock_count(0), m_need_repaint(false) {}
 
-void text_window::setup(bitmap *capture_screen) {
+void text_window::setup(bool capture_screen) {
   if (capture_screen) {
-    aux_text_window::read_screen_buffer(capture_screen);
+    aux_text_window::read_screen_buffer(&m_capture);
   }
   aux_text_window::set_video_mode(aux_text_window::s_text_mode_color_80_25);
   aux_text_window::set_cursor_style(aux_text_window::cursor_invisible, 0, 7);
@@ -178,7 +178,7 @@ void text_window::repaint(rect const &r) {
     static termel_t const ugly_px =
         termel::from('x', color::hi_cyan, color::hi_magenta);
     for (coord_t y = r.y1; y < r.y2; ++y) {
-      termel_t *row = m_backbuffer.data() + (y * m_backbuffer.width());
+      termel_t __far *row = m_backbuffer.data() + (y * m_backbuffer.width());
       for (coord_t x = r.x1; x < r.x2; ++x) {
         row[x] = ugly_px;
       }
@@ -248,7 +248,7 @@ void text_window::locked_repaint(rect const &r) {
   }
 }
 
-void text_window::present_copy(termel_t const *backbuffer, coord_t width,
+void text_window::present_copy(termel_t const __far *backbuffer, coord_t width,
                                coord_t height, rect const &r) {
   assert(r.reasonable());
   assert(r.x1 >= 0);

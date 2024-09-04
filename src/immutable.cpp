@@ -22,13 +22,13 @@ immutable_tracking_t immutable_index[max_reclaimable + 1];
 
 } // namespace aux_immutable
 
-void immutable::assign(prealloc_t policy, void const *p) {
+void immutable::assign(prealloc_t policy, void const __far *p) {
   (void)policy;
   if (m_index) {
     unref();
   }
   if (p) {
-    void const *norm_p = normalize_segmented(p);
+    void const __far *norm_p = normalize_segmented(p);
     m_seg = FP_SEG(norm_p);
     assert(m_seg != 0);
     m_index = 0;
@@ -41,12 +41,12 @@ void immutable::assign(prealloc_t policy, void const *p) {
   }
 }
 
-void immutable::assign(reclaim_func_t f, void const *p) {
+void immutable::assign(reclaim_func_t f, void const __far *p) {
   if (m_index) {
     unref();
   }
   if (p) {
-    void const *norm_p = normalize_segmented(p);
+    void const __far *norm_p = normalize_segmented(p);
     m_seg = FP_SEG(norm_p);
     assert(m_seg != 0);
     assert(FP_OFF(norm_p) < 0x10);
@@ -76,7 +76,7 @@ immutable &immutable::operator=(immutable const &other) {
   return *this;
 }
 
-void immutable::init(reclaim_func_t f, void const *orig_p) {
+void immutable::init(reclaim_func_t f, void const __far *orig_p) {
   if (!f) {
     m_index = 0;
     return;
@@ -136,8 +136,8 @@ void immutable::unref() {
     --tracking.live_refs;
   } else {
     // Reclaim the data
-    void const *norm_p = data();
-    void const *p = denormalize_segmented(tracking.orig_seg, norm_p);
+    void const __far *norm_p = data();
+    void const __far *p = denormalize_segmented(tracking.orig_seg, norm_p);
 #ifndef NDEBUG
     assert(p == tracking.orig_ptr);
     tracking.orig_ptr = NULL;

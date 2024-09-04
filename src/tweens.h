@@ -70,12 +70,13 @@ public:
     m_from = n_from;
     m_delta = n_to - n_from;
     anim_time_t cur = cur_time();
-    m_value =
-        (cur <= 0)
-            ? n_from
-            : ((cur >= n_duration)
-                   ? n_to
-                   : TEasing::compute_value(cur, duration(), m_from, m_delta));
+    if (cur >= n_duration) {
+      m_value = n_to;
+    } else if (cur <= 0) {
+      m_value = n_from;
+    } else {
+      m_value = TEasing::compute_value(cur, duration(), m_from, m_delta);
+    }
   }
 
   void reset_from_value(T n_from, T n_to, anim_time_t n_duration, T value) {

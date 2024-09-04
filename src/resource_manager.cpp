@@ -93,7 +93,7 @@ resource_manager::hash_t resource_manager::fletcher16_str(char const __far *s) {
 #if 1 // !defined(NDEBUG) || defined(SIMULATE)
   uint16_t s1 = 0;
   uint16_t s2 = 0;
-  for (char const *p = s; *p; ++p) {
+  for (char const __far *p = s; *p; ++p) {
     s1 += (uint8_t)*p;
     if (s1 >= 255) {
       s1 -= 255;
@@ -327,7 +327,7 @@ fail_return:
 }
 
 void resource_manager::reclaim_loaded_data(void __far *data) {
-  reclaim_header *header = reclaim_header_from_data(data);
+  reclaim_header __far *header = reclaim_header_from_data(data);
   assert(header->index < s_index.size());
 
   segsize_t index = header->index;

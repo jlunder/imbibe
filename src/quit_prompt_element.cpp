@@ -10,7 +10,7 @@
 
 quit_prompt_element::quit_prompt_element() {
   tbm quit_tbm(resource_manager::fetch_tbm("quit.tbm"));
-  tbm_header h = quit_tbm.header();
+  tbm_header const __far &h = quit_tbm.header();
   m_quit_width = h.width;
   m_quit_height = h.height;
   m_quit.set_tbm(quit_tbm);

@@ -9,15 +9,14 @@
 
 intro_element::intro_element() {
   tbm logo_tbm(resource_manager::fetch_tbm("logo.tbm"));
-  tbm_header h;
-  h = logo_tbm.header();
-  m_logo_width = h.width;
-  m_logo_height = h.height;
+  tbm_header const __far &logo_h = logo_tbm.header();
+  m_logo_width = logo_h.width;
+  m_logo_height = logo_h.height;
   m_logo.set_tbm(logo_tbm);
   tbm cover_tbm(resource_manager::fetch_tbm("cover.tbm"));
-  h = cover_tbm.header();
-  m_cover_width = h.width;
-  m_cover_height = h.height;
+  tbm_header const __far &cover_h = cover_tbm.header();
+  m_cover_width = cover_h.width;
+  m_cover_height = cover_h.height;
   m_cover.set_tbm(cover_tbm);
   m_active = false;
 }
@@ -78,7 +77,7 @@ bool intro_element::opaque() const {
   return m_cover.frame().y2 >= frame().height();
 }
 
-void intro_element::set_capture(im_ptr<bitmap> n_capture) {
+void intro_element::set_capture(bitmap const &n_capture) {
   m_capture_background.set_b(n_capture);
 }
 

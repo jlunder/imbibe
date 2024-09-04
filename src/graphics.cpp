@@ -64,8 +64,8 @@ bool clip_params::compute_clip(graphics const *g, rect const &r) {
 struct bitmap_transform_params : public clip_params {
   coord_t termels_per_line;
   coord_t lines;
-  termel_t const *source_p;
-  termel_t *dest_p;
+  termel_t const __far *source_p;
+  termel_t __far *dest_p;
   uint16_t source_stride;
   uint16_t dest_stride;
 
@@ -89,7 +89,7 @@ class copy_line_op {
 public:
   void transfer_line(termel_t __far *dest, termel_t const __far *src,
                      uint16_t count) const {
-    memcpy(dest, src, count * sizeof(termel_t));
+    _fmemcpy(dest, src, count * sizeof(termel_t));
   }
   void fill_line(termel_t __far *dest, termel_t src, uint16_t count) const {
     for (uint16_t i = 0; i < count; ++i) {
@@ -159,7 +159,7 @@ bool prepare_plain_tbm_transform_params(graphics *g, tbm const &t, coord_t x,
 
 template <class TLineOp>
 void draw_tbm(graphics *g, coord_t x, coord_t y, tbm const &t, TLineOp op) {
-  tbm_header tbm_h = t.header();
+  tbm_header const __far &tbm_h = t.header();
 
   if ((tbm_h.flags & tbm_flags::flags_format) == tbm_flags::fmt_flat) {
     bitmap_transform_params p;
@@ -191,8 +191,8 @@ template <class TLineOp>
 void draw_rle_tbm(graphics *g, aux_graphics::clip_params const &p, tbm const &t,
                   TLineOp op) {
   unpacker d(t.data_unpacker());
-  uint16_t const *lines = d.unpack_array<uint16_t>(p.source.y1);
-  termel_t *dest_p = g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
+  uint16_t const __far *lines = d.unpack_array<uint16_t>(p.source.y1);
+  termel_t __far *dest_p = g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
   uint16_t dest_stride = g->b()->width();
   for (coord_t i = p.source.y1; i < p.source.y2; ++i) {
     if (lines[i] == 0) {
@@ -234,8 +234,8 @@ template <class TLineOp>
 void draw_mask_rle_tbm(graphics *g, aux_graphics::clip_params const &p,
                        tbm const &t, TLineOp op) {
   unpacker d(t.data_unpacker());
-  uint16_t const *lines = d.unpack_array<uint16_t>(p.source.y1);
-  termel_t *dest_p = g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
+  uint16_t const __far *lines = d.unpack_array<uint16_t>(p.source.y1);
+  termel_t __far *dest_p = g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
   uint16_t dest_stride = g->b()->width();
   for (coord_t i = p.source.y1; i < p.source.y2; ++i) {
     if (lines[i] == 0) {
@@ -245,7 +245,7 @@ void draw_mask_rle_tbm(graphics *g, aux_graphics::clip_params const &p,
 
     coord_t span_end;
     for (coord_t span_start = 0;; span_start = span_end) {
-      tbm_span span = d.unpack<tbm_span>();
+      tbm_span const __far &span = d.unpack<tbm_span>();
       if ((span.skip == 0) && (span.termel_count == 0)) {
         break;
       }
@@ -336,7 +336,7 @@ void graphics::draw_rectangle(rect const & r, termel_t p) {
   uint16_t rows = cr.height();
   uint16_t stride = m_b->width();
   uint16_t cols = cr.width();
-  termel_t *pp = m_b->data() + cr.y1 * stride + cr.x1;
+  termel_t __far *pp = m_b->data() + cr.y1 * stride + cr.x1;
   for (uint16_t r = 0; r < rows; ++r) {
     for (uint16_t c = 0; c < cols; ++c) {
       pp[c] = p;

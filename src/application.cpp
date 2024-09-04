@@ -102,8 +102,7 @@ void application::setup() {
   s_outro_screen.setup();
   s_quit_prompt.setup();
 
-  bitmap *capture = new(arena::c()) bitmap();
-  s_win->setup(capture);
+  s_win->setup(true);
   s_display_width = s_win->backbuffer()->width();
   s_display_height = s_win->backbuffer()->height();
 
@@ -123,7 +122,9 @@ void application::setup() {
   s_quit_prompt->set_owner(s_main);
   s_outro_screen->set_owner(s_main);
 
-  s_intro_screen->set_capture(im_ptr<bitmap>(capture));
+  assert(s_win->capture());
+  bitmap const & b = *s_win->capture();
+  s_intro_screen->set_capture(bitmap(b.width(), b.height(), b.data()));
 
   s_menu_screen->layout(s_display_width, s_display_height);
   s_submenu_screen->layout(s_display_width, s_display_height);

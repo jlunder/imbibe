@@ -14,20 +14,20 @@ bitmap::bitmap(coord_t n_width, coord_t n_height)
   assign(n_width, n_height);
 }
 
-bitmap::bitmap(coord_t n_width, coord_t n_height, termel_t const *n_data)
+bitmap::bitmap(coord_t n_width, coord_t n_height, termel_t const __far *n_data)
     : m_width(0), m_height(0x8000), m_data(NULL) {
   assign(n_width, n_height, n_data);
 }
 
 bitmap::~bitmap() {
   if (!immutable()) {
-    ::free(m_data);
+    arena::c_free(m_data);
   }
 }
 
 bitmap &bitmap::assign(coord_t n_width, coord_t n_height) {
   if (!immutable()) {
-    ::free(m_data);
+    arena::c_free(m_data);
   }
 
   assert(n_width >= 0);
@@ -38,7 +38,8 @@ bitmap &bitmap::assign(coord_t n_width, coord_t n_height) {
          (uint32_t)UINT16_MAX - 31);
   m_width = n_width;
   m_height = n_height;
-  m_data = (termel_t *)::malloc(n_width * n_height * sizeof(termel_t));
+  m_data =
+      (termel_t __far *)::arena::c_alloc(n_width * n_height * sizeof(termel_t));
   assert(m_data);
   assert(!immutable());
 
@@ -47,7 +48,7 @@ bitmap &bitmap::assign(coord_t n_width, coord_t n_height) {
 
 bitmap &bitmap::assign(coord_t n_width, coord_t n_height, termel_t fill_brush) {
   assign(n_width, n_height);
-  uint16_t size = m_width * m_height;
+  uint16_t size = n_width * n_height;
   for (uint16_t i = 0; i < size; ++i) {
     m_data[i] = fill_brush;
   }
@@ -56,9 +57,9 @@ bitmap &bitmap::assign(coord_t n_width, coord_t n_height, termel_t fill_brush) {
 }
 
 bitmap &bitmap::assign(coord_t n_width, coord_t n_height,
-                       termel_t const *n_data) {
+                       termel_t const __far *n_data) {
   if (!immutable()) {
-    ::free(m_data);
+    arena::c_free(m_data);
   }
 
   assert(n_width >= 0);
@@ -74,20 +75,21 @@ bitmap &bitmap::assign(coord_t n_width, coord_t n_height,
 
 bitmap &bitmap::assign(bitmap const &n_bitmap) {
   if (!immutable()) {
-    ::free(m_data);
+    arena::c_free(m_data);
   }
 
   m_width = n_bitmap.m_width;
   m_height = n_bitmap.m_height;
   assert_margin(m_width, COORD_MAX);
-  assert_margin(m_height, COORD_MAX);
+  assert_margin(m_height & 0x7FFF, COORD_MAX);
   if (n_bitmap.immutable()) {
     m_data = n_bitmap.m_data;
     assert(immutable());
   } else {
-    m_data = (termel_t *)::malloc(m_width * m_height * sizeof(termel_t));
+    m_data =
+        (termel_t __far *)arena::c_alloc(m_width * m_height * sizeof(termel_t));
     assert(m_data);
-    memcpy(m_data, n_bitmap.m_data, m_width * m_height * sizeof(termel_t));
+    _fmemcpy(m_data, n_bitmap.m_data, m_width * m_height * sizeof(termel_t));
     assert(!immutable());
   }
 

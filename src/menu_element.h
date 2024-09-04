@@ -6,6 +6,7 @@
 #include "rectangle_element.h"
 #include "screen_element.h"
 #include "tbm_element.h"
+#include "tweens.h"
 
 class menu_element : public screen_element {
 public:
@@ -17,56 +18,24 @@ public:
   virtual bool handle_key(uint16_t key);
   virtual void animate(anim_time_t delta_ms);
   virtual bool active() const;
+  virtual void paint(graphics *g);
 
 private:
-  struct option_entry {
+  struct menu_option {
     rect hot;
-    point viz;
-    uint16_t offset;
+    point selected_pos;
+    tbm selected_overlay;
+    linear_tween<coord_t> hide_transition;
+    linear_tween<coord_t> show_transition;
   };
 
-  struct menu_info {
-    option_entry * entries;
-    uint8_t data[];
-  };
+  stack_arena m_data_arena;
 
-  // m_selecting_index;
-  // m_deselecting_index;
-  // m_selecting_transition;
-  // m_deselecting_transition;
-  // m_transition_right;
-
-  //im_ptr<
-
-  // tbm_element m_header;
-  // coord_t m_header_width;
-  // coord_t m_header_height;
-  // tbm_element m_footer;
-  // coord_t m_footer_width;
-  // coord_t m_footer_height;
-
-  tbm_element m_background;
-
-  coord_t m_scroll_height;
-#if 0
-  class menu_option_element : public element {
-  public:
-    immut<tbm> m_selected;
-    linear_tween<coord_t> m_hide_transition;
-    linear_tween<coord_t> m_show_transition;
-
-    void animate();
-
-    void select();
-    void unselect();
-  };
-  immut<menu_def> m_def;
-  vector<menu_option_element> m_menu_options;
-
-  immut<tbm_element> m_background;
-
-  menu_state m_state;
-#endif
+  vector<menu_option> m_menu_options;
+  linear_tween<coord_t> m_scroll_y;
+  tbm m_background;
+  segsize_t m_selected_option;
+  segsize_t m_last_selected_option;
 };
 
 #endif // __MENU_ELEMENT_H_INCLUDED

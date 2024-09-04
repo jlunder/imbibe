@@ -16,9 +16,9 @@ LINK_OPT = $(LINK_OPT_$(VERSION))
 
 LINK = wlink
 
-CC_OPT_RELEASE = -dNDEBUG -otexan -mc
-CC_OPT_DEBUG = -d3i -od -ml
-CC_OPT_PROFILE = -dNDEBUG -d1 -otexan -mc
+CC_OPT_RELEASE = -dNDEBUG -otaeilh -ms
+CC_OPT_DEBUG = -d3i -osaeih -ml
+CC_OPT_PROFILE = $(CC_OPT_RELEASE) -d1
 CC_OPT = $(CC_OPT_$(VERSION)) -2 -bt=dos -fpc -w5 -ze
 
 CC = wpp
@@ -37,7 +37,13 @@ IMBIBE_RESOURCES = \
 	testdata/cover.tbm \
 	testdata/logo.tbm \
 	testdata/menu-bg.tbm \
-	testdata/menu-sel.tbm \
+	testdata/menu-sel0.tbm \
+	testdata/menu-sel1.tbm \
+	testdata/menu-sel2.tbm \
+	testdata/menu-sel3.tbm \
+	testdata/menu-sel4.tbm \
+	testdata/menu-sel5.tbm \
+	testdata/menu-sel6.tbm \
 	testdata/quit.tbm
 
 .PHONY: all clean deps dirs imbibe

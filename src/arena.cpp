@@ -2,9 +2,9 @@
 
 #include "arena.h"
 
-arena __far *arena::s_cur = NULL;
-arena __far *arena::s_temp = NULL;
-arena __far *arena::s_c = NULL;
+arena *arena::s_cur = NULL;
+arena *arena::s_temp = NULL;
+arena *arena::s_c = NULL;
 
 namespace aux_arena {
 
@@ -32,9 +32,9 @@ void __far *c_arena::alloc(segsize_t size) {
   return result;
 }
 
-void c_arena::free(void __far *p) {
+void c_arena::free(void const __far *p) {
   assert(p != NULL);
-  ::_ffree(p);
+  ::_ffree((void *)p);
 }
 
 stack_arena::stack_arena(segsize_t n_capacity, char const __far *n_name) {
@@ -78,7 +78,7 @@ void __far *stack_arena::alloc(segsize_t size) {
 #endif
 }
 
-void stack_arena::free(void __far *p) {
+void stack_arena::free(void const __far *p) {
 #ifdef SIMULATE
   bool found = false;
   for (std::vector<void *>::iterator i = m_allocated.begin();
@@ -91,7 +91,7 @@ void stack_arena::free(void __far *p) {
   if (!found) {
     abortf("Free in arena '%s' not allocated there (or already freed)", m_name);
   }
-  ::free(p);
+  ::free((void *)p);
 #else
   assert((__segment)FP_SEG(p) == m_seg);
   assert((segsize_t)FP_OFF(p) < m_top);

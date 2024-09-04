@@ -13,8 +13,8 @@ namespace tbm_aux {
 static const size_t s_tbm_area_max = 1u << 14;
 
 bool validate(unpacker const &tbm_data);
-bool validate_data_rle(tbm_header const &tbm_h, unpacker *tbm);
-bool validate_data_mask_rle(tbm_header const &tbm_h, unpacker *tbm);
+bool validate_data_rle(tbm_header const __far &tbm_h, unpacker *tbm);
+bool validate_data_mask_rle(tbm_header const __far &tbm_h, unpacker *tbm);
 
 } // namespace tbm_aux
 
@@ -41,7 +41,7 @@ bool tbm_aux::validate(unpacker const &tbm_data) {
   }
 
   {
-    iff_header const &iff_h = tbm.unpack<iff_header>();
+    iff_header const __far &iff_h = tbm.unpack<iff_header>();
     if (fourcc(iff_h.magic) != fourcc("TBMa")) {
       logf_tbm("bad TBM fourcc, unpacking %p", tbm.base());
       return false;
@@ -50,7 +50,7 @@ bool tbm_aux::validate(unpacker const &tbm_data) {
                    (uint16_t)min<uint32_t>(iff_h.data_size, tbm.remain()));
   }
 
-  tbm_header tbm_h = tbm.unpack<tbm_header>();
+  tbm_header const __far &tbm_h = tbm.unpack<tbm_header>();
   uint16_t plane_size = (uint16_t)tbm_h.width * tbm_h.height;
   if ((tbm_h.width == 0) || (tbm_h.height == 0) ||
       (plane_size > s_tbm_area_max)) {
@@ -75,13 +75,13 @@ bool tbm_aux::validate(unpacker const &tbm_data) {
   return true;
 }
 
-bool tbm_aux::validate_data_rle(tbm_header const &tbm_h, unpacker *tbm) {
+bool tbm_aux::validate_data_rle(tbm_header const __far &tbm_h, unpacker *tbm) {
   if (!tbm->fits_array<uint16_t>(tbm_h.height)) {
     logf_tbm("TBM line index truncated, unpacking %p", tbm->base());
     return false;
   }
   uint16_t lines_origin = tbm->pos();
-  uint16_t const *lines = tbm->unpack_array<uint16_t>(tbm_h.height);
+  uint16_t const __far *lines = tbm->unpack_array<uint16_t>(tbm_h.height);
   for (uint16_t i = 0; i < tbm_h.height; ++i) {
     if (lines[i] >= (tbm->size() - lines_origin)) {
       logf_tbm("TBM line %u outside data (at %u), unpacking %p", i, lines[i],
@@ -118,7 +118,7 @@ bool tbm_aux::validate_data_rle(tbm_header const &tbm_h, unpacker *tbm) {
                    lines[i], tbm->base());
           return false;
         }
-        tbm->unpack<termel_t>();
+        tbm->skip<termel_t>();
       }
       x += run_length;
     }
@@ -126,13 +126,14 @@ bool tbm_aux::validate_data_rle(tbm_header const &tbm_h, unpacker *tbm) {
   return true;
 }
 
-bool tbm_aux::validate_data_mask_rle(tbm_header const &tbm_h, unpacker *tbm) {
+bool tbm_aux::validate_data_mask_rle(tbm_header const __far &tbm_h,
+                                     unpacker *tbm) {
   if (!tbm->fits_array<uint16_t>(tbm_h.height)) {
     logf_tbm("TBM line index truncated, unpacking %p", tbm->base());
     return false;
   }
   uint16_t lines_origin = tbm->pos();
-  uint16_t const *lines = tbm->unpack_array<uint16_t>(tbm_h.height);
+  uint16_t const __far *lines = tbm->unpack_array<uint16_t>(tbm_h.height);
   for (uint16_t i = 0; i < tbm_h.height; ++i) {
     if (lines[i] == 0) {
       continue;
@@ -150,7 +151,7 @@ bool tbm_aux::validate_data_mask_rle(tbm_header const &tbm_h, unpacker *tbm) {
                  lines[i], tbm->base());
         return false;
       }
-      tbm_span span = tbm->unpack<tbm_span>();
+      tbm_span const __far &span = tbm->unpack<tbm_span>();
       if ((span.skip == 0) && (span.termel_count == 0)) {
         // end marker
         break;

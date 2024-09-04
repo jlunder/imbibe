@@ -12,7 +12,7 @@ public:
   bitmap(coord_t n_width, coord_t n_height);
   // In the case of preallocated data, the data is treated as immutable and
   // will not be freed!
-  bitmap(coord_t n_width, coord_t n_height, termel_t const *n_data);
+  bitmap(coord_t n_width, coord_t n_height, termel_t const __far *n_data);
   ~bitmap();
 
   coord_t width() const { return m_width; }
@@ -25,11 +25,11 @@ public:
     assert(y < height());
     return m_data[y * m_width + x];
   }
-  termel_t *data() {
+  termel_t __far *data() {
     assert(!immutable());
     return m_data;
   }
-  termel_t const *data() const { return m_data; }
+  termel_t const __far *data() const { return m_data; }
 
   void set_at(coord_t x, coord_t y, termel_t n_t) {
     assert(!immutable());
@@ -42,7 +42,8 @@ public:
 
   bitmap &assign(coord_t n_width, coord_t n_height);
   bitmap &assign(coord_t n_width, coord_t n_height, termel_t fill_brush);
-  bitmap &assign(coord_t n_width, coord_t n_height, termel_t const *n_data);
+  bitmap &assign(coord_t n_width, coord_t n_height,
+                 termel_t const __far *n_data);
   bitmap &assign(bitmap const &n_bitmap);
 
   bitmap &operator=(bitmap const &other) { return assign(other); }
@@ -50,7 +51,7 @@ public:
 private:
   coord_t m_width;
   coord_t m_height;
-  termel_t *m_data;
+  termel_t __far *m_data;
 };
 
 #endif // __BITMAP_H_INCLUDED

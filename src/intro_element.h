@@ -19,7 +19,7 @@ public:
   virtual bool active() const;
   virtual bool opaque() const;
 
-  void set_capture(im_ptr<bitmap> n_capture);
+  void set_capture(bitmap const &n_capture);
 
   void play_intro();
   void skip_transition();

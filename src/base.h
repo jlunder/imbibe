@@ -5,7 +5,7 @@
 #define __STDC_LIMIT_MACROS
 #pragma warning 549 9
 #pragma warning 446 9
-#pragma warning  14 9
+#pragma warning 14 9
 #endif
 
 #include <assert.h>
@@ -20,7 +20,8 @@
 #if !defined(M_I86) || !defined(MSDOS)
 
 #define __near
-#define __far
+#define __far volatile
+// #define __far
 
 #define _Packed
 #define __packed__ __attribute__((packed))
@@ -66,16 +67,20 @@ extern void _dos_setvect(int, void (*)());
 extern void (*_dos_getvect(int))();
 extern void _chain_intr(void (*)());
 
-extern unsigned _dos_open(const char *path, unsigned mode, int *handle);
+extern unsigned _dos_open(char const __far *path, unsigned mode,
+                          int __far *handle);
 extern unsigned _dos_close(int handle);
-extern unsigned _dos_read(int handle, void *buf, unsigned count,
-                          unsigned *bytes);
+extern unsigned _dos_read(int handle, void __far *buf, unsigned count,
+                          unsigned __far *bytes);
 extern unsigned _dos_lseek(int handle, long offset, int whence,
                            unsigned long __far *where);
 
 extern void __far *_fmalloc(size_t size);
 extern void __far *_fexpand(void __far *p, size_t size);
 extern void _ffree(void __far *p);
+extern int _fstrcmp(char const __far *x, char const __far *y);
+extern size_t _fstrlen(char const __far *s);
+extern void _fmemcpy(void __far *dest, void const __far *src, size_t size);
 
 #define SIMULATE
 

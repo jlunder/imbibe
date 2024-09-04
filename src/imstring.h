@@ -33,7 +33,7 @@ public:
 
   uint16_t length() const {
     assert(m_str);
-    return strlen(m_str);
+    return _fstrlen(m_str);
   }
   char at(uint16_t pos) const {
     assert(m_str);
@@ -46,7 +46,7 @@ public:
   // operator char const * () const { return c_str(); }
 
   static int compare(imstring const &x, imstring const &y) {
-    return strcmp(x.c_str(), y.c_str());
+    return _fstrcmp(x.c_str(), y.c_str());
   }
   static imstring copy(char const __far *str) {
     imstring result;

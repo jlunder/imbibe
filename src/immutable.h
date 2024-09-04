@@ -40,8 +40,8 @@ public:
     }
   }
 
-  void assign(prealloc_t policy, void const *p);
-  void assign(reclaim_func_t f, void const *p);
+  void assign(prealloc_t policy, void const __far *p);
+  void assign(reclaim_func_t f, void const __far *p);
 
   operator bool() const { return !!m_seg; }
 
@@ -79,7 +79,7 @@ private:
   uint8_t m_index;
   uint8_t m_ofs;
 
-  void init(reclaim_func_t f, void const *orig_p);
+  void init(reclaim_func_t f, void const __far *orig_p);
   void ref();
   void unref();
 
@@ -166,6 +166,8 @@ private:
 #endif
 };
 
+#if 0
+
 // Shared pointer for generic read-only data blocks; this is optimized for
 // the case where sometimes the block is statically allocated and doesn't
 // need to be freed. If your data is always static, just use bare pointers --
@@ -198,5 +200,7 @@ private:
     arena::cur_free(p);
   }
 };
+
+#endif
 
 #endif // __RODATA_H_INCLUDED

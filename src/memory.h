@@ -20,30 +20,31 @@
 typedef uint16_t segsize_t;
 typedef int16_t segdiff_t;
 
-inline void const *normalize_segmented(void const *p) {
+inline void const __far *normalize_segmented(void const __far *p) {
 #ifdef SIMULATE
-  void const *norm_p = p;
+  void const __far *norm_p = p;
 #else
   if ((uint16_t)FP_OFF(p) <= UINT8_MAX) {
     return p;
   }
-  void const *norm_p = MK_FP(FP_SEG(p) + (FP_OFF(p) >> 4), FP_OFF(p) & 0xF);
+  void const __far *norm_p =
+      MK_FP(FP_SEG(p) + (FP_OFF(p) >> 4), FP_OFF(p) & 0xF);
 #endif
   // logf("normalized %p to %p\n", p, norm_p);
   assert(FP_SEG(norm_p) - FP_SEG(p) < 0x8000);
   return norm_p;
 }
 
-inline void *normalize_segmented(void *p) {
-  return (void *)normalize_segmented((void const *)p);
+inline void __far *normalize_segmented(void __far *p) {
+  return (void __far *)normalize_segmented((void const __far *)p);
 }
 
-inline void const *denormalize_segmented(__segment orig_seg,
-                                         void const *norm_p) {
+inline void const __far *denormalize_segmented(__segment orig_seg,
+                                               void const __far *norm_p) {
 #ifdef SIMULATE
-  void const *p = norm_p;
+  void const __far *p = norm_p;
 #else
-  void const *p =
+  void const __far *p =
       MK_FP(orig_seg, FP_OFF(norm_p) + ((FP_SEG(norm_p) - orig_seg) << 4));
 #endif
   // logf("denormalized %p to %p\n", norm_p, p);
@@ -52,8 +53,10 @@ inline void const *denormalize_segmented(__segment orig_seg,
   return p;
 }
 
-inline void *denormalize_segmented(__segment orig_seg, void *norm_p) {
-  return (void *)denormalize_segmented(orig_seg, (void const *)norm_p);
+inline void __far *denormalize_segmented(__segment orig_seg,
+                                         void __far *norm_p) {
+  return (void __far *)denormalize_segmented(orig_seg,
+                                             (void const __far *)norm_p);
 }
 
 template <class T> class ofsp {

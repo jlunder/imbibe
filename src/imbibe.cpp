@@ -226,9 +226,9 @@ void _chain_intr(void (*int_handler)()) {
   int_handler();
 }
 
-unsigned _dos_open(const char *path, unsigned mode, int *handle) {
+unsigned _dos_open(char const __far *path, unsigned mode, int __far *handle) {
   assert(handle);
-  *handle = open(path, mode);
+  *handle = open((char const *)path, mode);
   if (*handle < 0) {
     return 1;
   }
@@ -241,10 +241,11 @@ unsigned _dos_close(int handle) {
   return 0;
 }
 
-unsigned _dos_read(int handle, void *buf, unsigned count, unsigned *bytes) {
+unsigned _dos_read(int handle, void __far *buf, unsigned count,
+                   unsigned __far *bytes) {
   assert(handle >= 0);
   assert(buf);
-  ssize_t amount = read(handle, buf, count);
+  ssize_t amount = read(handle, (void *)buf, count);
   if (amount < 0) {
     return 1;
   }
@@ -285,6 +286,16 @@ void _ffree(void __far *p) {
   assert(p);
   size_t *header_p = (size_t *)p - 1;
   ::free(header_p);
+}
+
+int _fstrcmp(char const __far *x, char const __far *y) {
+  return strcmp((char const *)x, (char const *)y);
+}
+
+size_t _fstrlen(char const __far *s) { return strlen((char const *)s); }
+
+void _fmemcpy(void __far *dest, void const __far *src, size_t size) {
+  memcpy((void *)dest, (void const *)src, size);
 }
 
 #else
