@@ -50,6 +50,11 @@ struct asm_video_details {
 };
 
 extern asm_video_details asm_bios_get_video_details();
+extern void asm_bios_set_video_mode(uint8_t mode);
+extern void asm_bios_set_cursor_style(uint8_t start_opts, uint8_t end);
+
+#if BUILD_MSDOS_WATCOMC
+
 #pragma aux asm_bios_get_video_details =                                       \
     "   mov ah, 00Fh              "                                            \
     "   push    bp                "                                            \
@@ -57,19 +62,21 @@ extern asm_video_details asm_bios_get_video_details();
     "   pop     bp                "                                            \
     "   mov     bl, bh            " modify[ax bx] nomemory value[bx ax]
 
-extern void asm_bios_set_video_mode(uint8_t mode);
 #pragma aux asm_bios_set_video_mode =                                          \
     "   push    bp                "                                            \
     "   mov ah, 000h              "                                            \
     "   int     10h               "                                            \
     "   pop     bp                " parm[al] modify[ax] nomemory;
 
-extern void asm_bios_set_cursor_style(uint8_t start_opts, uint8_t end);
 #pragma aux asm_bios_set_cursor_style =                                        \
     "   push    bp                "                                            \
     "   mov ah, 001h              "                                            \
     "   int     10h               "                                            \
     "   pop     bp                " parm[ch][cl] modify[ax] nomemory;
+
+#else
+// TODO
+#endif
 
 inline void aux_text_window::read_screen_buffer(bitmap *out_b) {
   asm_video_details details = asm_bios_get_video_details();

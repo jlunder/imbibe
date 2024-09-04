@@ -55,6 +55,7 @@ int harderr_handler(unsigned deverror, unsigned errcode,
 extern unsigned asm_dos_lseek(int handle, long offset, int whence,
                               unsigned long __far *where);
 
+#if BUILD_MSDOS_WATCOMC
 #pragma aux asm_dos_lseek = "   mov     ah, 042h              "                \
                             "   int     21h                   "                \
                             "   jc      @error                "                \
@@ -63,6 +64,9 @@ extern unsigned asm_dos_lseek(int handle, long offset, int whence,
                             "   xor     ax, ax                "                \
                             "@error:                          " parm[bx]       \
     [cx dx][ax][es di] modify[ax bx cx dx] nomemory value[ax]
+#else
+// TODO
+#endif
 
 unsigned _dos_lseek(int handle, long offset, int whence,
                     unsigned long __far *where) {

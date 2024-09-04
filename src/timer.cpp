@@ -31,8 +31,7 @@ extern void asm_timer_outwb(uint16_t port, uint16_t value);
 extern uint16_t asm_timer_inb(uint16_t port);
 extern uint16_t asm_timer_inwb(uint16_t port);
 
-#if !BUILD_POSIX_SIM
-
+#if BUILD_MSDOS_WATCOMC
 #pragma aux asm_timer_enter_crit = "pushf"                                     \
                                    "cli" modify exact[] nomemory;
 
@@ -57,7 +56,9 @@ extern uint16_t asm_timer_inwb(uint16_t port);
     "in al, dx"                                                                \
     "xchg al, ah" parm[dx] value[ax] modify exact[ax] nomemory;
 
-#else
+#elif BUILD_MSDOS_GCC_IA16
+// TODO
+#elif BUILD_POSIX_SIM
 
 inline void asm_timer_enter_crit() {}
 inline void asm_timer_leave_crit() {}
@@ -83,6 +84,8 @@ inline uint16_t asm_timer_inwb(uint16_t port) {
   return 0;
 }
 
+#else
+#error New platform support needed?
 #endif
 
 uint32_t timer::now() {

@@ -144,6 +144,11 @@ $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)u_imbibe.lnk $(OBJ_DIR)u_imbibe.cpp | $(OBJ_DIR)
 	      -c "exit" )
 	mv $(UPPER_TGT) $@
 
+# $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)u_imbibe.cpp | $(OBJ_DIR)
+# 	rm -f $@
+# 	rm -f $(OBJ_DIR)*.OBJ
+# 	ia16-elf-g++ -std=gnu++17 -g -W -Wall -Werror -li86 -I. -o $@ $<
+
 
 $(OBJ_DIR)%.obj: private CC_LOG = $(patsubst %.obj,%.log,$@)
 $(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp $(SIM_OBJ_DIR)%.o Makefile | $(OBJ_DIR)

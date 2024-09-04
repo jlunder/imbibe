@@ -103,9 +103,11 @@ UpArr  4800     4838     8D00     9800
 
 #define logf_key_manager(...) disable_logf("KEYBOARD: " __VA_ARGS__)
 
-#if !BUILD_POSIX_SIM
-
+#if BUILD_MSDOS
 extern bool asm_bios_key_event_available();
+extern uint16_t asm_bios_read_key_event();
+
+#if BUILD_MSDOS_WATCOMC
 #pragma aux asm_bios_key_event_available =                                     \
     "   mov     ah, 011h          "                                            \
     "   int     016h              "                                            \
@@ -114,16 +116,18 @@ extern bool asm_bios_key_event_available();
     "   mov     al, 1             "                                            \
     "@1:                          " modify nomemory[ax] value[al]
 
+#pragma aux asm_bios_read_key_event =                                          \
+    "   mov     ah, 010h          "                                            \
+    "   int     016h              " modify nomemory[ax] value[ax];
+#else
+// TODO
+#endif
+
 bool keyboard::key_event_available() {
   bool result = asm_bios_key_event_available();
   logf_sim("('key_avail',%d)\n", result);
   return result;
 }
-
-extern uint16_t asm_bios_read_key_event();
-#pragma aux asm_bios_read_key_event =                                          \
-    "   mov     ah, 010h          "                                            \
-    "   int     016h              " modify nomemory[ax] value[ax];
 
 key_code_t keyboard::read_key_event() {
   uint16_t k = asm_bios_read_key_event();
@@ -135,4 +139,8 @@ key_code_t keyboard::read_key_event() {
   }
 }
 
+#elif BUILD_POSIX_SIM
+// In imbibe.cpp
+#else
+#error New platform support needed?
 #endif

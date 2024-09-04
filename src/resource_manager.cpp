@@ -63,6 +63,7 @@ void __far *data_from_reclaim_header(reclaim_header __far *header) {
 #if 0
 
 extern hash_t asm_fletcher16_str(char const __far * s);
+#if BUILD_MSDOS_WATCOMC
 #pragma aux asm_fletcher16_str =                                               \
     "   dec     di              "                                              \
     "   xor     ax, ax          "                                              \
@@ -86,6 +87,9 @@ extern hash_t asm_fletcher16_str(char const __far * s);
     "   inc     al              "                                              \
     "   jmp     @loop           "                                              \
     "@done:                     " modify[ax bl di] parm[es di] value[ax]
+#else
+// TODO
+#endif
 
 #endif
 

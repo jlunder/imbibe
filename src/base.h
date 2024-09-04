@@ -88,8 +88,12 @@
 
 extern void failsafe_textmode();
 
+#if BUILD_MSDOS_WATCOMC
 #pragma aux failsafe_textmode = "mov ax, 03h"                                  \
                                 "int 010h" modify[ax] nomemory
+#else
+// TODO
+#endif
 
 // seemingly missing from dos.h??
 extern unsigned _dos_lseek(int handle, long offset, int whence,
