@@ -197,36 +197,36 @@ void draw_rle_tbm(graphics *g, aux_graphics::clip_params const &p, tbm const &t,
       g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
   uint16_t dest_stride = g->b()->width();
   for (coord_t i = p.source.y1; i < p.source.y2; ++i) {
-    if (lines[i] == 0) {
-      continue;
-    }
     d.seek_to(lines[i]);
-
-    coord_t run_end;
-    for (coord_t run_start = p.source.x1; run_start < p.source.x2;
-         run_start = run_end) {
+    coord_t run_end = -1; // should be set in loop
+    for (coord_t run_start = 0; run_start < p.source.x2; run_start = run_end) {
       uint8_t run_info = d.unpack<uint8_t>();
       uint8_t run_length = ((run_info - 1) & 0x7F) + 1;
       run_end = run_start + run_length;
-      if (run_end > p.source.x2) {
-        run_end = p.source.x2;
-      }
+      run_end = min(run_end, p.source.x2);
       if ((run_info & 0x80) == 0) {
+        // copy run
         termel_t const __far *run_data = d.unpack_array<termel_t>(run_length);
-        if (run_start < p.source.x1) {
-          run_data += p.source.x1 - run_start;
-          run_start = p.source.x1;
+        if (run_end > p.source.x1) {
+          if (run_start < p.source.x1) {
+            run_data += p.source.x1 - run_start;
+            run_start = p.source.x1;
+          }
+          op.transfer_line(dest_p + run_start - p.source.x1, run_data,
+                           run_end - run_start);
         }
-        op.transfer_line(dest_p + run_start - p.source.x1, run_data,
-                         run_end - run_start);
       } else {
+        // fill run
         termel_t run_tm = d.unpack<termel_t>();
-        if (run_start < p.source.x1) {
-          run_start = p.source.x1;
+        if (run_end > p.source.x1) {
+          if (run_start < p.source.x1) {
+            run_start = p.source.x1;
+          }
+          op.fill_line(dest_p + run_start - p.source.x1, run_tm,
+                       run_end - run_start);
         }
-        op.fill_line(dest_p + run_start - p.source.x1, run_tm,
-                     run_end - run_start);
       }
+      assert(run_end > 0);
     }
     dest_p += dest_stride;
   }
@@ -245,11 +245,12 @@ void draw_mask_rle_tbm(graphics *g, aux_graphics::clip_params const &p,
       continue;
     }
     d.seek_to(lines[i]);
-
-    coord_t span_end;
-    for (coord_t span_start = 0;; span_start = span_end) {
+    coord_t span_end = -1; // should be set in loop
+    for (coord_t span_start = 0; span_start < p.source.x2;
+         span_start = span_end) {
       tbm_span const __far &span = d.unpack<tbm_span>();
       if ((span.skip == 0) && (span.termel_count == 0)) {
+        // early end-of-line
         break;
       }
       span_start += span.skip;
@@ -270,9 +271,8 @@ void draw_mask_rle_tbm(graphics *g, aux_graphics::clip_params const &p,
         op.transfer_line(dest_p + span_start - p.source.x1, span_data,
                          span_end - span_start);
       }
-      if (span_end >= p.source.x2) {
-        break;
-      }
+      assert(span_end > 0);
+      assert(span_end > span_start);
     }
     dest_p += dest_stride;
   }

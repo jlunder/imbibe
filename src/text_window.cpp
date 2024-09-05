@@ -268,18 +268,15 @@ void text_window::present_copy(termel_t const __far *backbuffer, coord_t width,
       reinterpret_cast<void __far *>(aux_text_window::s_screen_buffer),
       *backbuffer, *aux_text_window::s_screen_buffer);
 
-  coord_t i;
   coord_t bytes_per_line = r.width() * sizeof(termel_t);
-  coord_t lines = min(r.y2, height) - min(r.y1, height);
-  uint8_t const __far *source_p =
-      reinterpret_cast<uint8_t const __far *>(backbuffer + r.y1 * width + r.x1);
-  uint8_t __far *dest_p = reinterpret_cast<uint8_t __far *>(
-      aux_text_window::s_screen_buffer + r.y1 * width + r.x1);
-  uint16_t stride = width * sizeof(termel_t);
+  coord_t lines = r.y2 - r.y1;
+  termel_t const __far *source_p = backbuffer + r.y1 * width + r.x1;
+  termel_t __far *dest_p =
+      aux_text_window::s_screen_buffer + r.y1 * width + r.x1;
 
-  for (i = 0; i < lines; ++i) {
+  for (coord_t i = 0; i < lines; ++i) {
     _fmemcpy(dest_p, source_p, bytes_per_line);
-    dest_p += stride;
-    source_p += stride;
+    dest_p += width;
+    source_p += width;
   }
 }

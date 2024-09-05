@@ -54,15 +54,25 @@ bool intro_element::handle_key(uint16_t key) {
 }
 
 void intro_element::animate(anim_time_t delta_ms) {
+  m_cover_y.update(delta_ms);
+  coord_t cover_y = m_cover_y.value();
+  m_cover.set_frame_pos(0, cover_y);
+
+  m_capture_background.set_visible(cover_y > 0);
+  m_logo.set_visible(cover_y > 0);
+
   m_logo_fade.update(delta_ms);
   m_logo.set_fade(m_logo_fade.value());
 
-  m_cover_y.update(delta_ms);
-  coord_t cover_y = m_cover_y.value();
-  m_capture_background.set_visible(cover_y > 0);
-  m_cover.set_frame_pos(0, cover_y);
+  // m_logo_fade.update(delta_ms);
+  // m_logo.set_fade(m_logo_fade.value());
 
-  m_logo.set_visible(cover_y > 0);
+  // m_cover_y.update(delta_ms);
+  // coord_t cover_y = m_cover_y.value();
+  // m_capture_background.set_visible(cover_y > 0);
+  // m_cover.set_frame_pos(0, cover_y);
+
+  // m_logo.set_visible(cover_y > 0);
 
   if (m_cover_y.done()) {
     m_active = false;

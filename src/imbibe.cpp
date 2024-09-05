@@ -136,7 +136,12 @@ struct loop_seq_entry {
 };
 
 key_seq_entry const key_seq[] = {
-    {500, key_code::escape},
+    {6500, key_code::escape},
+    { 137, key_code::down},
+    { 272, key_code::down},
+    { 440, key_code::up},
+    {  84, key_code::up},
+    { 178, key_code::up},
     {2000, key_code::control_q},
     {0, 0},
 };

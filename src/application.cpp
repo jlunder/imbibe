@@ -187,8 +187,14 @@ void application::run_loop() {
     anim_time_t anim_ms =
         (anim_time_t)min<uint32_t>(frame_ms, s_min_poll_interval_ms * 10);
     sim::step_animate(anim_ms);
+    s_win->lock_repaint();
     animate(anim_ms);
     s_main->show();
+    s_win->unlock_repaint();
+    // s_win->repaint(rect(10, 4, 20, 8));
+    // s_win->repaint(rect(10, 20, 20, 24));
+    // s_win->repaint(rect(60, 4, 70, 8));
+    // s_win->repaint(rect(60, 20, 70, 20));
     s_win->present();
   }
 }
