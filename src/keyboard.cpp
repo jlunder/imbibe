@@ -132,8 +132,9 @@ bool keyboard::key_event_available() {
 key_code_t keyboard::read_key_event() {
   uint16_t k = asm_bios_read_key_event();
   logf_sim("('read_key',0x%04X)\n", k);
-  if ((k & 0xFF) != 0) {
-    return (key_code_t)(k & 0xFF);
+  uint8_t ascii = (uint8_t)(k & 0xFF);
+  if ((ascii > 0) && (ascii < 128)) {
+    return (key_code_t)ascii;
   } else {
     return (key_code_t)(0x100 | (k >> 8));
   }

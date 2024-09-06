@@ -83,6 +83,28 @@ unsigned _dos_lseek(int handle, long offset, int whence,
 
 #endif
 
+#if BUILD_MSDOS && BUILD_DEBUG
+
+#include <signal.h>
+
+namespace aux_main {
+
+static termel_t screen_temp[80 * 25];
+void abort_handler(int sig) {
+  (void)sig;
+  ::_fmemcpy(screen_temp, MK_FP(0xB800, 0), sizeof screen_temp);
+  failsafe_textmode();
+  for (segsize_t i = 0; i < LENGTHOF(screen_temp); ++i) {
+    screen_temp[i] =
+        termel::with_attribute(screen_temp[i], color::white, color::black);
+  }
+  ::_fmemcpy(MK_FP(0xB800, 0), screen_temp, sizeof screen_temp);
+}
+
+} // namespace aux_main
+
+#endif
+
 int main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
@@ -101,14 +123,22 @@ int main(int argc, char *argv[]) {
   // more like, next time don't eject the disk while we're loading).
 
   _harderr(harderr_handler);
-#endif
 
+#endif
   imstring::setup();
   timer::setup();
   resource_manager::setup();
+
+#if BUILD_MSDOS && BUILD_DEBUG
+  typedef void (*sig_handler_t)(int);
+  sig_handler_t old_abort_handler = signal(SIGABRT, aux_main::abort_handler);
+#endif
   application::setup();
   application::run_loop();
   application::teardown();
+#if BUILD_MSDOS && BUILD_DEBUG
+  signal(SIGABRT, old_abort_handler);
+#endif
 
   resource_manager::teardown_exiting();
   timer::teardown();
@@ -136,14 +166,10 @@ struct loop_seq_entry {
 };
 
 key_seq_entry const key_seq[] = {
-    {6500, key_code::escape},
-    { 137, key_code::down},
-    { 272, key_code::down},
-    { 440, key_code::up},
-    {  84, key_code::up},
-    { 178, key_code::up},
-    {2000, key_code::control_q},
-    {0, 0},
+    {6500, key_code::escape},    {137, key_code::down},
+    {272, key_code::down},       {440, key_code::up},
+    {84, key_code::up},          {178, key_code::up},
+    {2000, key_code::control_q}, {0, 0},
 };
 
 loop_seq_entry const loop_seq[] = {

@@ -20,6 +20,8 @@ public:
   virtual bool active() const;
   virtual void paint(graphics *g);
 
+  void activate();
+
 private:
   struct menu_option {
     rect hot;

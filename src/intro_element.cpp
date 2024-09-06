@@ -39,17 +39,15 @@ void intro_element::layout(coord_t window_width, coord_t window_height) {
 }
 
 void intro_element::poll() {
-  if (m_active && !opaque()) {
+  if (m_active && (m_cover_y.value() + m_cover_height <= 0)) {
     application::do_next_from_intro();
+    m_active = false;
   }
 }
 
 bool intro_element::handle_key(uint16_t key) {
-  switch (key) {
-  case key_code::escape:
-    skip_transition();
-    return true;
-  }
+  (void)key;
+  skip_transition();
   return false;
 }
 
@@ -63,20 +61,6 @@ void intro_element::animate(anim_time_t delta_ms) {
 
   m_logo_fade.update(delta_ms);
   m_logo.set_fade(m_logo_fade.value());
-
-  // m_logo_fade.update(delta_ms);
-  // m_logo.set_fade(m_logo_fade.value());
-
-  // m_cover_y.update(delta_ms);
-  // coord_t cover_y = m_cover_y.value();
-  // m_capture_background.set_visible(cover_y > 0);
-  // m_cover.set_frame_pos(0, cover_y);
-
-  // m_logo.set_visible(cover_y > 0);
-
-  if (m_cover_y.done()) {
-    m_active = false;
-  }
 }
 
 bool intro_element::active() const { return m_active; }

@@ -135,11 +135,9 @@ struct rect {
   coord_t width() const { return x2 - x1; }
   coord_t height() const { return y2 - y1; }
   bool trivial() const { return (x2 <= x1) || (y2 <= y1); }
-  bool valid() const { return (x2 >= x1) && (y2 >= y1); }
   bool reasonable() const {
     // The >> 1 gets around an issue where abs(INT16_MIN) == INT16_MIN
-    return valid() &&
-           (((abs(x1 >> 1) | abs(y1 >> 1) | abs(x2 >> 1) | abs(y2 >> 1)) &
+    return (((abs(x1 >> 1) | abs(y1 >> 1) | abs(x2 >> 1) | abs(y2 >> 1)) &
              ~(INT16_MAX / 4)) == 0);
   }
 

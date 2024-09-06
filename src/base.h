@@ -89,8 +89,15 @@
 extern void failsafe_textmode();
 
 #if BUILD_MSDOS_WATCOMC
-#pragma aux failsafe_textmode = "mov ax, 03h"                                  \
-                                "int 010h" modify[ax] nomemory
+#pragma aux failsafe_textmode =                                                \
+    "   mov     ah, 003h                "                                      \
+    "   mov     bh, 0                   "                                      \
+    "   int     010h                    "                                      \
+    "   mov     ax, 00003h              "                                      \
+    "   int     010h                    "                                      \
+    "   mov     ah, 002h                "                                      \
+    "   mov     bh, 0                   "                                      \
+    "   int     010h                    " modify[ax bx cx dx] nomemory
 #else
 // TODO
 #endif

@@ -26,6 +26,10 @@ bool clip_params::compute_clip(graphics const *g, rect const &r) {
   assert(g_clip.y2 <= g->b()->height());
   assert(r.reasonable());
 
+  if (g->clip().trivial() || r.trivial()) {
+    return false;
+  }
+
   dest = g->origin() + point(r.x1, r.y1);
   source.assign(0, 0, r.width(), r.height());
 

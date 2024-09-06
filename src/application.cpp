@@ -442,6 +442,7 @@ void application::deactivate_intro() {
 void application::activate_menu() {
   assert(s_last_mode == mode_none);
   s_last_mode = mode_menu;
+  s_menu_screen->activate();
 }
 
 void application::deactivate_menu() {
