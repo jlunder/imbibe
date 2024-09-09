@@ -1,0 +1,103 @@
+{
+    "background": "assets/menu-bg.bin",
+    "options": [
+        {
+            "hot": [
+                0,
+                10,
+                80,
+                16
+            ],
+            "selected-pos": [
+                0,
+                12
+            ],
+            "selected-overlay": "assets/menu-se0.bin",
+            "submenu": "0about/submenu.json"
+        },
+        {
+            "hot": [
+                0,
+                10,
+                80,
+                16
+            ],
+            "selected-pos": [
+                0,
+                12
+            ],
+            "selected-overlay": "assets/menu-se1.bin",
+            "submenu": "1thought/submenu.json"
+        },
+        {
+            "hot": [
+                0,
+                10,
+                80,
+                16
+            ],
+            "selected-pos": [
+                0,
+                12
+            ],
+            "selected-overlay": "assets/menu-se2.bin",
+            "submenu": "2meat/submenu.json"
+        },
+        {
+            "hot": [
+                0,
+                10,
+                80,
+                16
+            ],
+            "selected-pos": [
+                0,
+                12
+            ],
+            "selected-overlay": "assets/menu-se3.bin",
+            "submenu": "3vegetar/submenu.json"
+        },
+        {
+            "hot": [
+                0,
+                10,
+                80,
+                16
+            ],
+            "selected-pos": [
+                0,
+                12
+            ],
+            "selected-overlay": "assets/assets/menu-se4.bin",
+            "submenu": "4lunatic/submenu.json"
+        },
+        {
+            "hot": [
+                0,
+                10,
+                80,
+                16
+            ],
+            "selected-pos": [
+                0,
+                12
+            ],
+            "selected-overlay": "assets/menu-se5.bin",
+            "submenu": "5drinks/submenu.json"
+        },
+        {
+            "hot": [
+                0,
+                10,
+                80,
+                16
+            ],
+            "selected-pos": [
+                0,
+                12
+            ],
+            "selected-overlay": "assets/menu-se6.bin",
+            "submenu": "6gallery/submenu.json"
+        }
+    ]
+}

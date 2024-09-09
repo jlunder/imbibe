@@ -1,0 +1,18 @@
+{
+    "menu-header": "./subm-top.bin",
+    "menu-footer": "assets/subm-bot.bin",
+    "option-unselected-background": "assets/subm-opt.bin",
+    "option-selected-background": "assets/subm-sel.bin",
+    "option-selected-offset": [
+        0,
+        0
+    ],
+    "option-unselected-label-attribute": "hi-white:black",
+    "option-selected-label-attribute": "hi-white:blue",
+    "option-label-offset": [
+        0,
+        1
+    ],
+    "options": [
+    ]
+}

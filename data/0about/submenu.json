@@ -1,0 +1,38 @@
+{
+    "menu-header": "./subm-top.bin",
+    "menu-footer": "assets/subm-bot.bin",
+    "option-unselected-background": "assets/subm-opt.bin",
+    "option-selected-background": "assets/subm-sel.bin",
+    "option-selected-offset": [
+        0,
+        0
+    ],
+    "option-unselected-label-attribute": "hi-white:black",
+    "option-selected-label-attribute": "hi-white:blue",
+    "option-label-offset": [
+        0,
+        1
+    ],
+    "options": [
+        {
+            "label": "From the editor: what it was, then",
+            "viewer-file": "./viewer/ABOUT.TXT"
+        },
+        {
+            "label": "From the editor: what it is, now",
+            "viewer-file": "./viewer/ABOUT3.TXT"
+        },
+        {
+            "label": "From the programmer: deflections, complaints, bluster",
+            "viewer-file": "./viewer/ABOUT-HJ.TXT"
+        },
+        {
+            "label": "About the recipes",
+            "viewer-file": "./viewer/RECIPES.TXT"
+        },
+        {
+            "label": "Contributors",
+            "viewer-file": "./viewer/-CONTRIB.TXT"
+        }
+    ]
+}
