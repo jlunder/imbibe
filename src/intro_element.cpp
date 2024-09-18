@@ -8,12 +8,12 @@
 #include "tbm.h"
 
 intro_element::intro_element() {
-  tbm logo_tbm(resource_manager::fetch_tbm("logo.tbm"));
+  tbm logo_tbm(resource_manager::fetch_tbm("assets/logo1.tbm"));
   tbm_header const __far &logo_h = logo_tbm.header();
   m_logo_width = logo_h.width;
   m_logo_height = logo_h.height;
   m_logo.set_tbm(logo_tbm);
-  tbm cover_tbm(resource_manager::fetch_tbm("cover.tbm"));
+  tbm cover_tbm(resource_manager::fetch_tbm("assets/cover.tbm"));
   tbm_header const __far &cover_h = cover_tbm.header();
   m_cover_width = cover_h.width;
   m_cover_height = cover_h.height;
@@ -45,7 +45,7 @@ void intro_element::poll() {
   }
 }
 
-bool intro_element::handle_key(uint16_t key) {
+bool intro_element::handle_key(key_code_t key) {
   (void)key;
   skip_transition();
   return false;

@@ -31,11 +31,16 @@ public:
   bool null_or_empty() const { return null() || empty(); }
   char const __far *c_str() const { return m_str; }
 
-  uint16_t length() const {
+  segsize_t length() const {
     assert(m_str);
     return _fstrlen(m_str);
   }
-  char at(uint16_t pos) const {
+  char at(segsize_t pos) const {
+    assert(m_str);
+    assert(pos < length());
+    return m_str[pos];
+  }
+  char operator[](segsize_t pos) const {
     assert(m_str);
     assert(pos < length());
     return m_str[pos];
@@ -43,7 +48,18 @@ public:
 
   int compare_to(imstring const &other) { return compare(*this, other); }
 
-  // operator char const __far *() const { return c_str(); }
+  //operator char const __far *() const { return c_str(); }
+
+  imstring &operator=(imstring const &other) {
+    if (is_dynamic(m_str)) {
+      unref_dynamic(*this);
+    }
+    m_str = other.m_str;
+    if (is_dynamic(m_str)) {
+      ref_dynamic(*this);
+    }
+    return *this;
+  }
 
   static int compare(imstring const &x, imstring const &y) {
     return _fstrcmp(x.c_str(), y.c_str());

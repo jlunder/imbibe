@@ -70,8 +70,8 @@ struct bitmap_transform_params : public clip_params {
   coord_t lines;
   termel_t const __far *source_p;
   termel_t __far *dest_p;
-  uint16_t source_stride;
-  uint16_t dest_stride;
+  segsize_t source_stride;
+  segsize_t dest_stride;
 
   bool compute_transform(graphics *g, coord_t x, coord_t y, coord_t width,
                          coord_t height, termel_t const __far *data);
@@ -92,11 +92,11 @@ struct bitmap_transform_params : public clip_params {
 class copy_line_op {
 public:
   void transfer_line(termel_t __far *dest, termel_t const __far *src,
-                     uint16_t count) const {
+                     segsize_t count) const {
     _fmemcpy(dest, src, count * sizeof(termel_t));
   }
-  void fill_line(termel_t __far *dest, termel_t src, uint16_t count) const {
-    for (uint16_t i = 0; i < count; ++i) {
+  void fill_line(termel_t __far *dest, termel_t src, segsize_t count) const {
+    for (segsize_t i = 0; i < count; ++i) {
       dest[i] = src;
     }
   }
@@ -110,19 +110,19 @@ public:
   }
 
   void transfer_line(termel_t __far *dest, termel_t const __far *src,
-                     uint16_t count) const {
-    for (uint16_t j = 0; j < count; ++j) {
+                     segsize_t count) const {
+    for (segsize_t j = 0; j < count; ++j) {
       termel_t te = src[j];
       dest[j] = termel::with_attribute(te, m_fade_lut[termel::foreground(te)],
                                        m_fade_lut[termel::background(te)]);
     }
   }
 
-  void fill_line(termel_t __far *dest, termel_t src, uint16_t count) const {
+  void fill_line(termel_t __far *dest, termel_t src, segsize_t count) const {
     termel_t te =
         termel::with_attribute(src, m_fade_lut[termel::foreground(src)],
                                m_fade_lut[termel::background(src)]);
-    for (uint16_t i = 0; i < count; ++i) {
+    for (segsize_t i = 0; i < count; ++i) {
       dest[i] = te;
     }
   }
@@ -196,10 +196,10 @@ template <class TLineOp>
 void draw_rle_tbm(graphics *g, aux_graphics::clip_params const &p, tbm const &t,
                   TLineOp op) {
   unpacker d(t.data_unpacker());
-  uint16_t const __far *lines = d.unpack_array<uint16_t>(p.source.y1);
+  segsize_t const __far *lines = d.unpack_array<segsize_t>(p.source.y1);
   termel_t __far *dest_p =
       g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
-  uint16_t dest_stride = g->b()->width();
+  segsize_t dest_stride = g->b()->width();
   for (coord_t i = p.source.y1; i < p.source.y2; ++i) {
     d.seek_to(lines[i]);
     coord_t run_end = -1; // should be set in loop
@@ -243,7 +243,7 @@ void draw_mask_rle_tbm(graphics *g, aux_graphics::clip_params const &p,
   uint16_t const __far *lines = d.unpack_array<uint16_t>(p.source.y1);
   termel_t __far *dest_p =
       g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
-  uint16_t dest_stride = g->b()->width();
+  segsize_t dest_stride = g->b()->width();
   for (coord_t i = p.source.y1; i < p.source.y2; ++i) {
     if (lines[i] == 0) {
       continue;
@@ -340,12 +340,12 @@ void graphics::draw_rectangle(rect const &r, termel_t p) {
   logf_graphics("clipped draw_rectangle %d, %d, %d, %d; %c, %02X\n", cx1, cy1,
                 cx2, cy2, p.character(), p.attribute().value());
 
-  uint16_t rows = cr.height();
-  uint16_t stride = m_b->width();
-  uint16_t cols = cr.width();
+  segsize_t rows = cr.height();
+  segsize_t stride = m_b->width();
+  segsize_t cols = cr.width();
   termel_t __far *pp = m_b->data() + cr.y1 * stride + cr.x1;
-  for (uint16_t r = 0; r < rows; ++r) {
-    for (uint16_t c = 0; c < cols; ++c) {
+  for (segsize_t r = 0; r < rows; ++r) {
+    for (segsize_t c = 0; c < cols; ++c) {
       pp[c] = p;
     }
     pp += stride;
@@ -353,13 +353,13 @@ void graphics::draw_rectangle(rect const &r, termel_t p) {
 }
 
 void graphics::draw_text(coord_t x, coord_t y, attribute_t attr,
-                         char const *s) {
+                         char const __far *s) {
   assert(m_clip.x1 >= 0);
   assert(m_clip.y1 >= 0);
   assert(m_clip.x2 >= 0);
   assert(m_clip.y2 >= 0);
   coord_t i;
-  coord_t s_len = strlen(s);
+  coord_t s_len = _fstrlen(s);
 
   x += m_origin.x;
   y += m_origin.y;

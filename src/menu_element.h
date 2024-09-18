@@ -3,7 +3,6 @@
 
 #include "imbibe.h"
 
-#include "rectangle_element.h"
 #include "screen_element.h"
 #include "tbm_element.h"
 #include "tweens.h"
@@ -15,7 +14,7 @@ public:
 
   virtual void layout(coord_t window_width, coord_t window_height);
   virtual void poll();
-  virtual bool handle_key(uint16_t key);
+  virtual bool handle_key(key_code_t key);
   virtual void animate(anim_time_t delta_ms);
   virtual bool active() const;
   virtual void paint(graphics *g);
@@ -31,9 +30,7 @@ private:
     linear_tween<coord_t> show_transition;
   };
 
-  stack_arena m_data_arena;
-
-  vector<menu_option> m_menu_options;
+  vector<menu_option> m_options;
   linear_tween<coord_t> m_scroll_y;
   tbm m_background;
   segsize_t m_selected_option;

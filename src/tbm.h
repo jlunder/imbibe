@@ -3,6 +3,7 @@
 
 #include "imbibe.h"
 
+#include "iff.h"
 #include "immutable.h"
 #include "unpacker.h"
 
@@ -24,11 +25,6 @@ public:
     fmt_mask_key = 0x0400,  // not supported yet
     fmt_mask_rle = 0x0500,
   };
-};
-
-_Packed struct __packed__ iff_header {
-  char magic[4]; // "TBMa"
-  uint32_t data_size;
 };
 
 _Packed struct __packed__ tbm_header {
@@ -69,6 +65,9 @@ public:
     return unpacker(reinterpret_cast<void const __far *>(th + 1),
                     (segsize_t)(ih->data_size - sizeof(tbm_header)));
   }
+
+  coord_t width() const {return (coord_t)header().width;}
+  coord_t height() const {return (coord_t)header().height;}
 
 private:
   immutable m_raw;

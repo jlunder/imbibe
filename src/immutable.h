@@ -55,7 +55,9 @@ public:
     if (m_index != 0) {
       unref();
     }
+    m_seg = 0;
     m_index = 0;
+    m_ofs = 0;
     return *this;
   }
 
@@ -86,6 +88,13 @@ private:
   void init(reclaim_func_t f, void const __far *orig_p);
   void ref();
   void unref();
+
+  immutable(__segment n_seg, uint8_t n_index, uint8_t n_ofs)
+      : m_seg(n_seg), m_index(n_index), m_ofs(n_ofs) {
+    if (m_index != 0) {
+      ref();
+    }
+  }
 
 #if BUILD_MSDOS
   explicit immutable(uint32_t n_handle) {

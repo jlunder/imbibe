@@ -9,7 +9,7 @@
 #include "unpacker.h"
 
 quit_prompt_element::quit_prompt_element() {
-  tbm quit_tbm(resource_manager::fetch_tbm("quit.tbm"));
+  tbm quit_tbm(resource_manager::fetch_tbm("assets/quit.tbm"));
   tbm_header const __far &h = quit_tbm.header();
   m_quit_width = h.width;
   m_quit_height = h.height;
@@ -29,7 +29,7 @@ void quit_prompt_element::layout(coord_t window_width, coord_t window_height) {
 
 void quit_prompt_element::poll() {}
 
-bool quit_prompt_element::handle_key(uint16_t key) {
+bool quit_prompt_element::handle_key(key_code_t key) {
   switch (key) {
   case 'y':
   case 'Y':

@@ -151,11 +151,11 @@ int main(int argc, char *argv[]) {
 
 namespace sim {
 
-uint16_t dummy_screen[16384];
+uint16_t dummy_screen[4000];
 
 struct key_seq_entry {
   uint32_t ms;
-  uint16_t key;
+  key_code_t key;
 };
 
 struct loop_seq_entry {

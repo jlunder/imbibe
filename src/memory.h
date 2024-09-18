@@ -20,6 +20,9 @@
 typedef uint16_t segsize_t;
 typedef int16_t segdiff_t;
 
+#define SEGSIZE_MAX UINT16_MAX
+#define SEGSIZE_INVALID UINT16_MAX
+
 inline void const __far *normalize_segmented(void const __far *p) {
 #if BUILD_POSIX_SIM
   void const __far *norm_p = p;
@@ -60,7 +63,11 @@ inline void __far *denormalize_segmented(__segment orig_seg,
 template <class T> class ofsp {
 public:
   ofsp() {}
+#if defined(__WATCOMC__)
   ofsp(ofsp const &other) : m_ofs(other.m_ofs) {}
+#else
+  ofsp(ofsp const &other) = default;
+#endif
   explicit ofsp(segsize_t i) : m_ofs((static_cast<T __near *>(0)) + i) {}
   explicit ofsp(T __near *n_ofs) : m_ofs(n_ofs) {}
   template <class U> explicit ofsp(ofsp<U> other) : m_ofs(other.m_ofs) {
@@ -70,6 +77,9 @@ public:
   ofsp operator+(segdiff_t n) const { return ofsp(m_ofs + n); }
   ofsp operator-(segdiff_t n) const { return ofsp(m_ofs - n); }
   segdiff_t operator-(ofsp other) const { return m_ofs - other.m_ofs; }
+#if !defined(__WATCOMC__)
+  ofsp &operator=(ofsp const &other) = default;
+#endif
   ofsp &operator+=(segdiff_t n) {
     m_ofs += n;
     return *this;
@@ -113,7 +123,11 @@ public:
   typedef T __far &reference_type;
 
   segp() {}
+#if defined(__WATCOMC__)
   segp(segp const &other) : m_seg(other.m_seg) {}
+#else
+  segp(segp const &other) = default;
+#endif
   explicit segp(__segment n_seg) : m_seg(n_seg) {}
   template <class U> explicit segp(segp<U> other) : m_seg(other.m_seg) {
     assert(static_cast<U __far *>(get()) == other.get());
@@ -147,6 +161,9 @@ public:
     return *(pointer_type)MK_FP(m_seg, ofs.ofs());
   }
   operator segp<T const>() const { return segp<T const>(m_seg); }
+#if !defined(__WATCOMC__)
+  segp &operator=(segp const &other) = default;
+#endif
 
 private:
   __segment m_seg;

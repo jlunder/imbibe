@@ -79,8 +79,8 @@ template <class T> inline void move(T *src, T *dest, uint_fast16_t n) {
 template <class T> class vector {
 public:
   // no reverse iterators, no swap, and pointers used as iterators. oh well.
-  typedef uint16_t size_type;
-  typedef int16_t difference_type;
+  typedef segsize_t size_type;
+  typedef segdiff_t difference_type;
   typedef T &reference;
   typedef T const &const_reference;
   typedef T *iterator;
@@ -91,8 +91,13 @@ public:
   vector() : m_size(0), m_capacity(0), m_data(NULL) {}
 
   vector(vector const &x) : m_size(x.m_size), m_capacity(x.m_capacity) {
-    m_data = aux_vector::allocate<T>(m_capacity);
-    aux_vector::copy_construct<T>(x.begin(), m_data, m_size);
+    assert(m_size <= m_capacity);
+    if (m_capacity > 0) {
+      m_data = aux_vector::allocate<T>(m_capacity);
+      aux_vector::copy_construct<T>(x.begin(), m_data, m_size);
+    } else {
+      m_data = NULL;
+    }
   }
 
   ~vector() {

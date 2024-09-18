@@ -1,0 +1,146 @@
+1998 June:
+
+The Mighty Cthulu: "hey joe, can I take advantage of your hax0rly skillz to
+                    produce an 3l33te e-mag called imbibe, all about food?"
+The 313370 hAx0R j03: "w0w! that sounds liK3 a r3et el33t ide4! g3t Me soME
+                       aRticlez aNd I'll get hax0ring!"
+
+1998 August:
+
+The 31ee70 haXoR J03: "h3y r0wan, wHEre arE th3 artic1es j00 prOMiseD me?"
+
+[It's a valid question: the latest timestamp on the vast majority of these 
+articles is March 21, 1998, well before Joe was shaking me down.  What was I 
+up to, having a breakdown?]  [Oh wait, M-9808 -- I *was* having a breakdown!]
+
+1998 October:
+
+The 3lit3 hAx0R j03: "ROWAN, th33 ARTICLEZ?"
+
+1998 December:
+
+The 313370 HAx0r Joe: "ROWAN YOU HOOR! I'VE BEEN ON YOUR ASS ABOUT THOSE
+                       ARTICLES FOR MONTHS NOW! GET ME THOSE ARTICLES!"
+
+1999 March:
+
+The Mighty Cthulu: "Here are the articles 8)"
+The 313370 hAx0R j03: "s0rRy. I w4it3d 8 m0nths, and now I've ins7a113d
+                       leenooks like a g00d little hax0r. um, TS 4 n0w, er..
+                       <sh33pi5H lo0k>"
+
+1999 September:
+
+The 31337 hAX0R j00: "y33h4w I bought a 1337 l4PT0P for sch00L! it onLy runz
+                      LOSED0ZE, which I have to run anyh0w 4 skewl."
+
+1999 December 19 (sunday) ~10h:
+
+The 37331 hAck3R j03: "I'm bored. I think I'll code imbibe."
+
+
+fortunately, the articles were written (thanks forever to my pack-rat nature)
+onto a CD-R backup of one of my hard drives before The Mighty Cthulu's hard
+drive got exploded by The Evil Laughing Linux Hax0r. I was able to get to 
+work straight away.
+
+anyway, you can see that this project has been underway for over a year now.
+[ha ha ha ha ha] that means it must be really good, right?
+
+
+right?
+
+imbibe e-mag viewer:
+
+the source code for imbibe weigh[ed] ~100k, which is ~5000 lines of C++ for me
+(85 or so typewritten pages), making it the largest single project I'[d] ever
+completed. for better or worse, that's not that big on the scale of things.
+still. I [was] a little proud.
+
+my development tools (for DOS) [were]: Watcom C++ 10.6, Tran's PMODE/W, and 
+edit.  the Watcom remote debugger for Windows is the bomb. edit is the tool 
+of satan.
+
+therefore I am satan. worship me.
+
+imbibe is absurdly overdesigned. I hope[d] to exploit that later by writing
+lots of e-mag viewers with really weird features and graphical easter-eggs:
+so if you [had] an idea for an e-mag and want[ed] a viewer coded, I would
+[have been] happy to oblige. send mail to [a very old address]. it might take
+me a week or two to respond, but I will respond [but not to mail sent to that
+long dormant address], so be patient.
+
+
+greets and dedications are for losers who know other people.
+
+ -hacker joe
+
+...
+
+[Cthulu picks up the trail, September 2022:]
+
+Of course, this document is what we might consider an alternate history, 
+since upon its final release this magazine distinctly is not tapping any of 
+the technology Joe cooked up for its use, no trace of which remains some 24 
+years later.  (School just started, and my family is sharing a carpooling 
+arrangement with Joe's for getting our kids to class and back, so even though 
+this has all been dormant longer than our lifespan to date back when it was a 
+going concern, the slim thread of history continues running through our 
+respective projects.)
+
+While wading around knee-deep in this pile of captures, like the Fellowship of
+the Ring reconstructing the fall of Khazad-dûm, trying to determine 
+conclusively just what the heck went wrong after getting 99% of the way 
+there... leaving us collectively languishing in development hell for, 
+charitably, a couple of decades -- I think I cracked the code.  Or is it 
+that the code cracked me?  Literally, it's 1998 Hacker Joe's homebrew markup
+language intended for beautifying the dozens of articles reserved for this 
+production.  I must have taken one look at it and gone "Manually implement my 
+own proprietary replacement for the (national) standard provided by ANSI?  
+Yeah, I'll definitely prioritise doing that... when pigs fly!"  Without any 
+intention to shame or scold Joe for his rough but robust solution to my nutty 
+problem, here you go, below -- the sample he provided that almost certainly 
+ground me to a halt:
+
+        this is an example of some formatted, marked up text.
+        {this is an aside}
+
+        \c15{this text is bright white}
+        \c15,1{this text is bright white on blue}
+        \c,7{this text has a gray background}
+        \db,15
+        \cb{this text is bright white (Bold)}
+        \p15,1{there is a 15% probability that this text will be blue}
+
+In retrospect, it's not so impossible to work with, but history has
+demonstrated that I can be pretty thoroughly derailed by even small 
+obstacles.  Now we know!  Now in its place instead of one user-unfriendly 
+solution I have wound up working with an entirely different user-unfriendly 
+solution of much lesser flexibility, with no tech support.  Nice work, bozo!
+
+[Cthulu resumes the trail in mid-2024:]
+
+OK, well, I have many different projects competing for my attention.  This is
+definitely the most longstanding of them, but sometimes forward progress gets
+blocked for a long time for a good reason -- because overcoming the obstacles
+in your path is genuinely challenging!
+
+I have to roll back a couple of bold proclamations made in 2022: in fact, we 
+did wind up putting this together using Joe's quarter-century-old code.  (It's
+like FORTRAN programmers coming out of retirement to save mainframes and the
+banking industry during Y2K, only the stakes are a little lower.)  When I got
+back in touch with Joe, he was like "oh yes, I definitely bit off a bit too
+much with that project, I was trying to make the emag into a multi-threaded
+operating system", so I don't feel too bad about being thrown clear by the 
+explosive scope creep at that time.
+
+The entirely different user-unfriendly solution?  Too user-unfriendly, it
+turns out.  (I had a scheme to hoover out the content from an issue of Eerie's
+ANSI review e-mag Undergrown and replace its assets with ours, a trick I know 
+is theoretically possible because Happyfish did it once for a Blender on the
+topics of NINJA / KUNG FU / SWEATSHOP.)
+
+The carpooling arrangement?  Wasn't the right fit for that moment in time,
+alas.  But as this magazine demonstrates, it's never too late, so keep your
+options open and maybe someday these kids will be commuting to work together
+through the post-apocalyptic hellscape of 2049.

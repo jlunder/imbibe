@@ -36,20 +36,13 @@ tbm::tbm(immutable const &n_raw, segsize_t raw_size) : m_raw(n_raw) {
 
 bool tbm_aux::validate(unpacker const &tbm_data) {
   unpacker tbm(tbm_data);
-  if (!tbm.fits_untyped(sizeof(iff_header) + sizeof(tbm_header))) {
-    logf_tbm("too-small TBM, unpacking " PRpF, tbm.peek_untyped());
+  uint32_t iff_data_size;
+  if (!iff::try_expect_magic(&tbm, FOURCC("TBMa"), &iff_data_size)) {
+    logf_tbm("invalid IFF header, unpacking " PRpF, tbm.peek_untyped());
     return false;
   }
-
-  {
-    iff_header const __far &iff_h = tbm.unpack<iff_header>();
-    if (fourcc(iff_h.magic) != fourcc("TBMa")) {
-      logf_tbm("bad TBM fourcc, unpacking " PRpF, tbm.base());
-      return false;
-    }
-    tbm = unpacker(tbm.peek_untyped(),
-                   (uint16_t)min<uint32_t>(iff_h.data_size, tbm.remain()));
-  }
+  tbm = unpacker(tbm.peek_untyped(),
+                 (segsize_t)min<uint32_t>(iff_data_size, tbm.remain()));
 
   tbm_header const __far &tbm_h = tbm.unpack<tbm_header>();
   uint16_t plane_size = (uint16_t)tbm_h.width * tbm_h.height;
@@ -81,7 +74,7 @@ bool tbm_aux::validate_data_rle(tbm_header const __far &tbm_h, unpacker *tbm) {
     logf_tbm("TBM line index truncated, unpacking " PRpF, tbm->base());
     return false;
   }
-  uint16_t lines_origin = tbm->pos();
+  segsize_t lines_origin = tbm->pos();
   uint16_t const __far *lines = tbm->unpack_array<uint16_t>(tbm_h.height);
   for (uint16_t i = 0; i < tbm_h.height; ++i) {
     if (lines[i] >= (tbm->size() - lines_origin)) {
@@ -90,8 +83,8 @@ bool tbm_aux::validate_data_rle(tbm_header const __far &tbm_h, unpacker *tbm) {
       return false;
     }
     tbm->seek_to(lines[i] + lines_origin);
-    uint16_t x = 0;
-    while (x < tbm_h.width) {
+    coord_t x = 0;
+    while (x < (coord_t)tbm_h.width) {
       if (!tbm->fits<uint8_t>()) {
         logf_tbm("TBM line %u run (at %u) truncated, unpacking " PRpF, i,
                  lines[i], tbm->base());
@@ -133,7 +126,7 @@ bool tbm_aux::validate_data_mask_rle(tbm_header const __far &tbm_h,
     logf_tbm("TBM line index truncated, unpacking " PRpF, tbm->base());
     return false;
   }
-  uint16_t lines_origin = tbm->pos();
+  segsize_t lines_origin = tbm->pos();
   uint16_t const __far *lines = tbm->unpack_array<uint16_t>(tbm_h.height);
   for (uint16_t i = 0; i < tbm_h.height; ++i) {
     if (lines[i] == 0) {
@@ -145,7 +138,7 @@ bool tbm_aux::validate_data_mask_rle(tbm_header const __far &tbm_h,
       return false;
     }
     tbm->seek_to(lines[i] + lines_origin);
-    uint16_t x = 0;
+    coord_t x = 0;
     for (;;) {
       if (!tbm->fits<tbm_span>()) {
         logf_tbm("TBM line %u span (at %u) truncated, unpacking " PRpF, i,
@@ -157,14 +150,15 @@ bool tbm_aux::validate_data_mask_rle(tbm_header const __far &tbm_h,
         // end marker
         break;
       }
-      if ((span.skip > tbm_h.width) || (x > tbm_h.width - span.skip)) {
+      if ((span.skip > tbm_h.width) ||
+          (x > (coord_t)(tbm_h.width - span.skip))) {
         logf_tbm("TBM line %u skip (at %u) leaves image, unpacking " PRpF, i,
                  (unsigned)(tbm->pos() - sizeof(tbm_span)), tbm->base());
         return false;
       }
       x += span.skip;
       if ((span.termel_count > tbm_h.width) ||
-          (x > tbm_h.width - span.termel_count)) {
+          (x > (coord_t)(tbm_h.width - span.termel_count))) {
         logf_tbm("TBM line %u data (at %u) leaves image, unpacking " PRpF, i,
                  (unsigned)(tbm->pos() - sizeof(tbm_span)), tbm->base());
         return false;

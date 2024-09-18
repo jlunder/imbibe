@@ -453,13 +453,14 @@ void application::deactivate_menu() {
 void application::activate_submenu(imstring category) {
   assert(s_last_mode == mode_none);
   assert(!category.null_or_empty());
+  s_submenu_screen->activate(s_submenu_category);
   s_last_submenu_category = category;
   s_last_mode = mode_submenu;
 }
 
 void application::deactivate_submenu() {
   assert(s_last_mode == mode_submenu);
-  s_last_submenu_category = NULL;
+  s_submenu_screen->deactivate();
   s_last_mode = mode_none;
 }
 

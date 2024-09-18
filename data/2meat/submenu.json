@@ -7,12 +7,16 @@
         0,
         0
     ],
-    "option-unselected-label-attribute": "hi-white:black",
-    "option-selected-label-attribute": "hi-white:blue",
     "option-label-offset": [
-        0,
+        10,
         1
     ],
+    "option-unselected-label-attribute": "hi-white:black",
+    "option-selected-label-attribute": "hi-white:blue",
     "options": [
+        {
+            "label": "About this menu",
+            "viewer-file": "./about.txt"
+        }
     ]
 }

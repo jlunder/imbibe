@@ -3,10 +3,6 @@
 
 #include "base.h"
 
-#define fourcc(arr)                                                            \
-  ((uint32_t)arr[0] | ((uint32_t)arr[1] << 8) | ((uint32_t)arr[2] << 16) |     \
-   ((uint32_t)arr[3] << 24))
-
 #define assert_margin(x, mag)                                                  \
   assert(((x) >= -((mag) / 4)) && ((x) <= (mag) / 4))
 
@@ -22,7 +18,32 @@ struct point {
   coord_t y;
 
   point() {}
+#if defined(__WATCOMC__)
+  point(point const &other) : x(other.x), y(other.y) {}
+#else
+  point(point const &other) = default;
+#endif
+#if !BUILD_FAR_DATA
+  point(point const __far &other) : x(other.x), y(other.y) {}
+#endif
   point(coord_t n_x, coord_t n_y) : x(n_x), y(n_y) {}
+
+#if defined(__WATCOMC__)
+  point &operator=(point const &other) {
+    x = other.x;
+    y = other.y;
+    return *this;
+  }
+#else
+  point &operator=(point const &other) = default;
+#endif
+#if !BUILD_FAR_DATA
+  point &operator=(point const __far &other) {
+    x = other.x;
+    y = other.y;
+    return *this;
+  }
+#endif
 
   point &operator+=(point p) {
     x += p.x;
@@ -52,6 +73,14 @@ struct rect {
   coord_t y2;
 
   rect() {}
+#if defined(__WATCOMC__)
+// rect(rect const & other): x1(other.x1), y1(other.y1), x2(other.x2),
+// y2(other.y2) {}
+#else
+  rect(rect const &other) = default;
+  rect(rect const __far &other)
+      : x1(other.x1), y1(other.y1), x2(other.x2), y2(other.y2) {}
+#endif
   rect(coord_t n_x1, coord_t n_y1, coord_t n_x2, coord_t n_y2)
       : x1(n_x1), y1(n_y1), x2(n_x2), y2(n_y2) {}
 
@@ -74,6 +103,27 @@ struct rect {
     y2 = n_y2;
     return *this;
   }
+
+#if defined(__WATCOMC__)
+  rect &operator=(rect const &other) {
+    x1 = other.x1;
+    y1 = other.y1;
+    x2 = other.x2;
+    y2 = other.y2;
+    return *this;
+  }
+#else
+  rect &operator=(rect const &other) = default;
+#endif
+#if !BUILD_FAR_DATA
+  rect &operator=(rect const __far &other) {
+    x1 = other.x1;
+    y1 = other.y1;
+    x2 = other.x2;
+    y2 = other.y2;
+    return *this;
+  }
+#endif
 
   rect &operator+=(point p) {
     x1 += p.x;

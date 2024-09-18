@@ -85,8 +85,8 @@ inline void aux_text_window::read_screen_buffer(bitmap *out_b) {
   if (details.mode == 2 || details.mode == 3) {
     out_b->assign(aux_text_window::s_screen_width,
                   aux_text_window::s_screen_height);
-    uint16_t offset = details.page * 4096 / sizeof(termel_t);
-    uint16_t size = out_b->width() * out_b->height();
+    segsize_t offset = details.page * 4096 / sizeof(termel_t);
+    segsize_t size = out_b->width() * out_b->height();
     logf_text_window("computed page offset: %u\n", offset);
     _fmemcpy(out_b->data(), aux_text_window::s_screen_buffer + offset,
              size * sizeof(termel_t));

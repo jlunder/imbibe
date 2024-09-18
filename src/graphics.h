@@ -3,6 +3,8 @@
 
 #include "imbibe.h"
 
+#include "imstring.h"
+
 class bitmap;
 class tbm;
 class unpacker;
@@ -33,7 +35,17 @@ public:
     draw_rectangle(rect(x1, y1, x2, y2), p);
   }
   void draw_rectangle(rect const &r, termel_t p);
+#if BUILD_FAR_DATA
   void draw_text(coord_t x, coord_t y, attribute_t attr, char const *s);
+#else
+  void draw_text(coord_t x, coord_t y, attribute_t attr, char const __far *s);
+  void draw_text(coord_t x, coord_t y, attribute_t attr, char const *s) {
+    draw_text(x, y, attr, static_cast<char const __far *>(s));
+  }
+#endif
+  void draw_text(coord_t x, coord_t y, attribute_t attr, imstring const &s) {
+    draw_text(x, y, attr, s.c_str());
+  }
   void draw_bitmap(coord_t x, coord_t y, bitmap const &b);
   void draw_bitmap_fade(coord_t x, coord_t y, bitmap const &b, uint8_t fade);
   void draw_tbm(coord_t x, coord_t y, tbm const &tbm_data);

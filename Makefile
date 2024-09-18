@@ -17,7 +17,7 @@ LINK_OPT = $(LINK_OPT_$(VERSION))
 LINK = wlink
 
 CC_OPT_RELEASE = -dNDEBUG -otaeilh -ms
-CC_OPT_DEBUG = -d2 -osaeih -mm
+CC_OPT_DEBUG = -d2 -osaeih -ml
 CC_OPT_PROFILE = $(CC_OPT_RELEASE) -d1
 CC_OPT = $(CC_OPT_$(VERSION)) -2 -bt=dos -fpc -w5 -ze
 
@@ -34,17 +34,10 @@ IMBIBE_SIM_OBJS = $(patsubst $(SRC_DIR)%.cpp,$(SIM_OBJ_DIR)%.o,$(IMBIBE_SOURCES)
 IMBIBE_DEPS = $(patsubst $(SRC_DIR)%.cpp,$(DEP_DIR)%.d,$(IMBIBE_SOURCES))
 
 IMBIBE_RESOURCES = \
-	testdata/cover.tbm \
-	testdata/logo.tbm \
-	testdata/menu-bg.tbm \
-	testdata/menu-se0.tbm \
-	testdata/menu-se1.tbm \
-	testdata/menu-se2.tbm \
-	testdata/menu-se3.tbm \
-	testdata/menu-se4.tbm \
-	testdata/menu-se5.tbm \
-	testdata/menu-se6.tbm \
-	testdata/quit.tbm
+	$(patsubst data/%.bin,testdata/%.tbm,$(wildcard data/*/*.bin)) \
+	$(patsubst data/%.bin,testdata/%.tbm,$(wildcard data/*/viewer/*.bin)) \
+	$(patsubst data/%.json,testdata/%.cfg,$(wildcard data/*/*.json)) \
+	$(patsubst data/%.json,testdata/%.cfg,$(wildcard data/*.json))
 
 .PHONY: all clean deps dirs imbibe
 .DEFAULT_GOAL: all
@@ -63,7 +56,7 @@ $(OBJ_DIR_PROFILE):
 dirs: $(SIM_OBJ_DIR) $(DEP_DIR) $(OBJ_DIR)
 
 $(SIM_OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(SIM_OBJ_DIR) $(DEP_DIR)
-	g++ -std=gnu++98 -g -W -Wall -Werror -MT $@ -MMD -MP -MF $(DEP_DIR)$*.d -c $< -o $@
+	g++ -std=gnu++17 -g -W -Wall -Werror -MT $@ -MMD -MP -MF $(DEP_DIR)$*.d -c $< -o $@
 
 $(DEP_DIR)%.d: $(SIM_OBJ_DIR)%.o
 
@@ -84,8 +77,13 @@ imbibe: $(OBJ_DIR)imbibe.exe $(IMBIBE_RESOURCES)
 	    -c "`echo $< | tr '/' '\\' ` > RUN.LOG"
 #	    -c "exit"
 
-%.tbm: %.bin support/mk_tbm.py Makefile
+testdata/%.tbm: data/%.bin support/mk_tbm.py Makefile
+	mkdir -p $(dir $@)
 	support/mk_tbm.py -v -o $@ $<
+
+testdata/%.cfg: data/%.json support/mk_cfg.py Makefile
+	mkdir -p $(dir $@)
+	support/mk_cfg.py -v -r data -o $@ $<
 
 $(OBJ_DIR)imbibe.lnk: Makefile | $(OBJ_DIR)
 	echo NAME $(OBJ_DIR)imbibe.exe > $@ && \
@@ -116,33 +114,33 @@ $(OBJ_DIR)u_imbibe.lnk: Makefile | $(OBJ_DIR)
 uc = $(shell echo $(1) | tr a-z A-Z)
 
 
-# $(OBJ_DIR)%.exe: private UPPER_TGT = $(@D)/$(call uc,$(@F))
-# $(OBJ_DIR)%.exe: private LINK_LOG = $(@D)/l_$(patsubst %.exe,%.log,$(@F))
-# $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(IMBIBE_OBJS) Makefile
-# 	rm -f $@
-# 	cd workspace && \
-# 	  $(DOSBOX_BUILD) \
-# 	    -c "S:" \
-# 	    -c "$(LINK) @$< > $(LINK_LOG)" \
-# 	    -c "exit"
-# 	mv $(UPPER_TGT) $@
-
 $(OBJ_DIR)%.exe: private UPPER_TGT = $(@D)/$(call uc,$(@F))
-$(OBJ_DIR)%.exe: private UNITY_SRC = $(@D)/u_$(patsubst %.exe,%.cpp,$(@F))
-$(OBJ_DIR)%.exe: private UNITY_LOG = $(@D)/u_$(patsubst %.exe,%.log,$(@F))
-$(OBJ_DIR)imbibe.exe: $(OBJ_DIR)u_imbibe.lnk $(OBJ_DIR)u_imbibe.cpp | $(OBJ_DIR)
+$(OBJ_DIR)%.exe: private LINK_LOG = $(@D)/l_$(patsubst %.exe,%.log,$(@F))
+$(OBJ_DIR)imbibe.exe: $(OBJ_DIR)imbibe.lnk $(IMBIBE_OBJS) Makefile
 	rm -f $@
-	rm -f $(OBJ_DIR)*.OBJ
-	TEMP_OBJ=$(OBJ_DIR)`mktemp -u -p . ~XXXXXX.obj | cut -c 3- | tr a-z A-Z` ; \
-	  ( cd workspace && \
-	    $(DOSBOX_BUILD) \
-	      -c "S:" \
-	      -c "$(CC) $(CC_OPT) -fo=$$TEMP_OBJ $(UNITY_SRC) > $(UNITY_LOG)" \
-	      -c "move $$TEMP_OBJ $(OBJ_DIR)u_imbibe.obj" \
-	      -c "$(LINK) @$< > $(LINK_LOG)" \
-	      -c "wdis $(patsubst %.cpp,%.obj,$(UNITY_SRC)) -s -l=$(patsubst %.cpp,%.lst,$(UNITY_SRC))" \
-	      -c "exit" )
+	cd workspace && \
+	  $(DOSBOX_BUILD) \
+	    -c "S:" \
+	    -c "$(LINK) @$< > $(LINK_LOG)" \
+	    -c "exit"
 	mv $(UPPER_TGT) $@
+
+# $(OBJ_DIR)%.exe: private UPPER_TGT = $(@D)/$(call uc,$(@F))
+# $(OBJ_DIR)%.exe: private UNITY_SRC = $(@D)/u_$(patsubst %.exe,%.cpp,$(@F))
+# $(OBJ_DIR)%.exe: private UNITY_LOG = $(@D)/u_$(patsubst %.exe,%.log,$(@F))
+# $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)u_imbibe.lnk $(OBJ_DIR)u_imbibe.cpp | $(OBJ_DIR)
+# 	rm -f $@
+# 	rm -f $(OBJ_DIR)*.OBJ
+# 	TEMP_OBJ=$(OBJ_DIR)`mktemp -u -p . ~XXXXXX.obj | cut -c 3- | tr a-z A-Z` ; \
+# 	  ( cd workspace && \
+# 	    $(DOSBOX_BUILD) \
+# 	      -c "S:" \
+# 	      -c "$(CC) $(CC_OPT) -fo=$$TEMP_OBJ $(UNITY_SRC) > $(UNITY_LOG)" \
+# 	      -c "move $$TEMP_OBJ $(OBJ_DIR)u_imbibe.obj" \
+# 	      -c "$(LINK) @$< > $(LINK_LOG)" \
+# 	      -c "wdis $(patsubst %.cpp,%.obj,$(UNITY_SRC)) -s -l=$(patsubst %.cpp,%.lst,$(UNITY_SRC))" \
+# 	      -c "exit" )
+# 	mv $(UPPER_TGT) $@
 
 # $(OBJ_DIR)imbibe.exe: $(OBJ_DIR)u_imbibe.cpp | $(OBJ_DIR)
 # 	rm -f $@

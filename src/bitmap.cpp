@@ -48,8 +48,8 @@ bitmap &bitmap::assign(coord_t n_width, coord_t n_height) {
 
 bitmap &bitmap::assign(coord_t n_width, coord_t n_height, termel_t fill_brush) {
   assign(n_width, n_height);
-  uint16_t size = n_width * n_height;
-  for (uint16_t i = 0; i < size; ++i) {
+  segsize_t size = n_width * n_height;
+  for (segsize_t i = 0; i < size; ++i) {
     m_data[i] = fill_brush;
   }
 

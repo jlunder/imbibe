@@ -7,6 +7,10 @@
 
 namespace application {
 
+static char const * const s_intro_cfg_path = "intro.cfg";
+static char const * const s_menu_cfg_path = "menu.cfg";
+static char const * const s_outro_cfg_path = "outro.cfg";
+
 void setup();
 void teardown();
 

@@ -12,7 +12,7 @@ void outro_element::layout(coord_t window_width, coord_t window_height) {
 
 void outro_element::poll() { application::do_next_from_outro(); }
 
-bool outro_element::handle_key(uint16_t key) {
+bool outro_element::handle_key(key_code_t key) {
   switch (key) {
   case key_code::escape:
   case 'q':

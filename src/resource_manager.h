@@ -15,9 +15,8 @@ void setup();
 void teardown();
 void teardown_exiting();
 
-extern tbm fetch_tbm(imstring const &name);
-void flush(imstring const &name);
-void flush_all();
+tbm fetch_tbm(imstring const &name);
+segsize_t fetch_data(imstring const &name, immutable *out_data);
 
 } // namespace resource_manager
 

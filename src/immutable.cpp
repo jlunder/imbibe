@@ -4,7 +4,7 @@
 
 namespace aux_immutable {
 
-static uint16_t const max_reclaimable = UINT8_MAX;
+static segsize_t const max_reclaimable = UINT8_MAX;
 
 struct immutable_tracking_t {
   immutable::reclaim_func_t reclaimer;
@@ -13,8 +13,8 @@ struct immutable_tracking_t {
 #endif
   __segment orig_seg;
   union {
-    uint16_t live_refs;
-    uint16_t next_unrefd;
+    segsize_t live_refs;
+    segsize_t next_unrefd;
   };
 };
 
@@ -29,7 +29,7 @@ void immutable::assign(prealloc_t policy, void const __far *p) {
   }
   if (p) {
     void const __far *norm_p = p;
-    if ((uint16_t)FP_OFF(p) > UINT8_MAX) {
+    if (FP_OFF(p) > UINT8_MAX) {
       norm_p = normalize_segmented(p);
       assert(FP_OFF(norm_p) < 0x10);
     }
@@ -53,7 +53,7 @@ void immutable::assign(reclaim_func_t f, void const __far *p) {
   }
   if (p) {
     void const __far *norm_p = p;
-    if ((uint16_t)FP_OFF(p) > UINT8_MAX) {
+    if (FP_OFF(p) > UINT8_MAX) {
       norm_p = normalize_segmented(p);
       assert(FP_OFF(norm_p) < 0x10);
     }
@@ -98,9 +98,9 @@ void immutable::init(reclaim_func_t f, void const __far *orig_p) {
       aux_immutable::immutable_index[0];
   assert(zero_tracking.reclaimer == NULL);
   if (zero_tracking.next_unrefd == 0) {
-    uint16_t last_link = 0;
+    segsize_t last_link = 0;
     // Maybe uninitialized? Rebuild the chain.
-    for (uint16_t i = 1; i < LENGTHOF(aux_immutable::immutable_index); ++i) {
+    for (segsize_t i = 1; i < LENGTHOF(aux_immutable::immutable_index); ++i) {
       if (aux_immutable::immutable_index[i].reclaimer == NULL) {
         aux_immutable::immutable_index[last_link].next_unrefd = i;
         last_link = i;
@@ -186,5 +186,6 @@ immutable weak_immutable::lock() {
   if (!tracking.reclaimer || (tracking.live_refs == 0)) {
     *this = weak_immutable();
   }
-  return immutable();
+
+  return immutable(m_seg, m_index, m_ofs);
 }

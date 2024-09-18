@@ -7,12 +7,12 @@
         0,
         0
     ],
-    "option-unselected-label-attribute": "hi-white:black",
-    "option-selected-label-attribute": "hi-white:blue",
     "option-label-offset": [
-        0,
+        10,
         1
     ],
+    "option-unselected-label-attribute": "hi-white:black",
+    "option-selected-label-attribute": "hi-white:blue",
     "options": [
         {
             "label": "From the editor: what it was, then",
@@ -23,7 +23,7 @@
             "viewer-file": "./viewer/ABOUT3.TXT"
         },
         {
-            "label": "From the programmer: deflections, complaints, bluster",
+            "label": "From the coder: deflections, complaints, bluster",
             "viewer-file": "./viewer/ABOUT-HJ.TXT"
         },
         {

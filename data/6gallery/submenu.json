@@ -7,84 +7,84 @@
         0,
         0
     ],
-    "option-unselected-label-attribute": "hi-white:black",
-    "option-selected-label-attribute": "hi-white:blue",
     "option-label-offset": [
-        0,
+        10,
         1
     ],
+    "option-unselected-label-attribute": "hi-white:black",
+    "option-selected-label-attribute": "hi-white:blue",
     "options": [
         {
             "label": "consolejockey - Orange",
-            "viewer-file": "CJY-Orange.ans"
+            "viewer-file": "./viewer/CJY-Orange.ans"
         },
         {
             "label": "Codefenix - Dabbling with ASCII - BK Logo",
-            "viewer-file": "CODEFENIX-BK_LOGO.ANS"
+            "viewer-file": "./viewer/CODEFENIX-BK_LOGO.ANS"
         },
         {
             "label": "Codefenix - Eyes Off My Fries",
-            "viewer-file": "CODEFENIX-EYES_OFF_MY_FRIES.ANS"
+            "viewer-file": "./viewer/CODEFENIX-EYES_OFF_MY_FRIES.ANS"
         },
         {
             "label": "Codefenix - Dabbling with ASCII - Pizza Hut Logo",
-            "viewer-file": "CODEFENIX-HUT_LOGO.ANS"
+            "viewer-file": "./viewer/CODEFENIX-HUT_LOGO.ANS"
         },
         {
             "label": "Codefenix - The Magic Of Caffeine",
-            "viewer-file": "CODEFENIX-MAGIC_OF_CAFFEINE.ANS"
+            "viewer-file": "./viewer/CODEFENIX-MAGIC_OF_CAFFEINE.ANS"
         },
         {
             "label": "Codefenix - Mountain Dew Logo",
-            "viewer-file": "CODEFENIX-MTDEW_LOGO.ANS"
+            "viewer-file": "./viewer/CODEFENIX-MTDEW_LOGO.ANS"
         },
         {
             "label": "Codefenix - Dabbling with ASCII - Pepsi Logo",
-            "viewer-file": "CODEFENIX-PEPSI_LOGO.ANS"
+            "viewer-file": "./viewer/CODEFENIX-PEPSI_LOGO.ANS"
         },
         {
             "label": "Codefenix - Taco Night",
-            "viewer-file": "CODEFENIX-TACO_NIGHT.ANS"
+            "viewer-file": "./viewer/CODEFENIX-TACO_NIGHT.ANS"
         },
         {
             "label": "Codefenix - Wash the Dishes",
-            "viewer-file": "CODEFENIX-WASH_THE_DISHES.ANS"
+            "viewer-file": "./viewer/CODEFENIX-WASH_THE_DISHES.ANS"
         },
         {
             "label": "Codefenix - Who wants Bologna?",
-            "viewer-file": "CODEFENIX-WHO_WANTS_BOLOGNA.ANS"
+            "viewer-file": "./viewer/CODEFENIX-WHO_WANTS_BOLOGNA.ANS"
         },
         {
             "label": "DosDoC - Fried Green Tomatoes",
-            "viewer-file": "DOSDOC-FGTOMATOES.ANS"
+            "viewer-file": "./viewer/DOSDOC-FGTOMATOES.ANS"
         },
         {
             "label": "DosDoC - Food of the Gods 2",
-            "viewer-file": "dosdoc-Food of the gods 2.ans"
+            "viewer-file": "./viewer/dosdoc-Food of the gods 2.ans"
         },
         {
             "label": "DosDoC - Nanny Oggs Cookbook",
-            "viewer-file": "dosdoc-nanny oggs cookbook.ans"
+            "viewer-file": "./viewer/dosdoc-nanny oggs cookbook.ans"
         },
         {
             "label": "moth - Broccoli",
-            "viewer-file": "moth-broccoli.ans"
+            "viewer-file": "./viewer/moth-broccoli.ans"
         },
         {
             "label": "Nitron - Bols de Fruit et Vin",
-            "viewer-file": "NI-BDFEV.ANS"
+            "viewer-file": "./viewer/NI-BDFEV.ANS"
         },
         {
             "label": "0DD - Dungeon Meshi",
-            "viewer-file": "odd-dungeonMeshiCol.ans"
+            "viewer-file": "./viewer/odd-dungeonMeshiCol.ans"
         },
         {
             "label": "0DD - GMO",
-            "viewer-file": "odd-gmo.ans"
+            "viewer-file": "./viewer/odd-gmo.ans"
         },
         {
             "label": "Zylone - Can of Beans",
-            "viewer-file": "ZYLONE-CAN_OF_BEANS.ANS"
+            "viewer-file": "./viewer/ZYLONE-CAN_OF_BEANS.ANS"
         }
     ]
 }

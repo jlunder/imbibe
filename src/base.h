@@ -112,6 +112,10 @@ extern unsigned _dos_lseek(int handle, long offset, int whence,
 #define PRpN "%Np"
 #define PRp "%p"
 
+#define PRsF "%Fs"
+#define PRsN "%Ns"
+#define PRs "%s"
+
 #elif BUILD_POSIX_SIM
 
 #define __near
@@ -138,8 +142,12 @@ extern unsigned _dos_lseek(int handle, long offset, int whence,
 #define PRpN "%p"
 #define PRp "%p"
 
+#define PRsF "%s"
+#define PRsN "%s"
+#define PRs "%s"
+
 namespace sim {
-extern uint16_t dummy_screen[16384];
+extern uint16_t dummy_screen[4000];
 }
 
 #define __interrupt
@@ -186,15 +194,14 @@ extern void _fmemcpy(void __far *dest, void const __far *src, size_t size);
 template <bool> struct base_static_assert;
 template <> struct base_static_assert<true> {};
 
-#define static_assert(e)                                                       \
-  struct __the_sa {                                                            \
-    ::base_static_assert<!!(e)> sa;                                            \
-  }
+#if defined(__WATCOMC__)
+#define static_assert(e) extern ::base_static_assert<!!(e)> __the_sa;
+#endif
 
 static_assert(true);
-// static_assert(sizeof(uint8_t) == 1);
-// static_assert(sizeof(uint16_t) == 2);
-// static_assert(sizeof(uint32_t) == 4);
+static_assert(sizeof(uint8_t) == 1);
+static_assert(sizeof(uint16_t) == 2);
+static_assert(sizeof(uint32_t) == 4);
 
 #define LENGTHOF(a) (sizeof(a) / sizeof(a[0]))
 
@@ -205,10 +212,15 @@ template <class T, size_t N> inline size_t length(T x[N]) {
 
 template <class T> inline T min(T x, T y) { return (x < y) ? x : y; }
 
-template <class T> inline T min(T x, T y, T z) { return min(min(x, y), z); }
+// template <class T> inline T min(T x, T y, T z) { return min(min(x, y), z); }
 
 template <class T> inline T max(T x, T y) { return (x > y) ? x : y; }
 
-template <class T> inline T max(T x, T y, T z) { return max(max(x, y), z); }
+// template <class T> inline T max(T x, T y, T z) { return max(max(x, y), z); }
+
+template <class T> inline T clamp(T x, T lower, T upper) {
+  assert(lower < upper);
+  return max(min(x, upper), lower);
+}
 
 #endif // __BASE_H_INCLUDED

@@ -17,7 +17,7 @@ static const segsize_t s_hash_capacity = 128;
 static const segsize_t s_index_initial_capacity = 8;
 static const segsize_t s_empty_index = UINT16_MAX;
 
-typedef uint16_t hash_t;
+typedef segsize_t hash_t;
 
 struct hash_entry {
   hash_t hash;
@@ -156,9 +156,11 @@ tbm resource_manager::fetch_tbm(imstring const &name) {
   return tbm(data, size);
 }
 
-void resource_manager::flush(imstring const &name) {
+segsize_t resource_manager::fetch_data(imstring const &name,
+                                       immutable *out_data) {
+  logf_resource_manager("resource_manager::fetch_tbm\n");
   assert(name.length() <= RESOURCE_NAME_LEN_MAX);
-  (void)name;
+  return find_or_load_data(name, out_data);
 }
 
 segsize_t resource_manager::find_or_load_data(imstring const &name,
@@ -219,11 +221,6 @@ segsize_t resource_manager::load_data_at_hash(imstring const &name, hash_t hash,
   }
   assert(s_first_free_index != s_empty_index);
 
-  index_entry entry;
-  entry.name = name;
-  entry.size = 0;
-  assert(!entry.data);
-
   segsize_t size = 0;
   void __far *data = load_data_from_file(name, &size);
 
@@ -234,12 +231,15 @@ segsize_t resource_manager::load_data_at_hash(imstring const &name, hash_t hash,
     s_name_hash[hint].hash = hash;
     s_name_hash[hint].index = index;
     s_first_free_index = s_index[s_first_free_index].next_free;
-    s_index[index] = entry;
+    s_index[index].name = name;
     reclaim_header_from_data(data)->index = index;
     out_data->assign(reclaim_loaded_data, data);
+    s_index[index].data = *out_data;
+    s_index[index].size = size;
+
     return size;
   } else {
-    return 0;
+    return SEGSIZE_INVALID;
   }
 }
 
@@ -271,6 +271,7 @@ void __far *resource_manager::load_data_from_file(imstring const &name,
       goto fail_return;
     }
     op = "allocation (file too big)";
+    static_assert(SEGSIZE_INVALID > (INT16_MAX / 2));
     if (size > (INT16_MAX / 2)) {
       goto fail_return;
     }
@@ -349,6 +350,7 @@ void resource_manager::reclaim_loaded_data(void __far *data) {
 
   arena::c_free(header);
 
+  assert(entry.data);
   entry.data = NULL;
   entry.name = NULL;
   entry.next_free = s_first_free_index;
