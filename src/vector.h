@@ -88,7 +88,9 @@ public:
 
   static size_type const c_size_max = (UINT16_MAX - 31) / sizeof(T);
 
-  vector() : m_size(0), m_capacity(0), m_data(NULL) {}
+  vector() : m_size(0), m_capacity(0), m_data(NULL) {
+    static_assert(c_size_max >= 4);
+  }
 
   vector(vector const &x) : m_size(x.m_size), m_capacity(x.m_capacity) {
     assert(m_size <= m_capacity);
@@ -325,7 +327,6 @@ private:
 
   static size_type round_up(size_type n) {
     assert(n < (c_size_max / 3 * 2));
-    assert(sizeof(T) <= c_size_max / 4);
     size_type r = (n * 3 + 1) / 2;
     r = max<size_type>(r, (16 + sizeof(T) - 1) / sizeof(T));
     assert(c_size_max > 1);

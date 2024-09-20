@@ -168,27 +168,43 @@ segsize_t resource_manager::find_or_load_data(imstring const &name,
   assert(s_hash_mask == (s_name_hash.size() - 1));
   assert(s_hash_mask == 15 || s_hash_mask == 31 || s_hash_mask == 63 ||
          s_hash_mask == 127 || s_hash_mask == 255 || s_hash_mask == 511);
-  logf_resource_manager("find_or_load_data %s\n", name.c_str());
+  logf_resource_manager("find_or_load_data '" PRsF "'\n", name.c_str());
   hash_t name_hash = fletcher16_str(name.c_str());
   logf_resource_manager("  fletcher16_str = %04x\n", (unsigned)name_hash);
-  for (segsize_t i = name_hash & s_hash_mask;; i = (i + 1) & s_hash_mask) {
+  segsize_t hint = (name_hash + (name_hash >> 8)) & s_hash_mask;
+  for (segsize_t i = hint;; i = (i + 1) & s_hash_mask) {
     // don't search too far
-    assert(((i - name_hash) & s_hash_mask) < 10);
+    assert(((i + s_hash_capacity - hint) & s_hash_mask) < 10);
     if (s_name_hash[i].index == s_empty_index) {
       // definitively not found
       logf_resource_manager("  not found at %d\n", (int)i);
       return load_data_at_hash(name, name_hash, i, out_data);
     } else if (s_name_hash[i].hash == name_hash) {
       // maybe our thing?
+      logf_resource_manager("  matching hash at %d\n", (int)i);
       segsize_t index = s_name_hash[i].index;
       if (s_index[index].name == name) {
         // that's us!
+        logf_resource_manager("  found at %d!\n", (int)i);
         *out_data = s_index[index].data.lock();
-        assert(*out_data);
+        if (!*out_data) {
+          // already indexed, but became unloaded -- reload
+          segsize_t size = 0;
+          void __far *data = load_data_from_file(name, &size);
+          assert(data);
+          assert(size == s_index[index].size);
+          reclaim_header_from_data(data)->index = index;
+          out_data->assign(reclaim_loaded_data, data);
+          s_index[index].data = *out_data;
+        }
         return s_index[index].size;
+      } else {
+        logf_resource_manager("  clashing names: '" PRsF "', '" PRsF "'\n",
+                              s_index[index].name.c_str(), name.c_str());
+        // otherwise fall through
       }
-      // otherwise fall through
     }
+    logf_resource_manager("  occupied slot at %d\n", (int)i);
     // some other thing, just continue...
   }
 }
@@ -254,7 +270,7 @@ void __far *resource_manager::load_data_from_file(imstring const &name,
   char const *op = "open";
   (void)op;
 
-  snprintf(path_buf, sizeof path_buf, "testdata/%s", name.c_str());
+  snprintf(path_buf, sizeof path_buf, "testdata/" PRsF, name.c_str());
   err = _dos_open(path_buf, O_RDONLY, &handle);
   if (err != 0) {
     goto fail_return;
@@ -285,8 +301,8 @@ void __far *resource_manager::load_data_from_file(imstring const &name,
     }
     temp_data = data_from_reclaim_header(header);
     temp_size = (segsize_t)size;
-    logf_resource_manager("load data " PRpF " -> header " PRpF " = %u\n",
-                          temp_data, header, header->index);
+    logf_resource_manager("load data " PRpF " -> header " PRpF "\n", temp_data,
+                          header);
   }
 
   {
@@ -314,8 +330,8 @@ void __far *resource_manager::load_data_from_file(imstring const &name,
   {
     err = _dos_close(handle);
     if (err != 0) {
-      logf_resource_manager("ignoring error %u during close, file '%s'\n", err,
-                            name.c_str());
+      logf_resource_manager("ignoring error %u during close, file '" PRsF "'\n",
+                            err, name.c_str());
     }
   }
 
@@ -330,7 +346,7 @@ fail_return:
   if (handle != -1) {
     _dos_close(handle);
   }
-  logf_resource_manager("error during %s (%u), file '%s'\n", op, err,
+  logf_resource_manager("error during %s (%u), file '" PRsF "'\n", op, err,
                         name.c_str());
   return NULL;
 }
@@ -352,9 +368,11 @@ void resource_manager::reclaim_loaded_data(void __far *data) {
 
   assert(entry.data);
   entry.data = NULL;
-  entry.name = NULL;
-  entry.next_free = s_first_free_index;
-  s_first_free_index = index;
+  // Can't actually reclaim the index entry because that could involve
+  // reindexing subsequent entries
+  // entry.name = NULL;
+  // entry.next_free = s_first_free_index;
+  // s_first_free_index = index;
 }
 
 #if 0
@@ -383,14 +401,14 @@ im_ptr<tbm> resource_manager::fetch_tbm(imstring const &name) {
       logf_resource_manager("  !entry.resource\n");
       reclaim_header __far *header =
           reinterpret_cast<reclaim_header __far *>(::_fmalloc(sizeof(reclaim_header) + sizeof(bitmap)));
-      logf_resource_manager("  header = "PRpF", .name = %s, .index = %u\n", header,
+      logf_resource_manager("  header = " PRpF ", .name = " PRsF ", .index = %u\n", header,
                             name.c_str(), (unsigned)index);
       header->name = name.c_str();
       header->index = index;
       entry.resource = header + 1;
-      logf_resource_manager("  entry.resource = "PRpF"\n", header);
+      logf_resource_manager("  entry.resource = " PRpF "\n", header);
       new (entry.resource) bitmap;
-      logf_resource_manager("  converting data at "PRpF" (%u bytes)\n", entry.data,
+      logf_resource_manager("  converting data at " PRpF " (%u bytes)\n", entry.data,
                             (unsigned)entry.size);
       tbm::to_bitmap(unpacker(entry.data, entry.size),
                      *reinterpret_cast<bitmap *>(entry.resource));
@@ -415,7 +433,7 @@ void resource_manager::reclaim_loaded_data(void __far *data) {
   segsize_t index = header->index;
   index_entry &entry = s_index[index];
   logf_resource_manager(
-      "reclaim_loaded_data "PRpF": header="PRpF", entry.resource="PRpF", .name=%s\n", data,
+      "reclaim_loaded_data " PRpF ": header=" PRpF ", entry.resource=" PRpF ", .name=" PRsF "\n", data,
       header, entry.resource, entry.name.c_str());
   assert(reinterpret_cast<void *>(entry.resource) == data);
   assert(entry.name == imstring(name));

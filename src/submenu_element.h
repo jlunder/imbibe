@@ -33,6 +33,7 @@ private:
 
   struct submenu {
     // config
+    immutable config;
     tbm menu_header;
     tbm menu_footer;
     tbm option_unselected_background;
@@ -56,6 +57,7 @@ private:
   vector<submenu> m_submenus;
   map<imstring, submenu *> m_submenus_by_name;
 
+  immutable m_menu_config;
   submenu *m_submenu;
 
   segsize_t m_selected_option;

@@ -51,14 +51,13 @@ void submenu_element::layout(coord_t window_width, coord_t window_height) {
 }
 
 bool submenu_element::try_unpack_menu_config() {
-  immutable cfg_im;
   segsize_t cfg_size =
-      resource_manager::fetch_data(application::s_menu_cfg_path, &cfg_im);
-  if (!cfg_im) {
+      resource_manager::fetch_data(application::s_menu_cfg_path, &m_menu_config);
+  if (!m_menu_config) {
     return false;
   }
 
-  unpacker data(cfg_im.data(), cfg_size);
+  unpacker data(m_menu_config.data(), cfg_size);
   uint32_t data_size;
   if (!iff::try_expect_magic(&data, FOURCC("CFmn"), &data_size) ||
       !data.try_subrange((segsize_t)data_size)) {
@@ -93,13 +92,12 @@ bool submenu_element::try_unpack_submenu_config(imstring const &cfg_path,
                                                 submenu *out_submenu) {
   coord_t const window_height = frame().height();
 
-  immutable cfg_im;
-  segsize_t cfg_size = resource_manager::fetch_data(cfg_path, &cfg_im);
-  if (!cfg_im) {
+  segsize_t cfg_size = resource_manager::fetch_data(cfg_path, &out_submenu->config);
+  if (!out_submenu->config) {
     return false;
   }
 
-  unpacker data(cfg_im.data(), cfg_size);
+  unpacker data(out_submenu->config.data(), cfg_size);
   uint32_t data_size;
   if (!iff::try_expect_magic(&data, FOURCC("CFsm"), &data_size) ||
       !data.try_subrange((segsize_t)data_size)) {
@@ -264,8 +262,9 @@ void submenu_element::animate(anim_time_t delta_ms) {
           clamp<coord_t>(clamp<coord_t>(cur_y, window_lower, window_upper), 0,
                          m_submenu->menu_height - frame().height());
     }
-    m_scroll_y.reset(cur_y, target_y,
-                     abs(m_scroll_y.value() - target_y) * 1000 / 100);
+    m_scroll_y.reset(
+        cur_y, target_y,
+        min(500, abs(m_scroll_y.value() - target_y) * (1000 / 100)));
   }
   m_hide_option_transition.update(delta_ms);
   m_show_option_transition.update(delta_ms);

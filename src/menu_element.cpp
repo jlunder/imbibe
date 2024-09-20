@@ -117,8 +117,9 @@ void menu_element::animate(anim_time_t delta_ms) {
       rect const &hot = m_options[m_selected_option].hot;
       target_y = hot.y1 - (frame().height() - hot.height()) / 2;
     }
-    m_scroll_y.reset(m_scroll_y.value(), target_y,
-                     abs(m_scroll_y.value() - target_y) * 1000 / 100);
+    m_scroll_y.reset(
+        m_scroll_y.value(), target_y,
+        min(500, abs(m_scroll_y.value() - target_y) * (1000 / 100)));
   }
 
   for (segsize_t i = 0; i < m_options.size(); ++i) {
