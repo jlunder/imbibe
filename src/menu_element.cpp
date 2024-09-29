@@ -14,10 +14,14 @@ namespace aux_menu_element {
 
 static struct {
   char const *name;
-} option_defs[] = {{"assets/menu-se0.tbm"}, {"assets/menu-se1.tbm"},
-                   {"assets/menu-se2.tbm"}, {"assets/menu-se3.tbm"},
-                   {"assets/menu-se4.tbm"}, {"assets/menu-se5.tbm"},
-                   {"assets/menu-se6.tbm"}};
+  char const *config;
+} option_defs[] = {{"assets/menu-se0.tbm", "0about/submenu.cfg"},
+                   {"assets/menu-se1.tbm", "1thought/submenu.cfg"},
+                   {"assets/menu-se2.tbm", "2meat/submenu.cfg"},
+                   {"assets/menu-se3.tbm", "3vegetar/submenu.cfg"},
+                   {"assets/menu-se4.tbm", "4lunatic/submenu.cfg"},
+                   {"assets/menu-se5.tbm", "5drinks/submenu.cfg"},
+                   {"assets/menu-se6.tbm", "6gallery/submenu.cfg"}}; // 7quit
 
 static const segsize_t options_length = LENGTHOF(option_defs);
 
@@ -46,6 +50,7 @@ void menu_element::layout(coord_t window_width, coord_t window_height) {
       logf_menu_element(
           "loaded TBM %s: %d x %d\n", aux_menu_element::option_defs[i].name,
           (int)o->selected_overlay.width(), (int)o->selected_overlay.height());
+      o->config = aux_menu_element::option_defs[i].config;
       o->hide_transition.reset(0, 0, 0);
       o->show_transition.reset(0, 0, 0);
       hot_y1 += 16;
@@ -90,6 +95,7 @@ bool menu_element::handle_key(key_code_t key) {
   case key_code::right:
   case key_code::enter:
   case ' ':
+    application::do_submenu_from_menu(m_options[m_selected_option].config);
     break;
   }
   return false;

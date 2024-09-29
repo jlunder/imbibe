@@ -52,7 +52,7 @@ void submenu_element::layout(coord_t window_width, coord_t window_height) {
 
 bool submenu_element::try_unpack_menu_config() {
   segsize_t cfg_size =
-      resource_manager::fetch_data(application::s_menu_cfg_path, &m_menu_config);
+      resource_manager::fetch_data(application::s_menu_config, &m_menu_config);
   if (!m_menu_config) {
     return false;
   }
@@ -88,11 +88,11 @@ bool submenu_element::try_unpack_menu_config() {
   return true;
 }
 
-bool submenu_element::try_unpack_submenu_config(imstring const &cfg_path,
+bool submenu_element::try_unpack_submenu_config(imstring const &config,
                                                 submenu *out_submenu) {
   coord_t const window_height = frame().height();
 
-  segsize_t cfg_size = resource_manager::fetch_data(cfg_path, &out_submenu->config);
+  segsize_t cfg_size = resource_manager::fetch_data(config, &out_submenu->config);
   if (!out_submenu->config) {
     return false;
   }
@@ -155,7 +155,7 @@ bool submenu_element::try_unpack_submenu_config(imstring const &cfg_path,
     logf_submenu_element(
         "Too many options (%u) in submenu " PRpF
         " (or background is too tall, %dtm)\n",
-        (unsigned)submenu_option_count, cfg_path.c_str(),
+        (unsigned)submenu_option_count, config.c_str(),
         (int)out_submenu->option_unselected_background.height());
   }
   coord_t all_options_y = (coord_t)out_submenu->menu_header.height();
@@ -332,8 +332,8 @@ void submenu_element::paint(graphics *g) {
   g->leave_subregion(&ss1);
 }
 
-void submenu_element::activate(imstring const &cfg_path) {
-  map<imstring, submenu *>::iterator i = m_submenus_by_name.find(cfg_path);
+void submenu_element::activate(imstring const &config) {
+  map<imstring, submenu *>::iterator i = m_submenus_by_name.find(config);
   if (i == m_submenus_by_name.end()) {
     assert(!"invalid submenu path");
     i = m_submenus_by_name.begin();

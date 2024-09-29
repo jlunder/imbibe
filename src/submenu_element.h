@@ -19,8 +19,13 @@ public:
   virtual bool active() const;
   virtual void paint(graphics *g);
 
-  void activate(imstring const &cfg_path);
+  void activate(imstring const &config);
   void deactivate();
+
+  void enter_from_menu();
+  void leave_to_menu();
+  void enter_from_viewer();
+  void leave_to_viewer();
 
 private:
   struct submenu_option {
@@ -72,12 +77,7 @@ private:
   bool m_active;
 
   bool try_unpack_menu_config();
-  bool try_unpack_submenu_config(imstring const &cfg_path, submenu *out_submenu);
-
-  void enter_from_menu();
-  void leave_to_menu();
-  void enter_from_viewer();
-  void leave_to_viewer();
+  bool try_unpack_submenu_config(imstring const &config, submenu *out_submenu);
 };
 
 #endif // __SUBMENU_ELEMENT_H_INCLUDED

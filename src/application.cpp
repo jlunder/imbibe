@@ -34,13 +34,13 @@ coord_t s_display_width;
 coord_t s_display_height;
 
 mode_t s_last_mode;
-imstring s_last_submenu_category;
+imstring s_last_submenu_config;
 bool s_last_showing_viewer;
 imstring s_last_viewer_article;
 bool s_last_showing_quit_prompt;
 
 mode_t s_mode;
-imstring s_submenu_category;
+imstring s_submenu_config;
 bool s_showing_viewer;
 imstring s_viewer_article;
 bool s_showing_quit_prompt;
@@ -72,7 +72,7 @@ void activate_intro();
 void deactivate_intro();
 void activate_menu();
 void deactivate_menu();
-void activate_submenu(imstring category);
+void activate_submenu(imstring config);
 void deactivate_submenu();
 void activate_viewer(imstring article);
 void deactivate_viewer();
@@ -89,7 +89,7 @@ void application::setup() {
 
   s_last_mode = mode_none;
   s_mode = mode_intro;
-  s_last_submenu_category = s_submenu_category = NULL;
+  s_last_submenu_config = s_submenu_config = NULL;
   s_last_showing_viewer = s_showing_viewer = false;
   s_last_viewer_article = s_viewer_article = NULL;
   s_last_showing_quit_prompt = s_showing_quit_prompt = false;
@@ -125,7 +125,7 @@ void application::setup() {
   s_outro_screen->set_owner(s_main);
 
   assert(s_win->capture());
-  bitmap const & b = *s_win->capture();
+  bitmap const &b = *s_win->capture();
   s_intro_screen->set_capture(bitmap(b.width(), b.height(), b.data()));
 
   s_menu_screen->layout(s_display_width, s_display_height);
@@ -306,12 +306,13 @@ void application::do_next_from_intro() {
   s_mode = mode_menu;
 }
 
-void application::do_submenu_from_menu(imstring category) {
+void application::do_submenu_from_menu(imstring config) {
   assert(s_mode == mode_menu);
   assert(!s_showing_viewer);
   assert(!s_showing_quit_prompt);
   internal_do_cancel_prompts();
-  s_submenu_category = category;
+  s_submenu_screen->enter_from_menu();
+  s_submenu_config = config;
   s_mode = mode_submenu;
 }
 
@@ -327,6 +328,7 @@ void application::do_viewer_from_submenu(imstring article) {
   assert(s_mode == mode_submenu);
   assert(!s_showing_viewer);
   assert(!s_showing_quit_prompt);
+  s_submenu_screen->leave_to_viewer();
   s_viewer_article = article;
   s_showing_viewer = true;
 }
@@ -335,6 +337,7 @@ void application::do_back_from_submenu() {
   assert(s_mode == mode_submenu);
   assert(!s_showing_viewer);
   assert(!s_showing_quit_prompt);
+  s_submenu_screen->leave_to_menu();
   s_mode = mode_menu;
 }
 
@@ -342,6 +345,9 @@ void application::do_back_from_viewer() {
   assert((s_mode == mode_menu) || (s_mode == mode_submenu));
   assert(s_showing_viewer);
   assert(!s_showing_quit_prompt);
+  if (s_mode == mode_submenu) {
+    s_submenu_screen->enter_from_viewer();
+  }
   s_showing_viewer = false;
 }
 
@@ -416,7 +422,7 @@ void application::update_transitions() {
       activate_menu();
       break;
     case mode_submenu:
-      activate_submenu(s_submenu_category);
+      activate_submenu(s_submenu_config);
       break;
     case mode_outro:
       activate_outro();
@@ -450,11 +456,11 @@ void application::deactivate_menu() {
   s_last_mode = mode_none;
 }
 
-void application::activate_submenu(imstring category) {
+void application::activate_submenu(imstring config) {
   assert(s_last_mode == mode_none);
-  assert(!category.null_or_empty());
-  s_submenu_screen->activate(s_submenu_category);
-  s_last_submenu_category = category;
+  assert(!config.null_or_empty());
+  s_submenu_screen->activate(s_submenu_config);
+  s_last_submenu_config = config;
   s_last_mode = mode_submenu;
 }
 

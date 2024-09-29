@@ -26,6 +26,7 @@ private:
     rect hot;
     point selected_pos;
     tbm selected_overlay;
+    imstring config;
     linear_tween<coord_t> hide_transition;
     linear_tween<coord_t> show_transition;
   };
