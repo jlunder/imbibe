@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "browse": {
+                "path": [
+                    "/usr/include",
+                    "/usr/include/SDL2"
+                ]
+            },
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "includePath": [
+                "${default}",
+                "/usr/include/SDL2"
+            ]
+        }
+    ],
+    "version": 4
+}
