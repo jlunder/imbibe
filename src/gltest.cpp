@@ -50,11 +50,11 @@ static const char *vertex_shader =
     "out vec4 g_fg_color;\n"
     "out vec4 g_bg_color;\n"
     "uniform uint u_blink_control;\n"
-    //    "uniform sampler1D u_palette_texture;\n"
+    //"uniform sampler1D u_palette_texture;\n"
     "void main() {\n"
     "    g_cell = i_cell;\n"
     "    g_char = i_char;\n"
-    "    g_fg_color = i_fg_color;\n"
+    "    g_fg_color = mix(i_bg_color, i_fg_color, float(u_blink_control));\n"
     "    g_bg_color = i_bg_color;\n"
     "}\n";
 
@@ -107,15 +107,22 @@ static const char *fragment_shader =
     "out vec4 o_color;\n"
     "uniform vec2 u_cell_size;\n"
     //"uniform sampler2DArray u_font_texture;\n"
-    "uniform sampler1D u_palette_texture;\n"
+    //"uniform sampler1D u_palette_texture;\n"
     "uniform sampler2D u_font_texture;\n"
     "void main() {\n"
-    "    float font = texelFetch(u_font_texture, "
-    "ivec2(floor(v_font_pixel_char.xy)), 0).x;\n"
+    //"    float font = (int(v_font_pixel_char.x) ^ int(v_font_pixel_char.y)) &
+    //1;"
+    "    float font = 1;\n" //texture(u_font_texture, vec2(0.5, 0.5)).r;\n"
+    // texelFetch(u_font_texture, ivec2(2, 7), 0).x;\n"
+    //  floor(v_font_pixel_char.xy)
     "    float grid = 1 - clamp(floor(v_font_pixel_char.x) * "
     "floor(v_font_pixel_char.y), 0, 1);\n"
-    "    vec4 temp = texelFetch(u_palette_texture, int(floor(v_font_pixel_char.x)), 0);\n"
-    "    o_color = mix(vec4(grid) + temp, mix(v_bg_color, v_fg_color, 0), 0.75);\n"
+    // "    vec4 temp = texelFetch(u_palette_texture, "
+    // "int(floor(v_font_pixel_char.x)), 0);\n"
+    "    vec4 temp = vec4(1, 1, 1, 1);\n"
+    // "    o_color = mix(0.5 * vec4(grid) + 0.5 * temp, mix(v_bg_color, v_fg_color, font), "
+    // "0.75);\n"
+    "    o_color = vec4(grid);\n"
     "}\n";
 
 typedef enum t_attrib_id {
@@ -231,20 +238,47 @@ int main(int argc, char **argv) {
   glAttachShader(program, gs);
   glAttachShader(program, fs);
 
-  unsigned int font_texture;
+  glBindAttribLocation(program, attrib_cell, "i_cell");
+  glBindAttribLocation(program, attrib_char, "i_char");
+  glBindAttribLocation(program, attrib_fg_color, "i_fg_color");
+  glBindAttribLocation(program, attrib_bg_color, "i_bg_color");
+
+  glLinkProgram(program);
+
+  // GLuint palette_texture;
+  // glGenTextures(1, &palette_texture);
+  // glBindTexture(GL_TEXTURE_1D, palette_texture);
+  // GLubyte palette_data[16][3] = {
+  //     {0, 0, 0},     {0, 0, 170},    {0, 170, 0},    {0, 170, 170},
+  //     {170, 0, 0},   {170, 0, 170},  {170, 85, 0},   {170, 170, 170},
+  //     {85, 85, 85},  {85, 85, 255},  {85, 255, 85},  {85, 255, 255},
+  //     {255, 85, 85}, {255, 85, 255}, {255, 255, 85}, {255, 255, 255},
+  // };
+  // glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  // glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  // glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  // glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 16, 0, GL_RGB, GL_UNSIGNED_BYTE,
+  //              palette_data);
+
+  GLuint font_texture;
   glGenTextures(1, &font_texture);
   // glBindTexture(GL_TEXTURE_2D_ARRAY, font_texture);
   glBindTexture(GL_TEXTURE_2D, font_texture);
-  uint8_t font_texture_data[256][16][16];
+  GLubyte font_texture_data[256][16][16][3];
   for (size_t i = 0; i < 256; ++i) {
     for (size_t j = 0; j < 16; ++j) {
       for (size_t k = 0; k < 8; ++k) {
-        font_texture_data[i][j][k] =
-            ibm_font_bits_8x16[i][j] & (1 << (7 - k)) ? 255 : 0;
+        GLubyte val = ibm_font_bits_8x16[65][j] & (1 << (7 - k)) ? 255 : 0;
+        font_texture_data[i][j][k][0] = val;
+        font_texture_data[i][j][k][1] = val;
+        font_texture_data[i][j][k][2] = val;
       }
       for (size_t k = 8; k < 16; ++k) {
-        font_texture_data[i][j][k] =
-            ((i >= 0xC0) && (i <= 0xDF)) ? font_texture_data[i][j][7] : 0;
+        GLubyte val =
+            ((i >= 0xC0) && (i <= 0xDF)) ? font_texture_data[i][j][7][0] : 0;
+        font_texture_data[i][j][k][0] = val;
+        font_texture_data[i][j][k][1] = val;
+        font_texture_data[i][j][k][2] = val;
       }
     }
   }
@@ -259,35 +293,21 @@ int main(int argc, char **argv) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 16, 16, 0, GL_R8, GL_UNSIGNED_BYTE,
-               font_texture_data + 65);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 16, 16, 0, GL_RGB, GL_UNSIGNED_BYTE,
+               &font_texture_data);
   for (size_t i = 0; i < 16; ++i) {
     for (size_t j = 0; j < 16; ++j) {
-      fprintf(stderr, "%c", font_texture_data[65][i][j] ? '*' : '.');
+      fprintf(stderr, "%c", font_texture_data[0][i][j][0] ? '*' : '.');
     }
     fprintf(stderr, "\n");
   }
 
-  GLuint palette_texture;
-  glGenTextures(1, &palette_texture);
-  glBindTexture(GL_TEXTURE_1D, palette_texture);
-  GLubyte palette_data[16][3] = {
-      {0, 0, 0},     {0, 0, 170},    {0, 170, 0},    {0, 170, 170},
-      {170, 0, 0},   {170, 0, 170},  {170, 85, 0},   {170, 170, 170},
-      {85, 85, 85},  {85, 85, 255},  {85, 255, 85},  {85, 255, 255},
-      {255, 85, 85}, {255, 85, 255}, {255, 255, 85}, {255, 255, 255},
-  };
-  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 16, 0, GL_RGB, GL_UNSIGNED_BYTE,
-               palette_data);
+  // glActiveTexture(GL_TEXTURE0 + 0);
+  // glBindTexture(GL_TEXTURE_1D, palette_texture);
 
-  glBindAttribLocation(program, attrib_cell, "i_cell");
-  glBindAttribLocation(program, attrib_char, "i_char");
-  glBindAttribLocation(program, attrib_fg_color, "i_fg_color");
-  glBindAttribLocation(program, attrib_bg_color, "i_bg_color");
-  glLinkProgram(program);
+  glActiveTexture(GL_TEXTURE0 + 0);
+  // glBindTexture(GL_TEXTURE_2D_ARRAY, font_texture);
+  glBindTexture(GL_TEXTURE_2D, font_texture);
 
   GLint status;
   glGetProgramiv(program, GL_LINK_STATUS, &status);
@@ -305,8 +325,6 @@ int main(int argc, char **argv) {
     return 0;
   }
 
-  glUseProgram(program);
-
   glDisable(GL_DEPTH_TEST);
   glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
   glViewport(0, 0, window_width, window_height);
@@ -318,13 +336,6 @@ int main(int argc, char **argv) {
   glGenVertexArrays(1, &rasterize_vao);
   glGenBuffers(1, &rasterize_structure_vbo);
   glGenBuffers(1, &rasterize_contents_vbo);
-
-  glActiveTexture(GL_TEXTURE0);
-  // glBindTexture(GL_TEXTURE_2D_ARRAY, font_texture);
-  glBindTexture(GL_TEXTURE_2D, font_texture);
-
-  glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_1D, palette_texture);
 
   glBindVertexArray(rasterize_vao);
 
@@ -389,21 +400,10 @@ int main(int argc, char **argv) {
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_rasterize_contents_data),
                g_rasterize_contents_data, GL_STATIC_DRAW);
 
-  fprintf(stderr, "uniform u_palette_texture: %d\n",
-          glGetUniformLocation(program, "u_palette_texture"));
-  fprintf(stderr, "uniform u_blink_control: %d\n",
-          glGetUniformLocation(program, "u_blink_control"));
-  fprintf(stderr, "uniform u_cell_size: %d\n",
-          glGetUniformLocation(program, "u_cell_size"));
-  fprintf(stderr, "uniform u_projection_matrix: %d\n",
-          glGetUniformLocation(program, "u_projection_matrix"));
-  fprintf(stderr, "uniform u_font_texture: %d\n",
-          glGetUniformLocation(program, "u_font_texture"));
-
   glUniform1ui(glGetUniformLocation(program, "u_blink_control"), 1);
 
-  glUniform1ui(glGetUniformLocation(program, "u_font_texture"), 0);
-  glUniform1ui(glGetUniformLocation(program, "u_palette_texture"), 1);
+  glUniform1i(glGetUniformLocation(program, "u_palette_texture"), 0);
+  glUniform1i(glGetUniformLocation(program, "u_font_texture"), 2);
 
   glUniform2f(glGetUniformLocation(program, "u_cell_size"), char_cell_width_px,
               char_cell_height_px);
@@ -413,6 +413,25 @@ int main(int argc, char **argv) {
                0.0f, 256.0f);
   glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1,
                      GL_FALSE, projection_matrix);
+
+  glValidateProgram(program);
+
+  glGetProgramiv(program, GL_VALIDATE_STATUS, &status);
+  if (status == GL_FALSE) {
+    GLint log_length = 0;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_length);
+    if (log_length > 0) {
+      char *log = (char *)malloc(log_length);
+      glGetProgramInfoLog(program, log_length, NULL, log);
+      fprintf(stderr, "shader program validate failed:\n%s\n", log);
+      free(log);
+    } else {
+      fprintf(stderr, "shader program validate failed (not able to get log)\n");
+    }
+    return 0;
+  }
+
+  glUseProgram(program);
 
   bool done = false;
   while (!done) {
