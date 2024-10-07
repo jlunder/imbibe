@@ -7,5 +7,5 @@ export MAKEFLAGS="src/gltest.cpp --std=gnu++17 -W -Wall -g $(pkg-config --cflags
 echo g++ $MAKEFLAGS
 g++ $MAKEFLAGS
 if [ -f build/gltest ]; then
-  build/gltest
+  gdb build/gltest
 fi

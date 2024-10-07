@@ -1,0 +1,149 @@
+CRT renderer plan
+-----------------
+
+This is a notional plan, conceived while working on Imbibe, but not really
+meant for Imbibe specifically. I just wanted to write it down here because if
+I ever execute on it I'll probably start from code started here, and
+colocating the plan will make it easier for me to find.
+
+The full plan describes what should be a reasonably efficient and simple way
+to pull off a detailed and solidly physical CRT simulation.
+
+The overall architecture breaks rendering into pipeline stages:
+
+1. Rasterize
+
+   Input: internal representation; e.g., char/attribute map + bitmap font +
+          palette for classic text modes
+   Output: RGB rasterized texture at native resolution, e.g. 720x350 for
+           80x25 text mode with a 9x14 character cell
+
+   Rasterize the logical image being presented -- i.e., convert to an RGB
+   pixel map at the digital pixel resolution, applying text mode fonts and
+   mapping palettes as required. Mono images get mapped to white (or some
+   single channel e.g. green) at this point, phosphor tint is applied at the
+   end.
+
+   If the image starts out as an RGB pixel map this is a no-op.
+
+2. Render beam
+
+   Input: R/G/B beam geometry (possibly computed in a vertex shader from
+          parameters); the colour channels may use distinct geometry because
+          convergence is not generally perfectly aligned
+          RGB rasterized texture from stage 1
+   Output: RGB texture at high resolution (sufficient for shadow mask)
+
+   Draw the scanlines using geometry to a hi-res intermediate texture. The
+   result incorporates modeling of the beam brightness, X and Y drive, focus,
+   convergence, etc.
+
+   This step should model any nonlinearity or other effects in the beam
+   brightness, for example gamma and power supply effects.
+
+   Timing effects, such as brightening of the screen edges between the
+   retrace and beginning or end of front/back porch, should be modeled in
+   this step if they're desired.
+
+   The value of having beam geometry is that it can easily incorporate
+   perturbations to the X, Y, and focus which result from power supply
+   interactions with line frequency or beam drive (i.e. image width
+   stretching or compressing when the image is bright). This also gives an
+   easy way to accurately reproduce scanline effects resulting from beam
+   spread smaller than the scanline interval.
+
+   This architecture also permits accurate modeling of vector displays, if
+   the beam path geometry is derived from the X/Y line sequence.
+
+3. Beam bloom filter
+
+   Input: RGB texture at high resolution (sufficient for shadow mask)
+   Output: RGB texture at high resolution
+
+   Filter the raw beam intensity to reproduce bloom, especially the effect of
+   an overdriven electron gun. For efficiency, this is probably 2 passes with
+   separated X and Y gaussian filters.
+
+   This step can be skipped if no significant bloom effect is desired.
+
+4. Shadow mask filter
+
+   Input: RGB texture at high resolution
+   Output: RGB or L texture at high resolution
+
+   Mask the beam intensity with a shadow mask pattern depending on the CRT
+   type being modeled. In practical terms, this is an elementwise
+   multiplication by a fixed texture representing the shadow mask (AKA
+   aperture grille in a Trinitron CRT).
+
+   This step can be skipped if the shadow mask would not appear at output
+   resolution, or the CRT modeled is monochrome and does not have one.
+
+   After this step, the R, G, and B channels in a colour image should be
+   separated: the purpose of the shadow mask is to ensure they land on
+   different parts of the phosphor surface. If memory or bandwidth are at a
+   premium, it's suggested that the mask texture be a small repeating one,
+   and the output be luma only, with colour information recovered in the
+   phosphor tint step.
+
+   Making this step output luma-only may allow easier modeling of colour
+   distortion due to magnetic disruption. However, there is a tradeoff here:
+   a luma-only texture is only practical if the resolution of the
+   intermediate stages is high enough to actually represent the screen mask
+   accurately. If memory or bandwidth constraints prevent this, or if the
+   final output will be low enough resolution that modeling the screen mask
+   will not improve the result, it's better to use a low-resolution but full-
+   colour intermediate texture, where the different channels can overlap
+   without interfering with each other.
+
+5. Phosphor model
+
+   Input: RGB or L texture at high resolution
+          Previous frame fade coefficient texture at high resolution
+   Output: RGB texture at high resolution
+           Fade coefficient texture at high resolution
+
+   Apply a colour model that tints the image based on the characteristics of
+   the phosphor at each point on the CRT surface.
+
+   For phosphor temporal effects, a fade coefficient texture is maintained
+   and updated every frame.
+
+6. Perspective distortion
+
+   Input: RGB texture at high resolution
+   Output: RGB texture at high resolution
+
+   Distort the geometry of the screen based on the surface curvature of the
+   CRT and the viewing angle.
+
+   This step can be skipped if no significant perspective distortion is
+   desired, or if the result will be rendered onto 3D geometry, this and
+   subsequent steps can be skipped. In the latter case it may be desirable to
+   use native anisotropic sampling instead of the suggested downscale filter,
+   because you don't know how close the geometry will be rendered or at what
+   angle.
+
+7. Downscale filter
+
+   Input: RGB texture at high resolution
+   Output: RGB texture at output resolution
+
+   Apply a 2 pass separated X and Y gaussian filter matched to the output
+   resolution, and sample the result.
+
+8. Bezel geometry and external reflection
+
+   Input: RGB texture at output resolution
+   Output: RGB texture at output resolution
+
+   Overlay rendered bezel geometry and external reflections on the final CRT
+   image.
+
+9. Optical bloom/postprocessing
+
+   Input: RGB texture at output resolution
+   Output: RGB texture at output resolution
+
+   Apply any optical bloom filters or other postprocessing effects desired.
+
