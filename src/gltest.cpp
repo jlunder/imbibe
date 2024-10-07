@@ -39,25 +39,27 @@ static inline void mat4x4_ortho(t_mat4x4 out, float left, float right,
 #undef T
 }
 
-static const char *vertex_shader = "#version 330 core\n"
-                                   "in vec2 i_cell;\n"
-                                   "in uint i_char;\n"
-                                   "in vec4 i_fg_color;\n"
-                                   "in vec4 i_bg_color;\n"
-                                   "out vec2 g_cell;\n"
-                                   "out uint g_char;\n"
-                                   "out vec4 g_fg_color;\n"
-                                   "out vec4 g_bg_color;\n"
-                                   "uniform uint u_blink_control;\n"
-                                   "void main() {\n"
-                                   "    g_cell = i_cell;\n"
-                                   "    g_char = i_char;\n"
-                                   "    g_fg_color = i_fg_color;\n"
-                                   "    g_bg_color = i_bg_color;\n"
-                                   "}\n";
+static const char *vertex_shader =
+    "#version 150 core\n"
+    "in vec2 i_cell;\n"
+    "in uint i_char;\n"
+    "in vec4 i_fg_color;\n"
+    "in vec4 i_bg_color;\n"
+    "out vec2 g_cell;\n"
+    "out uint g_char;\n"
+    "out vec4 g_fg_color;\n"
+    "out vec4 g_bg_color;\n"
+    "uniform uint u_blink_control;\n"
+    //    "uniform sampler1D u_palette_texture;\n"
+    "void main() {\n"
+    "    g_cell = i_cell;\n"
+    "    g_char = i_char;\n"
+    "    g_fg_color = i_fg_color;\n"
+    "    g_bg_color = i_bg_color;\n"
+    "}\n";
 
 static const char *geometry_shader =
-    "#version 330 core\n"
+    "#version 150 core\n"
     "layout(points) in;\n"
     "layout(triangle_strip, max_vertices = 4) out;\n"
     "in uint g_char[];\n"
@@ -66,39 +68,55 @@ static const char *geometry_shader =
     "in vec4 g_bg_color[];\n"
     "out vec4 v_fg_color;\n"
     "out vec4 v_bg_color;\n"
+    "out vec3 v_font_pixel_char;\n"
     "uniform vec2 u_cell_size;\n"
     "uniform mat4 u_projection_matrix;\n"
     "void main() {\n"
     "    v_fg_color = g_fg_color[0];\n"
     "    v_bg_color = g_bg_color[0];\n"
-    "    gl_Position = u_projection_matrix * vec4(g_cell[0].x * u_cell_size.x, "
-    "g_cell[0].y * u_cell_size.y, 0, 1.0);\n"
-    "    EmitVertex();\n"
-    "    v_fg_color = g_bg_color[0];\n"
-    "    v_bg_color = g_fg_color[0];\n"
-    "    gl_Position = u_projection_matrix * vec4((g_cell[0].x + 1) * "
-    "u_cell_size.x, g_cell[0].y * u_cell_size.y, 0, 1.0);\n"
-    "    EmitVertex();\n"
-    "    v_fg_color = g_bg_color[0];\n"
-    "    v_bg_color = g_fg_color[0];\n"
-    "    gl_Position = u_projection_matrix * vec4(g_cell[0].x * u_cell_size.x, "
-    "(g_cell[0].y + 1) * u_cell_size.y, 0, 1.0);\n"
+    "    v_font_pixel_char = vec3(0, 0, g_char[0]);\n"
+    "    gl_Position = u_projection_matrix * vec4(g_cell[0] * u_cell_size + "
+    "v_font_pixel_char.xy, 0, 1.0);\n"
     "    EmitVertex();\n"
     "    v_fg_color = g_fg_color[0];\n"
     "    v_bg_color = g_bg_color[0];\n"
-    "    gl_Position = u_projection_matrix * vec4((g_cell[0].x + 1) * "
-    "u_cell_size.x, (g_cell[0].y + 1) * u_cell_size.y, 0, 1.0);\n"
+    "    v_font_pixel_char = vec3(u_cell_size.x, 0, g_char[0]);\n"
+    "    gl_Position = u_projection_matrix * vec4(g_cell[0] * u_cell_size + "
+    "v_font_pixel_char.xy, 0, 1.0);\n"
+    "    EmitVertex();\n"
+    "    v_fg_color = g_fg_color[0];\n"
+    "    v_bg_color = g_bg_color[0];\n"
+    "    v_font_pixel_char = vec3(0, u_cell_size.y, g_char[0]);\n"
+    "    gl_Position = u_projection_matrix * vec4(g_cell[0] * u_cell_size + "
+    "v_font_pixel_char.xy, 0, 1.0);\n"
+    "    EmitVertex();\n"
+    "    v_fg_color = g_fg_color[0];\n"
+    "    v_bg_color = g_bg_color[0];\n"
+    "    v_font_pixel_char = vec3(u_cell_size.xy, g_char[0]);\n"
+    "    gl_Position = u_projection_matrix * vec4(g_cell[0] * u_cell_size + "
+    "v_font_pixel_char.xy, 0, 1.0);\n"
     "    EmitVertex();\n"
     "    EndPrimitive();\n"
     "}\n";
 
-static const char *fragment_shader = "#version 330 core\n"
-                                     "in vec4 v_fg_color;\n"
-                                     "in vec4 v_bg_color;\n"
-                                     "out vec4 o_color;\n"
-                                     "void main() {\n"
-                                     "    o_color = v_fg_color;\n"
-                                     "}\n";
+static const char *fragment_shader =
+    "#version 150 core\n"
+    "in vec4 v_fg_color;\n"
+    "in vec4 v_bg_color;\n"
+    "in vec3 v_font_pixel_char;\n"
+    "out vec4 o_color;\n"
+    "uniform vec2 u_cell_size;\n"
+    //"uniform sampler2DArray u_font_texture;\n"
+    "uniform sampler1D u_palette_texture;\n"
+    "uniform sampler2D u_font_texture;\n"
+    "void main() {\n"
+    "    float font = texelFetch(u_font_texture, "
+    "ivec2(floor(v_font_pixel_char.xy)), 0).x;\n"
+    "    float grid = 1 - clamp(floor(v_font_pixel_char.x) * "
+    "floor(v_font_pixel_char.y), 0, 1);\n"
+    "    vec4 temp = texelFetch(u_palette_texture, int(floor(v_font_pixel_char.x)), 0);\n"
+    "    o_color = mix(vec4(grid) + temp, mix(v_bg_color, v_fg_color, 0), 0.75);\n"
+    "}\n";
 
 typedef enum t_attrib_id {
   attrib_cell,
@@ -106,6 +124,19 @@ typedef enum t_attrib_id {
   attrib_fg_color,
   attrib_bg_color
 } t_attrib_id;
+
+void GLAPIENTRY log_gl_callback(GLenum source, GLenum type, GLuint id,
+                                GLenum severity, GLsizei length,
+                                const GLchar *message, const void *userParam) {
+  (void)source;
+  (void)id;
+  (void)length;
+  (void)userParam;
+  fprintf(stderr,
+          "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+          (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity,
+          message);
+}
 
 GLuint compile_shader(GLenum shader_type, GLchar const *shader_source) {
   char const *shader_type_name = "<unknown>";
@@ -153,6 +184,13 @@ int main(int argc, char **argv) {
   (void)argc;
   (void)argv;
 
+  (void)ibm_font_bits_8x8;
+  (void)ibm_font_bits_8x8_thin;
+
+  // During init, enable debug output
+  glEnable(GL_DEBUG_OUTPUT);
+  glDebugMessageCallback(log_gl_callback, 0);
+
   SDL_Init(SDL_INIT_VIDEO);
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
@@ -169,11 +207,11 @@ int main(int argc, char **argv) {
   static const int char_cell_width_px = 8;
   static const int width_px = width_chars * char_cell_width_px;
   static const int height_chars = 25;
-  static const int char_cell_height_px = 8;
+  static const int char_cell_height_px = 16;
   static const int height_px = height_chars * char_cell_height_px;
 
   static const int window_width = width_px * 2;
-  static const int window_height = height_px * 2 * 12 / 5;
+  static const int window_height = height_px * 2 * 6 / 5;
 
   SDL_Window *window = SDL_CreateWindow(
       "Imbibe", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, window_width,
@@ -193,28 +231,57 @@ int main(int argc, char **argv) {
   glAttachShader(program, gs);
   glAttachShader(program, fs);
 
+  unsigned int font_texture;
+  glGenTextures(1, &font_texture);
+  // glBindTexture(GL_TEXTURE_2D_ARRAY, font_texture);
+  glBindTexture(GL_TEXTURE_2D, font_texture);
+  uint8_t font_texture_data[256][16][16];
+  for (size_t i = 0; i < 256; ++i) {
+    for (size_t j = 0; j < 16; ++j) {
+      for (size_t k = 0; k < 8; ++k) {
+        font_texture_data[i][j][k] =
+            ibm_font_bits_8x16[i][j] & (1 << (7 - k)) ? 255 : 0;
+      }
+      for (size_t k = 8; k < 16; ++k) {
+        font_texture_data[i][j][k] =
+            ((i >= 0xC0) && (i <= 0xDF)) ? font_texture_data[i][j][7] : 0;
+      }
+    }
+  }
+  // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  // glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RED, 8, 16, 256);
+  // glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RED, 16, 16, 256, 0, GL_RED,
+  //              GL_UNSIGNED_BYTE, font_texture_data);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  unsigned int texture;
-  glGenTextures(1, &texture);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
-  uint8_t data[256][16][8];
-  for (size_t i = 0; i < 256; ++i) {
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 16, 16, 0, GL_R8, GL_UNSIGNED_BYTE,
+               font_texture_data + 65);
+  for (size_t i = 0; i < 16; ++i) {
     for (size_t j = 0; j < 16; ++j) {
-      for (size_t k = 0; k < 8; ++k) {
-        data[i][j][k] = ibm_font_bits_8x16[i][j] & (1 << (7 - k)) ? 255 : 0;
-      }
-      // for (size_t k = 8; k < 16; ++k) {
-      //   data[i][j][k] = ((i >= 0xC0) && (i <= 0xDF)) ? data[i][j][7] : 0;
-      // }
+      fprintf(stderr, "%c", font_texture_data[65][i][j] ? '*' : '.');
     }
+    fprintf(stderr, "\n");
   }
-  // glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RED, 8, 16, 256);
-  glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RED, 8, 16, 256, GL_RGB,
-               GL_UNSIGNED_BYTE, data);
-  // glGenerateMipmap(GL_TEXTURE_2D);
+
+  GLuint palette_texture;
+  glGenTextures(1, &palette_texture);
+  glBindTexture(GL_TEXTURE_1D, palette_texture);
+  GLubyte palette_data[16][3] = {
+      {0, 0, 0},     {0, 0, 170},    {0, 170, 0},    {0, 170, 170},
+      {170, 0, 0},   {170, 0, 170},  {170, 85, 0},   {170, 170, 170},
+      {85, 85, 85},  {85, 85, 255},  {85, 255, 85},  {85, 255, 255},
+      {255, 85, 85}, {255, 85, 255}, {255, 255, 85}, {255, 255, 255},
+  };
+  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 16, 0, GL_RGB, GL_UNSIGNED_BYTE,
+               palette_data);
 
   glBindAttribLocation(program, attrib_cell, "i_cell");
   glBindAttribLocation(program, attrib_char, "i_char");
@@ -241,7 +308,7 @@ int main(int argc, char **argv) {
   glUseProgram(program);
 
   glDisable(GL_DEPTH_TEST);
-  glClearColor(0.5, 0.0, 0.0, 0.0);
+  glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
   glViewport(0, 0, window_width, window_height);
 
   GLuint rasterize_vao;
@@ -251,6 +318,13 @@ int main(int argc, char **argv) {
   glGenVertexArrays(1, &rasterize_vao);
   glGenBuffers(1, &rasterize_structure_vbo);
   glGenBuffers(1, &rasterize_contents_vbo);
+
+  glActiveTexture(GL_TEXTURE0);
+  // glBindTexture(GL_TEXTURE_2D_ARRAY, font_texture);
+  glBindTexture(GL_TEXTURE_2D, font_texture);
+
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_1D, palette_texture);
 
   glBindVertexArray(rasterize_vao);
 
@@ -266,8 +340,7 @@ int main(int argc, char **argv) {
     GLfloat cell[2];
   };
 
-  rasterize_structure_t
-      g_rasterize_structure_data[width_chars * height_chars * 6];
+  rasterize_structure_t g_rasterize_structure_data[width_chars * height_chars];
 
   for (size_t i = 0; i < height_chars; ++i) {
     for (size_t j = 0; j < width_chars; ++j) {
@@ -300,7 +373,7 @@ int main(int argc, char **argv) {
 
   glBindBuffer(GL_ARRAY_BUFFER, rasterize_contents_vbo);
 
-  GLubyte g_rasterize_contents_data[width_chars * height_chars * 6][1];
+  GLubyte g_rasterize_contents_data[width_chars * height_chars][1];
   for (size_t i = 0; i < height_chars; ++i) {
     for (size_t j = 0; j < width_chars; ++j) {
       size_t n = i * width_chars + j;
@@ -316,7 +389,21 @@ int main(int argc, char **argv) {
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_rasterize_contents_data),
                g_rasterize_contents_data, GL_STATIC_DRAW);
 
+  fprintf(stderr, "uniform u_palette_texture: %d\n",
+          glGetUniformLocation(program, "u_palette_texture"));
+  fprintf(stderr, "uniform u_blink_control: %d\n",
+          glGetUniformLocation(program, "u_blink_control"));
+  fprintf(stderr, "uniform u_cell_size: %d\n",
+          glGetUniformLocation(program, "u_cell_size"));
+  fprintf(stderr, "uniform u_projection_matrix: %d\n",
+          glGetUniformLocation(program, "u_projection_matrix"));
+  fprintf(stderr, "uniform u_font_texture: %d\n",
+          glGetUniformLocation(program, "u_font_texture"));
+
   glUniform1ui(glGetUniformLocation(program, "u_blink_control"), 1);
+
+  glUniform1ui(glGetUniformLocation(program, "u_font_texture"), 0);
+  glUniform1ui(glGetUniformLocation(program, "u_palette_texture"), 1);
 
   glUniform2f(glGetUniformLocation(program, "u_cell_size"), char_cell_width_px,
               char_cell_height_px);
