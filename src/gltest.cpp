@@ -9,6 +9,8 @@
 
 #include "ibm_font.h"
 
+#define USE_GEOMETRY_SHADER 0
+
 typedef float t_mat4x4[16];
 
 static inline void mat4x4_ortho(t_mat4x4 out, float left, float right,
@@ -39,6 +41,7 @@ static inline void mat4x4_ortho(t_mat4x4 out, float left, float right,
 #undef T
 }
 
+#if USE_GEOMETRY_SHADER
 static const char *vertex_shader =
     "#version 150 core\n"
     "in vec2 i_cell;\n"
@@ -124,12 +127,65 @@ static const char *fragment_shader =
     // "0.75);\n"
     "    o_color = vec4(grid);\n"
     "}\n";
+#else
+static const char *vertex_shader =
+    "#version 150 core\n"
+    "in vec2 i_cell;\n"
+    "in vec2 i_corner;\n"
+    "in uint i_char;\n"
+    // "in uint i_attr;\n"
+    // "in vec4 i_fg_color;\n"
+    // "in vec4 i_bg_color;\n"
+    // "out vec4 v_fg_color;\n"
+    // "out vec4 v_bg_color;\n"
+    "out vec3 v_font_pixel_char;\n"
+    "uniform vec2 u_cell_size;\n"
+    "uniform mat4 u_projection_matrix;\n"
+    // "uniform uint u_blink_control;\n"
+    "uniform sampler1D u_palette_texture;\n"
+    "void main() {\n"
+    "    v_font_pixel_char = vec3(i_corner * u_cell_size,float(i_char));\n"
+    // "    v_fg_color = mix(i_bg_color, i_fg_color, float(u_blink_control));\n"
+    // "    v_bg_color = i_bg_color;\n"
+    "    gl_Position = u_projection_matrix * vec4((i_cell + i_corner) * "
+    "u_cell_size, 0, 1);\n"
+    "}\n";
+
+static const char *fragment_shader =
+    "#version 150 core\n"
+    // "in vec4 v_fg_color;\n"
+    // "in vec4 v_bg_color;\n"
+    "in vec3 v_font_pixel_char;\n"
+    "out vec4 o_color;\n"
+    "uniform vec2 u_cell_size;\n"
+    //"uniform sampler1D u_palette_texture;\n"
+    "uniform sampler2DArray u_font_texture;\n"
+    "void main() {\n"
+    "    float font = texelFetch(u_font_texture, ivec3(v_font_pixel_char), "
+    "0).x;\n"
+
+    "    float grid = 1 - clamp(floor(v_font_pixel_char.x) * "
+    "floor(v_font_pixel_char.y), 0, 1);\n"
+
+    // "    vec4 temp = texelFetch(u_palette_texture,
+    // int(floor(v_font_pixel_char.x)), 0);\n"
+    "    float temp = clamp(v_font_pixel_char.z - "
+    "(floor(v_font_pixel_char.y) * u_cell_size.x + "
+    "floor(v_font_pixel_char.x)), "
+    "0, 1);\n"
+    "    o_color = vec4(grid, font, temp, 1);\n"
+    "}\n";
+#endif
 
 typedef enum t_attrib_id {
   attrib_cell,
+#if !USE_GEOMETRY_SHADER
+  attrib_corner,
+#endif
   attrib_char,
+  attrib_attr,
   attrib_fg_color,
-  attrib_bg_color
+  attrib_bg_color,
 } t_attrib_id;
 
 void GLAPIENTRY log_gl_callback(GLenum source, GLenum type, GLuint id,
@@ -191,6 +247,7 @@ int main(int argc, char **argv) {
   (void)argc;
   (void)argv;
 
+  (void)ibm_font_bits_8x16;
   (void)ibm_font_bits_8x8;
   (void)ibm_font_bits_8x8_thin;
 
@@ -225,6 +282,7 @@ int main(int argc, char **argv) {
       window_height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
   SDL_GLContext context = SDL_GL_CreateContext(window);
 
+#if USE_GEOMETRY_SHADER
   GLuint vs = compile_shader(GL_VERTEX_SHADER, vertex_shader);
   GLuint gs = compile_shader(GL_GEOMETRY_SHADER, geometry_shader);
   GLuint fs = compile_shader(GL_FRAGMENT_SHADER, fragment_shader);
@@ -242,72 +300,27 @@ int main(int argc, char **argv) {
   glBindAttribLocation(program, attrib_char, "i_char");
   glBindAttribLocation(program, attrib_fg_color, "i_fg_color");
   glBindAttribLocation(program, attrib_bg_color, "i_bg_color");
+#else
+  GLuint vs = compile_shader(GL_VERTEX_SHADER, vertex_shader);
+  GLuint fs = compile_shader(GL_FRAGMENT_SHADER, fragment_shader);
+
+  if (vs == 0 || fs == 0) {
+    return 0;
+  }
+
+  GLuint program = glCreateProgram();
+  glAttachShader(program, vs);
+  glAttachShader(program, fs);
+
+  glBindAttribLocation(program, attrib_cell, "i_cell");
+  glBindAttribLocation(program, attrib_corner, "i_corner");
+  glBindAttribLocation(program, attrib_char, "i_char");
+  // glBindAttribLocation(program, attrib_attr, "i_attr");
+  //  glBindAttribLocation(program, attrib_fg_color, "i_fg_color");
+  //  glBindAttribLocation(program, attrib_bg_color, "i_bg_color");
+#endif
 
   glLinkProgram(program);
-
-  // GLuint palette_texture;
-  // glGenTextures(1, &palette_texture);
-  // glBindTexture(GL_TEXTURE_1D, palette_texture);
-  // GLubyte palette_data[16][3] = {
-  //     {0, 0, 0},     {0, 0, 170},    {0, 170, 0},    {0, 170, 170},
-  //     {170, 0, 0},   {170, 0, 170},  {170, 85, 0},   {170, 170, 170},
-  //     {85, 85, 85},  {85, 85, 255},  {85, 255, 85},  {85, 255, 255},
-  //     {255, 85, 85}, {255, 85, 255}, {255, 255, 85}, {255, 255, 255},
-  // };
-  // glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  // glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  // glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  // glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 16, 0, GL_RGB, GL_UNSIGNED_BYTE,
-  //              palette_data);
-
-  GLuint font_texture;
-  glGenTextures(1, &font_texture);
-  // glBindTexture(GL_TEXTURE_2D_ARRAY, font_texture);
-  glBindTexture(GL_TEXTURE_2D, font_texture);
-  GLubyte font_texture_data[256][16][16][3];
-  for (size_t i = 0; i < 256; ++i) {
-    for (size_t j = 0; j < 16; ++j) {
-      for (size_t k = 0; k < 8; ++k) {
-        GLubyte val = ibm_font_bits_8x16[65][j] & (1 << (7 - k)) ? 255 : 0;
-        font_texture_data[i][j][k][0] = val;
-        font_texture_data[i][j][k][1] = val;
-        font_texture_data[i][j][k][2] = val;
-      }
-      for (size_t k = 8; k < 16; ++k) {
-        GLubyte val =
-            ((i >= 0xC0) && (i <= 0xDF)) ? font_texture_data[i][j][7][0] : 0;
-        font_texture_data[i][j][k][0] = val;
-        font_texture_data[i][j][k][1] = val;
-        font_texture_data[i][j][k][2] = val;
-      }
-    }
-  }
-  // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  // glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RED, 8, 16, 256);
-  // glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RED, 16, 16, 256, 0, GL_RED,
-  //              GL_UNSIGNED_BYTE, font_texture_data);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 16, 16, 0, GL_RGB, GL_UNSIGNED_BYTE,
-               &font_texture_data);
-  for (size_t i = 0; i < 16; ++i) {
-    for (size_t j = 0; j < 16; ++j) {
-      fprintf(stderr, "%c", font_texture_data[0][i][j][0] ? '*' : '.');
-    }
-    fprintf(stderr, "\n");
-  }
-
-  // glActiveTexture(GL_TEXTURE0 + 0);
-  // glBindTexture(GL_TEXTURE_1D, palette_texture);
-
-  glActiveTexture(GL_TEXTURE0 + 0);
-  // glBindTexture(GL_TEXTURE_2D_ARRAY, font_texture);
-  glBindTexture(GL_TEXTURE_2D, font_texture);
 
   GLint status;
   glGetProgramiv(program, GL_LINK_STATUS, &status);
@@ -330,89 +343,170 @@ int main(int argc, char **argv) {
   glViewport(0, 0, window_width, window_height);
 
   GLuint rasterize_vao;
-  GLuint rasterize_structure_vbo;
-  GLuint rasterize_contents_vbo;
-
   glGenVertexArrays(1, &rasterize_vao);
-  glGenBuffers(1, &rasterize_structure_vbo);
-  glGenBuffers(1, &rasterize_contents_vbo);
-
   glBindVertexArray(rasterize_vao);
 
+  GLuint rasterize_structure_vbo;
+  glGenBuffers(1, &rasterize_structure_vbo);
   glBindBuffer(GL_ARRAY_BUFFER, rasterize_structure_vbo);
 
-  glEnableVertexAttribArray(attrib_cell);
-  glEnableVertexAttribArray(attrib_fg_color);
-  glEnableVertexAttribArray(attrib_bg_color);
-
+#if USE_GEOMETRY_SHADER
   struct rasterize_structure_t {
-    GLfloat fg_color[4];
-    GLfloat bg_color[4];
     GLfloat cell[2];
+    GLfloat corner[2];
+    // GLfloat fg_color[4];
+    // GLfloat bg_color[4];
   };
 
-  rasterize_structure_t g_rasterize_structure_data[width_chars * height_chars];
+  glEnableVertexAttribArray(attrib_cell);
+  glEnableVertexAttribArray(attrib_corner);
+  // glEnableVertexAttribArray(attrib_fg_color);
+  // glEnableVertexAttribArray(attrib_bg_color);
 
-  for (size_t i = 0; i < height_chars; ++i) {
-    for (size_t j = 0; j < width_chars; ++j) {
-      size_t n = i * width_chars + j;
-      g_rasterize_structure_data[n].fg_color[0] = 1.0f;
-      g_rasterize_structure_data[n].fg_color[1] = 1.0f;
-      g_rasterize_structure_data[n].fg_color[2] = 1.0f;
-      g_rasterize_structure_data[n].fg_color[3] = 1.0f;
-      g_rasterize_structure_data[n].bg_color[0] = 0.0f;
-      g_rasterize_structure_data[n].bg_color[1] = 0.0f;
-      g_rasterize_structure_data[n].bg_color[2] = 0.0f;
-      g_rasterize_structure_data[n].bg_color[3] = 1.0f;
-      g_rasterize_structure_data[n].cell[0] = j;
-      g_rasterize_structure_data[n].cell[1] = i;
-    }
-  }
-
-  glVertexAttribPointer(attrib_fg_color, 4, GL_FLOAT, GL_FALSE,
-                        sizeof(rasterize_structure_t),
-                        (void *)(offsetof(rasterize_structure_t, fg_color)));
-  glVertexAttribPointer(attrib_bg_color, 4, GL_FLOAT, GL_FALSE,
-                        sizeof(rasterize_structure_t),
-                        (void *)(offsetof(rasterize_structure_t, bg_color)));
   glVertexAttribPointer(attrib_cell, 2, GL_FLOAT, GL_FALSE,
                         sizeof(rasterize_structure_t),
                         (void *)(offsetof(rasterize_structure_t, cell)));
+  glVertexAttribPointer(attrib_corner, 2, GL_FLOAT, GL_FALSE,
+                        sizeof(rasterize_structure_t),
+                        (void *)(offsetof(rasterize_structure_t, corner)));
+  // glVertexAttribPointer(attrib_fg_color, 4, GL_FLOAT, GL_FALSE,
+  //                       sizeof(rasterize_structure_t),
+  //                       (void *)(offsetof(rasterize_structure_t, fg_color)));
+  // glVertexAttribPointer(attrib_bg_color, 4, GL_FLOAT, GL_FALSE,
+  //                       sizeof(rasterize_structure_t),
+  //                       (void *)(offsetof(rasterize_structure_t, bg_color)));
+
+  rasterize_structure_t
+      g_rasterize_structure_data[width_chars * height_chars * 6];
+
+  for (size_t i = 0; i < height_chars; ++i) {
+    for (size_t j = 0; j < width_chars; ++j) {
+      size_t m = (i * width_chars + j) * 6;
+      g_rasterize_structure_data[m + 0].corner[0] = 0;
+      g_rasterize_structure_data[m + 0].corner[1] = 0;
+      g_rasterize_structure_data[m + 1].corner[0] = 1;
+      g_rasterize_structure_data[m + 1].corner[1] = 0;
+      g_rasterize_structure_data[m + 2].corner[0] = 1;
+      g_rasterize_structure_data[m + 2].corner[1] = 1;
+      g_rasterize_structure_data[m + 3].corner[0] = 0;
+      g_rasterize_structure_data[m + 3].corner[1] = 0;
+      g_rasterize_structure_data[m + 4].corner[0] = 1;
+      g_rasterize_structure_data[m + 4].corner[1] = 1;
+      g_rasterize_structure_data[m + 5].corner[0] = 0;
+      g_rasterize_structure_data[m + 5].corner[1] = 1;
+      for (size_t k = 0; k < 6; ++k) {
+        size_t n = m + k;
+        g_rasterize_structure_data[n].cell[0] = j;
+        g_rasterize_structure_data[n].cell[1] = i;
+        // g_rasterize_structure_data[n].fg_color[0] = 1.0f;
+        // g_rasterize_structure_data[n].fg_color[1] = 1.0f;
+        // g_rasterize_structure_data[n].fg_color[2] = 1.0f;
+        // g_rasterize_structure_data[n].fg_color[3] = 1.0f;
+        // g_rasterize_structure_data[n].bg_color[0] = 0.0f;
+        // g_rasterize_structure_data[n].bg_color[1] = 0.0f;
+        // g_rasterize_structure_data[n].bg_color[2] = 0.0f;
+        // g_rasterize_structure_data[n].bg_color[3] = 1.0f;
+      }
+    }
+  }
+#else
+  struct rasterize_structure_t {
+    GLfloat cell[2];
+    GLfloat corner[2];
+    // GLfloat fg_color[4];
+    // GLfloat bg_color[4];
+  };
+
+  glEnableVertexAttribArray(attrib_cell);
+  glEnableVertexAttribArray(attrib_corner);
+  // glEnableVertexAttribArray(attrib_fg_color);
+  // glEnableVertexAttribArray(attrib_bg_color);
+
+  glVertexAttribPointer(attrib_cell, 2, GL_FLOAT, GL_FALSE,
+                        sizeof(rasterize_structure_t),
+                        (void *)(offsetof(rasterize_structure_t, cell)));
+  glVertexAttribPointer(attrib_corner, 2, GL_FLOAT, GL_FALSE,
+                        sizeof(rasterize_structure_t),
+                        (void *)(offsetof(rasterize_structure_t, corner)));
+  // glVertexAttribPointer(attrib_fg_color, 4, GL_FLOAT, GL_FALSE,
+  //                       sizeof(rasterize_structure_t),
+  //                       (void *)(offsetof(rasterize_structure_t, fg_color)));
+  // glVertexAttribPointer(attrib_bg_color, 4, GL_FLOAT, GL_FALSE,
+  //                       sizeof(rasterize_structure_t),
+  //                       (void *)(offsetof(rasterize_structure_t, bg_color)));
+
+  rasterize_structure_t
+      g_rasterize_structure_data[width_chars * height_chars * 6];
+
+  for (size_t i = 0; i < height_chars; ++i) {
+    for (size_t j = 0; j < width_chars; ++j) {
+      size_t m = (i * width_chars + j) * 6;
+      g_rasterize_structure_data[m + 0].corner[0] = 0;
+      g_rasterize_structure_data[m + 0].corner[1] = 0;
+      g_rasterize_structure_data[m + 1].corner[0] = 1;
+      g_rasterize_structure_data[m + 1].corner[1] = 0;
+      g_rasterize_structure_data[m + 2].corner[0] = 1;
+      g_rasterize_structure_data[m + 2].corner[1] = 1;
+      g_rasterize_structure_data[m + 3].corner[0] = 0;
+      g_rasterize_structure_data[m + 3].corner[1] = 0;
+      g_rasterize_structure_data[m + 4].corner[0] = 1;
+      g_rasterize_structure_data[m + 4].corner[1] = 1;
+      g_rasterize_structure_data[m + 5].corner[0] = 0;
+      g_rasterize_structure_data[m + 5].corner[1] = 1;
+      for (size_t k = 0; k < 6; ++k) {
+        size_t n = m + k;
+        g_rasterize_structure_data[n].cell[0] = j;
+        g_rasterize_structure_data[n].cell[1] = i;
+        // g_rasterize_structure_data[n].fg_color[0] = 1.0f;
+        // g_rasterize_structure_data[n].fg_color[1] = 1.0f;
+        // g_rasterize_structure_data[n].fg_color[2] = 1.0f;
+        // g_rasterize_structure_data[n].fg_color[3] = 1.0f;
+        // g_rasterize_structure_data[n].bg_color[0] = 0.0f;
+        // g_rasterize_structure_data[n].bg_color[1] = 0.0f;
+        // g_rasterize_structure_data[n].bg_color[2] = 0.0f;
+        // g_rasterize_structure_data[n].bg_color[3] = 1.0f;
+      }
+    }
+  }
+#endif
 
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_rasterize_structure_data),
                g_rasterize_structure_data, GL_STATIC_DRAW);
 
+  GLuint rasterize_contents_vbo;
+  glGenBuffers(1, &rasterize_contents_vbo);
   glBindBuffer(GL_ARRAY_BUFFER, rasterize_contents_vbo);
 
+  glEnableVertexAttribArray(attrib_char);
+  //glEnableVertexAttribArray(attrib_attr);
+
+  glVertexAttribIPointer(attrib_char, 1, GL_UNSIGNED_BYTE, sizeof(GLubyte),
+                         (void *)(0));
+
+#if USE_GEOMETRY_SHADER
   GLubyte g_rasterize_contents_data[width_chars * height_chars][1];
   for (size_t i = 0; i < height_chars; ++i) {
     for (size_t j = 0; j < width_chars; ++j) {
       size_t n = i * width_chars + j;
-      g_rasterize_contents_data[n][0] = (GLubyte)n;
+      for (size_t k = 0; k < 6; ++k) {
+        g_rasterize_contents_data[n][0][k] = (GLubyte)n;
+      }
     }
   }
-
-  glEnableVertexAttribArray(attrib_char);
-
-  glVertexAttribPointer(attrib_char, 1, GL_UNSIGNED_BYTE, GL_FALSE,
-                        sizeof(*g_rasterize_contents_data), (void *)(0));
+#else
+  GLubyte g_rasterize_contents_data[width_chars * height_chars][1][6];
+  for (size_t i = 0; i < height_chars; ++i) {
+    for (size_t j = 0; j < width_chars; ++j) {
+      size_t n = i * width_chars + j;
+      for (size_t k = 0; k < 6; ++k) {
+        g_rasterize_contents_data[n][0][k] = (GLubyte)n;
+      }
+    }
+  }
+#endif
 
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_rasterize_contents_data),
-               g_rasterize_contents_data, GL_STATIC_DRAW);
-
-  glUniform1ui(glGetUniformLocation(program, "u_blink_control"), 1);
-
-  glUniform1i(glGetUniformLocation(program, "u_palette_texture"), 0);
-  glUniform1i(glGetUniformLocation(program, "u_font_texture"), 2);
-
-  glUniform2f(glGetUniformLocation(program, "u_cell_size"), char_cell_width_px,
-              char_cell_height_px);
-
-  t_mat4x4 projection_matrix;
-  mat4x4_ortho(projection_matrix, 0.0f, (float)width_px, (float)height_px, 0.0f,
-               0.0f, 256.0f);
-  glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1,
-                     GL_FALSE, projection_matrix);
+               g_rasterize_contents_data, GL_DYNAMIC_DRAW);
 
   glValidateProgram(program);
 
@@ -433,12 +527,79 @@ int main(int argc, char **argv) {
 
   glUseProgram(program);
 
+  glUniform1ui(glGetUniformLocation(program, "u_blink_control"), 1);
+
+  // glUniform1i(glGetUniformLocation(program, "u_palette_texture"), 0);
+  glUniform1i(glGetUniformLocation(program, "u_font_texture"), 1);
+
+  glUniform2f(glGetUniformLocation(program, "u_cell_size"), char_cell_width_px,
+              char_cell_height_px);
+
+  t_mat4x4 projection_matrix;
+  mat4x4_ortho(projection_matrix, 0.0f, (float)width_px, (float)height_px, 0.0f,
+               0.0f, 256.0f);
+  glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1,
+                     GL_FALSE, projection_matrix);
+
+  // GLuint palette_texture;
+  // glGenTextures(1, &palette_texture);
+  // glBindTexture(GL_TEXTURE_1D, palette_texture);
+  // GLubyte palette_data[16][3] = {
+  //     {0, 0, 0},     {0, 0, 170},    {0, 170, 0},    {0, 170, 170},
+  //     {170, 0, 0},   {170, 0, 170},  {170, 85, 0},   {170, 170, 170},
+  //     {85, 85, 85},  {85, 85, 255},  {85, 255, 85},  {85, 255, 255},
+  //     {255, 85, 85}, {255, 85, 255}, {255, 255, 85}, {255, 255, 255},
+  // };
+  // glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  // glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  // glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  // glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 16, 0, GL_RGB, GL_UNSIGNED_BYTE,
+  //              palette_data);
+
+  GLuint font_texture;
+  glGenTextures(1, &font_texture);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, font_texture);
+  GLubyte font_texture_data[256][16][16][3];
+  for (size_t i = 0; i < 256; ++i) {
+    for (size_t j = 0; j < 16; ++j) {
+      for (size_t k = 0; k < 8; ++k) {
+        GLubyte val = ibm_font_bits_8x16[i][j] & (1 << (7 - k)) ? 255 : 0;
+        font_texture_data[i][j][k][0] = val;
+        font_texture_data[i][j][k][1] = val;
+        font_texture_data[i][j][k][2] = val;
+      }
+      for (size_t k = 8; k < 16; ++k) {
+        GLubyte val =
+            ((i >= 0xC0) && (i <= 0xDF)) ? font_texture_data[i][j][7][0] : 0;
+        font_texture_data[i][j][k][0] = val;
+        font_texture_data[i][j][k][1] = val;
+        font_texture_data[i][j][k][2] = val;
+      }
+    }
+  }
+  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, 16, 16, 256, 0, GL_RGB,
+               GL_UNSIGNED_BYTE, &font_texture_data);
+
+  // glActiveTexture(GL_TEXTURE0);
+  // glBindTexture(GL_TEXTURE_1D, palette_texture);
+
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, font_texture);
+
   bool done = false;
   while (!done) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBindVertexArray(rasterize_vao);
+#if USE_GEOMETRY_SHADER
     glDrawArrays(GL_POINTS, 0, width_chars * height_chars);
+#else
+    glDrawArrays(GL_TRIANGLES, 0, width_chars * height_chars * 6);
+#endif
 
     SDL_GL_SwapWindow(window);
     SDL_Delay(1);
