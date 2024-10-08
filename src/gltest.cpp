@@ -9,7 +9,7 @@
 
 #include "ibm_font.h"
 
-#define USE_GEOMETRY_SHADER 0
+#define USE_GEOMETRY_SHADER 1
 
 typedef float t_mat4x4[16];
 
@@ -45,28 +45,32 @@ static inline void mat4x4_ortho(t_mat4x4 out, float left, float right,
 static const char *vertex_shader =
     "#version 150 core\n"
     "in vec2 i_cell;\n"
-    "in uint i_char;\n"
-    "in vec4 i_fg_color;\n"
-    "in vec4 i_bg_color;\n"
+    "in int i_char;\n"
+    "in int i_attr;\n"
     "out vec2 g_cell;\n"
-    "out uint g_char;\n"
+    "out int g_char;\n"
     "out vec4 g_fg_color;\n"
     "out vec4 g_bg_color;\n"
+    "uniform int u_cfg_ice_color;\n"
     "uniform int u_blink_control;\n"
-    //"uniform sampler1D u_palette_texture;\n"
+    "uniform sampler1D u_palette_texture;\n"
     "void main() {\n"
     "    g_cell = i_cell;\n"
     "    g_char = i_char;\n"
-    "    g_fg_color = mix(i_bg_color, i_fg_color, float(u_blink_control));\n"
-    "    g_bg_color = i_bg_color;\n"
+    "    vec4 fg = texelFetch(u_palette_texture, i_attr & 0xF, 0);\n"
+    "    vec4 bg = texelFetch(u_palette_texture, (i_attr >> 4) & "
+    "(bool(u_cfg_ice_color) ? 0x0F : 0x7), 0);\n"
+    "    g_fg_color = mix(bg, fg, float(bool(u_blink_control) && "
+    "!bool(u_cfg_ice_color)));\n"
+    "    g_bg_color = bg;\n"
     "}\n";
 
 static const char *geometry_shader =
     "#version 150 core\n"
     "layout(points) in;\n"
     "layout(triangle_strip, max_vertices = 4) out;\n"
-    "in uint g_char[];\n"
     "in vec2 g_cell[];\n"
+    "in int g_char[];\n"
     "in vec4 g_fg_color[];\n"
     "in vec4 g_bg_color[];\n"
     "out vec4 v_fg_color;\n"
@@ -101,32 +105,6 @@ static const char *geometry_shader =
     "    EmitVertex();\n"
     "    EndPrimitive();\n"
     "}\n";
-
-static const char *fragment_shader =
-    "#version 150 core\n"
-    "in vec4 v_fg_color;\n"
-    "in vec4 v_bg_color;\n"
-    "in vec3 v_font_pixel_char;\n"
-    "out vec4 o_color;\n"
-    "uniform vec2 u_cell_size;\n"
-    //"uniform sampler2DArray u_font_texture;\n"
-    //"uniform sampler1D u_palette_texture;\n"
-    "uniform sampler2D u_font_texture;\n"
-    "void main() {\n"
-    //"    float font = (int(v_font_pixel_char.x) ^ int(v_font_pixel_char.y)) &
-    // 1;"
-    "    float font = 1;\n" // texture(u_font_texture, vec2(0.5, 0.5)).r;\n"
-    // texelFetch(u_font_texture, ivec2(2, 7), 0).x;\n"
-    //  floor(v_font_pixel_char.xy)
-    "    float grid = 1 - clamp(floor(v_font_pixel_char.x) * "
-    "floor(v_font_pixel_char.y), 0, 1);\n"
-    // "    vec4 temp = texelFetch(u_palette_texture, "
-    // "int(floor(v_font_pixel_char.x)), 0);\n"
-    "    vec4 temp = vec4(1, 1, 1, 1);\n"
-    // "    o_color = mix(0.5 * vec4(grid) + 0.5 * temp, mix(v_bg_color,
-    // v_fg_color, font), " "0.75);\n"
-    "    o_color = vec4(grid);\n"
-    "}\n";
 #else
 static const char *vertex_shader =
     "#version 150 core\n"
@@ -147,11 +125,13 @@ static const char *vertex_shader =
     "    vec4 fg = texelFetch(u_palette_texture, i_attr & 0xF, 0);\n"
     "    vec4 bg = texelFetch(u_palette_texture, (i_attr >> 4) & "
     "(bool(u_cfg_ice_color) ? 0x0F : 0x7), 0);\n"
-    "    v_fg_color = mix(bg, fg, float(bool(u_blink_control) && !bool(u_cfg_ice_color)));\n"
+    "    v_fg_color = mix(bg, fg, float(bool(u_blink_control) && "
+    "!bool(u_cfg_ice_color)));\n"
     "    v_bg_color = bg;\n"
     "    gl_Position = u_projection_matrix * vec4((i_cell + i_corner) * "
     "u_cell_size, 0, 1);\n"
     "}\n";
+#endif
 
 static const char *fragment_shader =
     "#version 150 core\n"
@@ -174,7 +154,6 @@ static const char *fragment_shader =
     // "0, 1);\n"
     // "    o_color = mix(o_color, vec4(grid, font, temp, 1), 0.25);\n"
     "}\n";
-#endif
 
 typedef enum t_attrib_id {
   attrib_cell,
@@ -345,18 +324,13 @@ int main(int argc, char **argv) {
 #if USE_GEOMETRY_SHADER
   struct rasterize_structure_t {
     GLfloat i_cell[2];
-    GLfloat i_corner[2];
   };
 
   glEnableVertexAttribArray(attrib_cell);
-  glEnableVertexAttribArray(attrib_corner);
 
   glVertexAttribPointer(attrib_cell, 2, GL_FLOAT, GL_FALSE,
                         sizeof(rasterize_structure_t),
                         (void *)(offsetof(rasterize_structure_t, i_cell)));
-  glVertexAttribPointer(attrib_corner, 2, GL_FLOAT, GL_FALSE,
-                        sizeof(rasterize_structure_t),
-                        (void *)(offsetof(rasterize_structure_t, i_corner)));
 
   rasterize_structure_t
       g_rasterize_structure_data[width_chars * height_chars * 6];
@@ -440,7 +414,8 @@ int main(int argc, char **argv) {
     for (size_t j = 0; j < width_chars; ++j) {
       size_t n = i * width_chars + j;
       g_rasterize_contents_data[n].i_char = (GLubyte)(n % 256);
-      g_rasterize_contents_data[n].i_attr = (GLubyte)(n % 16);
+      g_rasterize_contents_data[n].i_attr =
+          (GLubyte)((n + (n / 256) * 61) % 256);
     }
   }
 #else
