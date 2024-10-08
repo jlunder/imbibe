@@ -408,33 +408,6 @@ int main(int argc, char **argv) {
                          sizeof(rasterize_contents_t),
                          (void *)offsetof(rasterize_contents_t, i_attr));
 
-#if USE_GEOMETRY_SHADER
-  rasterize_contents_t g_rasterize_contents_data[width_chars * height_chars];
-  for (size_t i = 0; i < height_chars; ++i) {
-    for (size_t j = 0; j < width_chars; ++j) {
-      size_t n = i * width_chars + j;
-      g_rasterize_contents_data[n].i_char = (GLubyte)(n % 256);
-      g_rasterize_contents_data[n].i_attr =
-          (GLubyte)((n + (n / 256) * 61) % 256);
-    }
-  }
-#else
-  rasterize_contents_t g_rasterize_contents_data[width_chars * height_chars][6];
-  for (size_t i = 0; i < height_chars; ++i) {
-    for (size_t j = 0; j < width_chars; ++j) {
-      size_t n = i * width_chars + j;
-      for (size_t k = 0; k < 6; ++k) {
-        g_rasterize_contents_data[n][k].i_char = (GLubyte)(n % 256);
-        g_rasterize_contents_data[n][k].i_attr =
-            (GLubyte)((n + (n / 256) * 61) % 256);
-      }
-    }
-  }
-#endif
-
-  glBufferData(GL_ARRAY_BUFFER, sizeof(g_rasterize_contents_data),
-               g_rasterize_contents_data, GL_DYNAMIC_DRAW);
-
   glUseProgram(program);
 
   glUniform1i(glGetUniformLocation(program, "u_palette_texture"), 0);
@@ -520,10 +493,42 @@ int main(int argc, char **argv) {
   glBindTexture(GL_TEXTURE_2D_ARRAY, font_texture);
 
   bool done = false;
+  uint64_t count = 0;
   while (!done) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBindVertexArray(rasterize_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, rasterize_contents_vbo);
+
+#if USE_GEOMETRY_SHADER
+    rasterize_contents_t g_rasterize_contents_data[width_chars * height_chars];
+    for (size_t i = 0; i < height_chars; ++i) {
+      for (size_t j = 0; j < width_chars; ++j) {
+        size_t n = i * width_chars + j;
+        g_rasterize_contents_data[n].i_char = (GLubyte)((n + count) % 256);
+        g_rasterize_contents_data[n].i_attr =
+            (GLubyte)((n + (n / 256) * 61) % 256);
+      }
+    }
+#else
+    rasterize_contents_t g_rasterize_contents_data[width_chars * height_chars]
+                                                  [6];
+    for (size_t i = 0; i < height_chars; ++i) {
+      for (size_t j = 0; j < width_chars; ++j) {
+        size_t n = i * width_chars + j;
+        for (size_t k = 0; k < 6; ++k) {
+          g_rasterize_contents_data[n][k].i_char = (GLubyte)((n + count) % 256);
+          g_rasterize_contents_data[n][k].i_attr =
+              (GLubyte)((n + (n / 256) * 61) % 256);
+        }
+      }
+    }
+#endif
+    ++count;
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_rasterize_contents_data),
+                 g_rasterize_contents_data, GL_DYNAMIC_DRAW);
+
 #if USE_GEOMETRY_SHADER
     glDrawArrays(GL_POINTS, 0, width_chars * height_chars);
 #else
@@ -531,7 +536,7 @@ int main(int argc, char **argv) {
 #endif
 
     SDL_GL_SwapWindow(window);
-    SDL_Delay(1);
+    SDL_Delay(100);
 
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
