@@ -162,7 +162,7 @@ GLuint compile_shader(GLenum shader_type, GLchar const *shader_source) {
     return 0;
   }
 
-  GLint length = strlen(geometry_shader);
+  GLint length = strlen(shader_source);
   glShaderSource(shader, 1, &shader_source, &length);
   glCompileShader(shader);
 
