@@ -9,8 +9,6 @@
 
 #include "ibm_font.h"
 
-#define USE_GEOMETRY_SHADER 1
-
 typedef float t_mat4x4[16];
 
 static inline void mat4x4_ortho(t_mat4x4 out, float left, float right,
@@ -41,7 +39,6 @@ static inline void mat4x4_ortho(t_mat4x4 out, float left, float right,
 #undef T
 }
 
-#if USE_GEOMETRY_SHADER
 static const char *vertex_shader =
     "#version 150 core\n"
     "in vec2 i_cell;\n"
@@ -105,33 +102,6 @@ static const char *geometry_shader =
     "    EmitVertex();\n"
     "    EndPrimitive();\n"
     "}\n";
-#else
-static const char *vertex_shader =
-    "#version 150 core\n"
-    "in vec2 i_cell;\n"
-    "in vec2 i_corner;\n"
-    "in int i_char;\n"
-    "in int i_attr;\n"
-    "out vec4 v_fg_color;\n"
-    "out vec4 v_bg_color;\n"
-    "out vec3 v_font_pixel_char;\n"
-    "uniform vec2 u_cell_size;\n"
-    "uniform mat4 u_projection_matrix;\n"
-    "uniform int u_cfg_ice_color;\n"
-    "uniform int u_blink_control;\n"
-    "uniform sampler1D u_palette_texture;\n"
-    "void main() {\n"
-    "    v_font_pixel_char = vec3(i_corner * u_cell_size,float(i_char));\n"
-    "    vec4 fg = texelFetch(u_palette_texture, i_attr & 0xF, 0);\n"
-    "    vec4 bg = texelFetch(u_palette_texture, (i_attr >> 4) & "
-    "(bool(u_cfg_ice_color) ? 0x0F : 0x7), 0);\n"
-    "    v_fg_color = mix(bg, fg, float(bool(u_blink_control) && "
-    "!bool(u_cfg_ice_color)));\n"
-    "    v_bg_color = bg;\n"
-    "    gl_Position = u_projection_matrix * vec4((i_cell + i_corner) * "
-    "u_cell_size, 0, 1);\n"
-    "}\n";
-#endif
 
 static const char *fragment_shader =
     "#version 150 core\n"
@@ -157,9 +127,6 @@ static const char *fragment_shader =
 
 typedef enum t_attrib_id {
   attrib_cell,
-#if !USE_GEOMETRY_SHADER
-  attrib_corner,
-#endif
   attrib_char,
   attrib_attr,
 } t_attrib_id;
@@ -258,7 +225,6 @@ int main(int argc, char **argv) {
       window_height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
   SDL_GLContext context = SDL_GL_CreateContext(window);
 
-#if USE_GEOMETRY_SHADER
   GLuint vs = compile_shader(GL_VERTEX_SHADER, vertex_shader);
   GLuint gs = compile_shader(GL_GEOMETRY_SHADER, geometry_shader);
   GLuint fs = compile_shader(GL_FRAGMENT_SHADER, fragment_shader);
@@ -271,23 +237,8 @@ int main(int argc, char **argv) {
   glAttachShader(program, vs);
   glAttachShader(program, gs);
   glAttachShader(program, fs);
-#else
-  GLuint vs = compile_shader(GL_VERTEX_SHADER, vertex_shader);
-  GLuint fs = compile_shader(GL_FRAGMENT_SHADER, fragment_shader);
-
-  if (vs == 0 || fs == 0) {
-    return 0;
-  }
-
-  GLuint program = glCreateProgram();
-  glAttachShader(program, vs);
-  glAttachShader(program, fs);
-#endif
 
   glBindAttribLocation(program, attrib_cell, "i_cell");
-#if !USE_GEOMETRY_SHADER
-  glBindAttribLocation(program, attrib_corner, "i_corner");
-#endif
   glBindAttribLocation(program, attrib_char, "i_char");
   glBindAttribLocation(program, attrib_attr, "i_attr");
 
@@ -321,7 +272,6 @@ int main(int argc, char **argv) {
   glGenBuffers(1, &rasterize_structure_vbo);
   glBindBuffer(GL_ARRAY_BUFFER, rasterize_structure_vbo);
 
-#if USE_GEOMETRY_SHADER
   struct rasterize_structure_t {
     GLfloat i_cell[2];
   };
@@ -342,48 +292,6 @@ int main(int argc, char **argv) {
       g_rasterize_structure_data[n].i_cell[1] = i;
     }
   }
-#else
-  struct rasterize_structure_t {
-    GLfloat i_cell[2];
-    GLfloat i_corner[2];
-  };
-
-  glEnableVertexAttribArray(attrib_cell);
-  glEnableVertexAttribArray(attrib_corner);
-
-  glVertexAttribPointer(attrib_cell, 2, GL_FLOAT, GL_FALSE,
-                        sizeof(rasterize_structure_t),
-                        (void *)(offsetof(rasterize_structure_t, i_cell)));
-  glVertexAttribPointer(attrib_corner, 2, GL_FLOAT, GL_FALSE,
-                        sizeof(rasterize_structure_t),
-                        (void *)(offsetof(rasterize_structure_t, i_corner)));
-
-  rasterize_structure_t
-      g_rasterize_structure_data[width_chars * height_chars * 6];
-
-  for (size_t i = 0; i < height_chars; ++i) {
-    for (size_t j = 0; j < width_chars; ++j) {
-      size_t m = (i * width_chars + j) * 6;
-      g_rasterize_structure_data[m + 0].i_corner[0] = 0;
-      g_rasterize_structure_data[m + 0].i_corner[1] = 0;
-      g_rasterize_structure_data[m + 1].i_corner[0] = 1;
-      g_rasterize_structure_data[m + 1].i_corner[1] = 0;
-      g_rasterize_structure_data[m + 2].i_corner[0] = 1;
-      g_rasterize_structure_data[m + 2].i_corner[1] = 1;
-      g_rasterize_structure_data[m + 3].i_corner[0] = 0;
-      g_rasterize_structure_data[m + 3].i_corner[1] = 0;
-      g_rasterize_structure_data[m + 4].i_corner[0] = 1;
-      g_rasterize_structure_data[m + 4].i_corner[1] = 1;
-      g_rasterize_structure_data[m + 5].i_corner[0] = 0;
-      g_rasterize_structure_data[m + 5].i_corner[1] = 1;
-      for (size_t k = 0; k < 6; ++k) {
-        size_t n = m + k;
-        g_rasterize_structure_data[n].i_cell[0] = j;
-        g_rasterize_structure_data[n].i_cell[1] = i;
-      }
-    }
-  }
-#endif
 
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_rasterize_structure_data),
                g_rasterize_structure_data, GL_STATIC_DRAW);
@@ -500,7 +408,6 @@ int main(int argc, char **argv) {
     glBindVertexArray(rasterize_vao);
     glBindBuffer(GL_ARRAY_BUFFER, rasterize_contents_vbo);
 
-#if USE_GEOMETRY_SHADER
     rasterize_contents_t g_rasterize_contents_data[width_chars * height_chars];
     for (size_t i = 0; i < height_chars; ++i) {
       for (size_t j = 0; j < width_chars; ++j) {
@@ -510,30 +417,12 @@ int main(int argc, char **argv) {
             (GLubyte)((n + (n / 256) * 61) % 256);
       }
     }
-#else
-    rasterize_contents_t g_rasterize_contents_data[width_chars * height_chars]
-                                                  [6];
-    for (size_t i = 0; i < height_chars; ++i) {
-      for (size_t j = 0; j < width_chars; ++j) {
-        size_t n = i * width_chars + j;
-        for (size_t k = 0; k < 6; ++k) {
-          g_rasterize_contents_data[n][k].i_char = (GLubyte)((n + count) % 256);
-          g_rasterize_contents_data[n][k].i_attr =
-              (GLubyte)((n + (n / 256) * 61) % 256);
-        }
-      }
-    }
-#endif
     ++count;
 
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_rasterize_contents_data),
                  g_rasterize_contents_data, GL_DYNAMIC_DRAW);
 
-#if USE_GEOMETRY_SHADER
     glDrawArrays(GL_POINTS, 0, width_chars * height_chars);
-#else
-    glDrawArrays(GL_TRIANGLES, 0, width_chars * height_chars * 6);
-#endif
 
     SDL_GL_SwapWindow(window);
     SDL_Delay(100);
