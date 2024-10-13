@@ -24,13 +24,15 @@ typedef int16_t segdiff_t;
 #define SEGSIZE_INVALID UINT16_MAX
 
 inline void const __far *normalize_segmented(void const __far *p) {
-#if BUILD_POSIX_SIM
-  void const __far *norm_p = p;
-#else
+#if BUILD_MSDOS
   void const __far *norm_p =
       MK_FP(FP_SEG(p) + (FP_OFF(p) >> 4), FP_OFF(p) & 0xF);
+#elif BUILD_POSIX
+  void const __far *norm_p = p;
+#else
+#error New platform support needed?
 #endif
-  // logf("normalized "PRpF" to "PRpF"\n", p, norm_p);
+  // logf_any("normalized "PRpF" to "PRpF"\n", p, norm_p);
   assert(FP_SEG(norm_p) - FP_SEG(p) < 0x8000);
   return norm_p;
 }
@@ -42,13 +44,15 @@ inline void __far *normalize_segmented(void __far *p) {
 
 inline void const __far *denormalize_segmented(__segment orig_seg,
                                                void const __far *norm_p) {
-#if BUILD_POSIX_SIM
-  void const __far *p = norm_p;
-#else
+#if BUILD_MSDOS
   void const __far *p =
       MK_FP(orig_seg, FP_OFF(norm_p) + ((FP_SEG(norm_p) - orig_seg) << 4));
+#elif BUILD_POSIX
+  void const __far *p = norm_p;
+#else
+#error New platform support needed?
 #endif
-  // logf("denormalized "PRpF" to "PRpF"\n", norm_p, p);
+  // logf_any("denormalized "PRpF" to "PRpF"\n", norm_p, p);
   assert(FP_SEG(p) == orig_seg);
   assert(FP_SEG(norm_p) - orig_seg < 0x8000);
   return p;

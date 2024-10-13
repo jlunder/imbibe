@@ -1,0 +1,94 @@
+#include "imbibe.h"
+
+#if !BUILD_POSIX
+#error Wrong build
+#elif !BUILD_POSIX_SIM
+#warning Wrong build, but please do syntax highlighting
+#endif
+
+#ifndef logf_imbibe
+#define logf_imbibe(...) disable_logf("IMBIBE: " __VA_ARGS__)
+#endif
+
+#include "keyboard.h"
+
+void imbibe_main();
+
+int main(int argc, char *argv[]) {
+  (void)argc;
+  (void)argv;
+
+  imbibe_main();
+  return 0;
+}
+
+namespace sim {
+
+extern uint16_t dummy_screen[4000];
+extern uint32_t now_ms;
+
+extern void advance_time_to(uint32_t to_ms);
+
+struct key_seq_entry {
+  uint32_t ms;
+  key_code_t key;
+};
+
+struct loop_seq_entry {
+  uint32_t ms;
+  uint32_t ms_per_loop;
+  uint32_t ms_per_idle;
+  uint32_t idle_per_loop;
+};
+
+key_seq_entry const key_seq[] = {
+    {6500, key_code::escape},    {137, key_code::down},
+    {272, key_code::down},       {440, key_code::up},
+    {84, key_code::up},          {178, key_code::up},
+    {2000, key_code::control_q}, {0, 0},
+};
+
+loop_seq_entry const loop_seq[] = {
+    {1, 10, 1, 0},
+    {0, 10, 1, 0},
+};
+
+key_seq_entry const *key_seq_p = key_seq;
+loop_seq_entry const *loop_seq_p = loop_seq;
+
+} // namespace sim
+
+void sim::step_idle() { advance_time_to(now_ms + loop_seq_p->ms_per_idle); }
+
+void sim::step_poll() {
+  assert(loop_seq_p < loop_seq + LENGTHOF(loop_seq));
+  advance_time_to(loop_seq_p->ms);
+  while ((loop_seq_p->ms > 0) && (now_ms >= (loop_seq_p + 1)->ms)) {
+    ++loop_seq_p;
+  }
+  advance_time_to(now_ms + loop_seq_p->ms_per_loop);
+}
+
+void sim::step_animate(uint32_t anim_ms) {
+  (void)anim_ms;
+  // assert desired anim_ms achieved
+}
+
+bool keyboard::key_event_available() {
+  assert(sim::key_seq_p < (sim::key_seq + LENGTHOF(sim::key_seq)));
+  return (sim::key_seq_p->ms > 0) && (sim::key_seq_p->ms <= sim::now_ms);
+}
+
+key_code_t keyboard::read_key_event() {
+  assert(sim::key_seq_p < (sim::key_seq + LENGTHOF(sim::key_seq)));
+  if (sim::key_seq_p->ms == 0) {
+    assert(!"read_key_event no key available!");
+    return 0;
+  }
+  if (sim::key_seq_p->ms > sim::now_ms) {
+    logf_imbibe("read_key_event blocking\n");
+    sim::advance_time_to(sim::key_seq_p->ms);
+  }
+  assert(sim::key_seq_p->ms <= sim::now_ms);
+  return (sim::key_seq_p++)->key;
+}

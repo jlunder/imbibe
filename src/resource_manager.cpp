@@ -59,7 +59,7 @@ void __far *data_from_reclaim_header(reclaim_header __far *header) {
 
 } // namespace resource_manager
 
-// #if !BUILD_POSIX_SIM
+// #if !BUILD_POSIX
 #if 0
 
 extern hash_t asm_fletcher16_str(char const __far * s);
@@ -94,7 +94,7 @@ extern hash_t asm_fletcher16_str(char const __far * s);
 #endif
 
 resource_manager::hash_t resource_manager::fletcher16_str(char const __far *s) {
-#if 1 // BUILD_DEBUG || BUILD_POSIX_SIM
+#if 1 // BUILD_DEBUG || BUILD_POSIX
   uint16_t s1 = 0;
   uint16_t s2 = 0;
   for (char const __far *p = s; *p; ++p) {
@@ -115,7 +115,7 @@ resource_manager::hash_t resource_manager::fletcher16_str(char const __far *s) {
   //   uint16_t result = asm_fletcher16_str(s);
   //   assert(result == ((s2 << 8) | s1));
   //   return result;
-  // #elif BUILD_POSIX_SIM
+  // #elif BUILD_POSIX
   //   return (s2 << 8) | s1;
   // #else
   // #error New platform support needed?

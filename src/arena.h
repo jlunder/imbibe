@@ -5,7 +5,7 @@
 
 #include "memory.h"
 
-#if BUILD_POSIX_SIM
+#if BUILD_POSIX
 #include <vector>
 #endif
 
@@ -110,7 +110,7 @@ public:
   virtual void free(void __far *p);
 
   mark_t mark() {
-#if BUILD_POSIX_SIM
+#if BUILD_POSIX
     mark_t result = {m_top, m_live_count, (segsize_t)m_allocated.size()};
 #else
     mark_t result = {m_top, m_live_count};
@@ -120,7 +120,7 @@ public:
   void reset(mark_t n_mark) {
     assert(n_mark.marked_top <= m_top);
     assert(n_mark.marked_live == m_live_count);
-#if BUILD_POSIX_SIM
+#if BUILD_POSIX
     assert(n_mark.marked_allocated < m_allocated.size());
     for (segsize_t i = n_mark.marked_allocated; i < m_allocated.size(); ++i) {
       assert(!m_allocated[i]);
@@ -140,7 +140,7 @@ private:
   segsize_t m_live_count;
   void __far *m_allocation;
   char const *m_name;
-#if BUILD_POSIX_SIM
+#if BUILD_POSIX
   std::vector<void *> m_allocated;
 #endif
 };

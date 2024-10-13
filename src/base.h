@@ -21,7 +21,9 @@
 #define BUILD_MSDOS 1
 #define BUILD_MSDOS_GCC_IA16 0
 #define BUILD_MSDOS_WATCOMC 1
+#define BUILD_POSIX 0
 #define BUILD_POSIX_SIM 0
+#define BUILD_POSIX_SDL_GL 0
 
 #elif defined(__ia16__)
 
@@ -33,17 +35,30 @@
 #define BUILD_MSDOS_GCC_IA16 1
 #define BUILD_MSDOS_WATCOMC 0
 #define BUILD_POSIX_SIM 0
+#define BUILD_POSIX_SDL_GL 0
 
 #else
 
 #define BUILD_MSDOS 0
 #define BUILD_MSDOS_GCC_IA16 0
 #define BUILD_MSDOS_WATCOMC 0
+#define BUILD_POSIX 1
+
+#if defined(GLIMBIBE)
+
+#define BUILD_POSIX_SIM 0
+#define BUILD_POSIX_SDL_GL 1
+
+#else
+
 #define BUILD_POSIX_SIM 1
+#define BUILD_POSIX_SDL_GL 0
 
 #endif
 
-#if BUILD_POSIX_SIM
+#endif
+
+#if BUILD_POSIX_SIM || BUILD_POSIX_SDL_GL
 
 #define BUILD_NEAR_DATA 0
 #define BUILD_FAR_DATA 0
@@ -116,7 +131,7 @@ extern unsigned _dos_lseek(int handle, long offset, int whence,
 #define PRsN "%Ns"
 #define PRs "%s"
 
-#elif BUILD_POSIX_SIM
+#elif BUILD_POSIX
 
 #define __near
 #define __far volatile

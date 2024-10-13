@@ -23,11 +23,11 @@
 //   uint16_t s_first_free_ref;
 // }
 
-#if !BUILD_POSIX_SIM
+#if BUILD_MSDOS
 __segment imstring::s_dynamic_seg;
 #endif
 
-#if BUILD_POSIX_SIM
+#if BUILD_POSIX
 bool imstring::is_dynamic(char const __far *str) {
   // TODO
   (void)str;

@@ -32,7 +32,7 @@ extern void set_cursor_style(uint8_t visible, uint8_t start_row,
 
 } // namespace aux_text_window
 
-#if !BUILD_POSIX_SIM
+#if BUILD_MSDOS
 
 /*
   "   mov     ah, 003h          " \
@@ -74,8 +74,10 @@ extern void asm_bios_set_cursor_style(uint8_t start_opts, uint8_t end);
     "   int     10h               "                                            \
     "   pop     bp                " parm[ch][cl] modify[ax] nomemory;
 
+#elif BUILD_POSIX
+// TODO?
 #else
-// TODO
+#error New platform support needed?
 #endif
 
 inline void aux_text_window::read_screen_buffer(bitmap *out_b) {

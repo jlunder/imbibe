@@ -20,7 +20,7 @@ public:
     assign(f, p);
   }
 
-#if BUILD_POSIX_SIM
+#if BUILD_POSIX
   immutable(immutable const &other)
       : m_seg(other.m_seg), m_index(other.m_index), m_ofs(other.m_ofs) {
     if (m_index != 0) {
@@ -63,7 +63,7 @@ public:
 
 #if BUILD_MSDOS
   bool operator==(immutable const &other) { return handle() == other.handle(); }
-#elif BUILD_POSIX_SIM
+#elif BUILD_POSIX
   bool operator==(immutable const &other) {
     return (m_seg == other.m_seg) && (m_index == other.m_index) &&
            (m_ofs == other.m_ofs);
@@ -120,7 +120,7 @@ public:
 #if BUILD_MSDOS
   weak_immutable(immutable const &strong) { set_handle(strong.handle()); }
   weak_immutable(weak_immutable const &other) { set_handle(other.handle()); }
-#elif BUILD_POSIX_SIM
+#elif BUILD_POSIX
   weak_immutable(immutable const &strong)
       : m_seg(strong.m_seg), m_index(strong.m_index), m_ofs(strong.m_ofs) {}
   weak_immutable(weak_immutable const &other)
@@ -134,7 +134,7 @@ public:
   weak_immutable &operator=(immutable const &strong) {
 #if BUILD_MSDOS
     set_handle(strong.handle());
-#elif BUILD_POSIX_SIM
+#elif BUILD_POSIX
     m_seg = strong.m_seg;
     m_index = strong.m_index;
     m_ofs = strong.m_ofs;
@@ -147,7 +147,7 @@ public:
   weak_immutable &operator=(weak_immutable const &other) {
 #if BUILD_MSDOS
     set_handle(other.handle());
-#elif BUILD_POSIX_SIM
+#elif BUILD_POSIX
     m_seg = other.m_seg;
     m_index = other.m_index;
     m_ofs = other.m_ofs;
@@ -162,7 +162,7 @@ public:
     (void)p;
 #if BUILD_MSDOS
     set_handle(0);
-#elif BUILD_POSIX_SIM
+#elif BUILD_POSIX
     m_seg = 0;
     m_index = 0;
     m_ofs = 0;

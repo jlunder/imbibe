@@ -140,7 +140,7 @@ key_code_t keyboard::read_key_event() {
   }
 }
 
-#elif BUILD_POSIX_SIM
+#elif BUILD_POSIX
 // In imbibe.cpp
 #else
 #error New platform support needed?

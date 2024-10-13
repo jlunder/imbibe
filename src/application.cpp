@@ -15,7 +15,7 @@
 #include "timer.h"
 #include "viewer_element.h"
 
-#define logf_application(...) logf("APPLICATION: " __VA_ARGS__)
+#define logf_application(...) logf_any("APPLICATION: " __VA_ARGS__)
 
 namespace application {
 

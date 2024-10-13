@@ -11,7 +11,7 @@
 #include "termviz.h"
 #include "unpacker.h"
 
-#define logf_submenu_element(...) logf("SUBMENU_ELEMENT: " __VA_ARGS__)
+#define logf_submenu_element(...) logf_any("SUBMENU_ELEMENT: " __VA_ARGS__)
 
 void submenu_element::layout(coord_t window_width, coord_t window_height) {
   set_frame(0, 0, window_width, window_height);

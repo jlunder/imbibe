@@ -75,20 +75,22 @@ public:
   static void teardown_exiting();
 
 private:
-#if !BUILD_POSIX_SIM
+#if BUILD_MSDOS
   static __segment s_dynamic_seg;
 #endif
 
   char const __far *m_str;
 
-#if BUILD_POSIX_SIM
-  static bool is_dynamic(char const __far *str);
-#else
+#if BUILD_MSDOS
   static bool is_dynamic(char const __far *str) {
     // return FP_SEG(str) == s_dynamic_seg;
     (void)str;
     return false;
   }
+#elif BUILD_POSIX
+  static bool is_dynamic(char const __far *str);
+#else
+#error New platform support needed?
 #endif
   static void copy_dynamic(imstring &ims, char const __far *str);
   static void ref_dynamic(imstring &ims);

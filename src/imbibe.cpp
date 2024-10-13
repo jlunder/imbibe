@@ -12,7 +12,7 @@
 
 #define logf_imbibe(...) disable_logf("IMBIBE: " __VA_ARGS__)
 
-#if !BUILD_POSIX_SIM
+#if BUILD_MSDOS
 
 int harderr_handler(unsigned deverror, unsigned errcode,
                     unsigned __far *devhdr) {
@@ -105,26 +105,7 @@ void abort_handler(int sig) {
 
 #endif
 
-int main(int argc, char *argv[]) {
-  (void)argc;
-  (void)argv;
-
-#if !BUILD_POSIX_SIM
-  // The DOS default is to show weird error prompts with questions like
-  // "Abort, Retry, Ignore, Fail" when there are hardware errors like disk
-  // read failures. We're not handling critical data where that prompt could
-  // save them from disaster, so this kind of interruption in our UI is not
-  // particularly justified.
-
-  // This installs an error handler that fails the DOS function; if we want
-  // to handle the error, that can be done in the normal call flow after
-  // function return. In practice we will probably just bail, the user can
-  // find better hardware to run our program on if it's that marginal (or
-  // more like, next time don't eject the disk while we're loading).
-
-  _harderr(harderr_handler);
-
-#endif
+void imbibe_main() {
   imstring::setup();
   timer::setup();
   resource_manager::setup();
@@ -143,93 +124,88 @@ int main(int argc, char *argv[]) {
   resource_manager::teardown_exiting();
   timer::teardown();
   imstring::teardown_exiting();
+}
 
+#if BUILD_MSDOS
+
+int main(int argc, char *argv[]) {
+  (void)argc;
+  (void)argv;
+
+  // The DOS default is to show weird error prompts with questions like
+  // "Abort, Retry, Ignore, Fail" when there are hardware errors like disk
+  // read failures. We're not handling critical data where that prompt could
+  // save them from disaster, so this kind of interruption in our UI is not
+  // particularly justified.
+
+  // This installs an error handler that fails the DOS function; if we want
+  // to handle the error, that can be done in the normal call flow after
+  // function return. In practice we will probably just bail, the user can
+  // find better hardware to run our program on if it's that marginal (or
+  // more like, next time don't eject the disk while we're loading).
+
+  _harderr(harderr_handler);
+
+  imbibe_main();
   return 0;
 }
 
+namespace aux_simulation {
+uint32_t s_idle_count = 0;
+}
+
+void sim::step_idle() { ++aux_simulation::s_idle_count; }
+
+void sim::step_poll() {
+  logf_sim("('poll',{'t':%lu,'idle'=%lu})\n", (unsigned long)timer::now(),
+           (unsigned long)aux_simulation::s_idle_count);
+}
+
+void sim::step_animate(uint32_t anim_ms) {
+  logf_sim("('animate',{'t':%lu,'anim_ms'=%lu})\n", (unsigned long)timer::now(),
+           (unsigned long)anim_ms);
+}
+
+#elif BUILD_POSIX
+
 #if BUILD_POSIX_SIM
+#include "imbibe_sim.ii"
+#elif BUILD_POSIX_SDL_GL
+#include "imbibe_sdl_gl.ii"
+#else
+#error New platform support needed?
+#endif
 
 namespace sim {
 
 uint16_t dummy_screen[4000];
 
-struct key_seq_entry {
-  uint32_t ms;
-  key_code_t key;
-};
-
-struct loop_seq_entry {
-  uint32_t ms;
-  uint32_t ms_per_loop;
-  uint32_t ms_per_idle;
-  uint32_t idle_per_loop;
-};
-
-key_seq_entry const key_seq[] = {
-    {6500, key_code::escape},    {137, key_code::down},
-    {272, key_code::down},       {440, key_code::up},
-    {84, key_code::up},          {178, key_code::up},
-    {2000, key_code::control_q}, {0, 0},
-};
-
-loop_seq_entry const loop_seq[] = {
-    {1, 10, 1, 0},
-    {0, 10, 1, 0},
-};
-
 uint32_t now_ms = 0;
-key_seq_entry const *key_seq_p = key_seq;
-loop_seq_entry const *loop_seq_p = loop_seq;
-
 uint32_t pit_tick_counter = 0;
 void pit_tick_counter_int_handler() { ++pit_tick_counter; }
 void (*pit_int_handler)() = pit_tick_counter_int_handler;
 
 void advance_time_to(uint32_t to_ms);
+
 } // namespace sim
 
-void sim::step_idle() { advance_time_to(now_ms + loop_seq_p->ms_per_idle); }
-
-void sim::step_poll() {
-  assert(loop_seq_p < loop_seq + LENGTHOF(loop_seq));
-  advance_time_to(loop_seq_p->ms);
-  while ((loop_seq_p->ms > 0) && (now_ms >= (loop_seq_p + 1)->ms)) {
-    ++loop_seq_p;
-  }
-  advance_time_to(now_ms + loop_seq_p->ms_per_loop);
-}
-
 void sim::advance_time_to(uint32_t to_ms) {
-  while (now_ms < to_ms) {
+  // We probably shouldn't be jumping ahead by more than an hour
+  uint32_t delta_ms = to_ms - now_ms;
+
+  if (delta_ms > (UINT32_MAX / 2)) {
+    // going backwards I guess?
+    assert(((~delta_ms + 1) & 0xFFFFFFFFUL) < 10000UL);
+    return;
+  }
+  assert(delta_ms < 36000000UL);
+
+  while (now_ms != to_ms) {
     if (pit_int_handler != pit_tick_counter_int_handler) {
       pit_int_handler();
     }
     ++now_ms;
   }
-}
-
-void sim::step_animate(uint32_t anim_ms) {
-  (void)anim_ms;
-  // assert desired anim_ms achieved
-}
-
-bool keyboard::key_event_available() {
-  assert(sim::key_seq_p < (sim::key_seq + LENGTHOF(sim::key_seq)));
-  return (sim::key_seq_p->ms > 0) && (sim::key_seq_p->ms <= sim::now_ms);
-}
-
-key_code_t keyboard::read_key_event() {
-  assert(sim::key_seq_p < (sim::key_seq + LENGTHOF(sim::key_seq)));
-  if (sim::key_seq_p->ms == 0) {
-    assert(!"read_key_event no key available!");
-    return 0;
-  }
-  if (sim::key_seq_p->ms > sim::now_ms) {
-    logf_imbibe("read_key_event blocking\n");
-    sim::advance_time_to(sim::key_seq_p->ms);
-  }
-  assert(sim::key_seq_p->ms <= sim::now_ms);
-  return (sim::key_seq_p++)->key;
 }
 
 void _dos_setvect(int int_no, void (*int_handler)()) {
@@ -329,21 +305,5 @@ void _fmemcpy(void __far *dest, void const __far *src, size_t size) {
 }
 
 #else
-
-namespace aux_simulation {
-uint32_t s_idle_count = 0;
-}
-
-void sim::step_idle() { ++aux_simulation::s_idle_count; }
-
-void sim::step_poll() {
-  logf_sim("('poll',{'t':%lu,'idle'=%lu})\n", (unsigned long)timer::now(),
-           (unsigned long)aux_simulation::s_idle_count);
-}
-
-void sim::step_animate(uint32_t anim_ms) {
-  logf_sim("('animate',{'t':%lu,'anim_ms'=%lu})\n", (unsigned long)timer::now(),
-           (unsigned long)anim_ms);
-}
-
+#error New platform support needed?
 #endif

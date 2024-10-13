@@ -3,11 +3,11 @@
 
 #include "base.h"
 
-#define logf(...) cprintf(__VA_ARGS__)
+#define logf_any(...) cprintf(__VA_ARGS__)
 #define disable_logf(...)                                                      \
   do {                                                                         \
   } while (false)
-#define logf_sim(...) logf("SIM: " __VA_ARGS__)
+#define logf_sim(...) logf_any("SIM: " __VA_ARGS__)
 
 #define abortf(...)                                                            \
   do {                                                                         \

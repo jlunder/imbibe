@@ -1,7 +1,9 @@
 VERSION = DEBUG
 
 SIM_OBJ_DIR = build/simdebug/
-DEP_DIR = build/deps/
+SIM_DEP_DIR = build/simdeps/
+SDL_GL_OBJ_DIR = build/sdlgldebug/
+SDL_GL_DEP_DIR = build/sdlgldeps/
 
 OBJ_DIR_RELEASE = build/release/
 OBJ_DIR_DEBUG = build/debug/
@@ -31,7 +33,9 @@ IMBIBE_SOURCES = $(wildcard $(SRC_DIR)*.cpp)
 
 IMBIBE_OBJS = $(patsubst $(SRC_DIR)%.cpp,$(OBJ_DIR)%.obj,$(IMBIBE_SOURCES))
 IMBIBE_SIM_OBJS = $(patsubst $(SRC_DIR)%.cpp,$(SIM_OBJ_DIR)%.o,$(IMBIBE_SOURCES))
-IMBIBE_DEPS = $(patsubst $(SRC_DIR)%.cpp,$(DEP_DIR)%.d,$(IMBIBE_SOURCES))
+IMBIBE_SIM_DEPS = $(patsubst $(SRC_DIR)%.cpp,$(SIM_DEP_DIR)%.d,$(IMBIBE_SOURCES))
+IMBIBE_SDL_GL_OBJS = $(patsubst $(SRC_DIR)%.cpp,$(SDL_GL_OBJ_DIR)%.o,$(IMBIBE_SOURCES))
+IMBIBE_SDL_GL_DEPS = $(patsubst $(SRC_DIR)%.cpp,$(SDL_GL_DEP_DIR)%.d,$(IMBIBE_SOURCES))
 
 IMBIBE_RESOURCES = \
 	$(patsubst data/%.bin,testdata/%.tbm,$(wildcard data/*/*.bin)) \
@@ -44,7 +48,11 @@ IMBIBE_RESOURCES = \
 
 $(SIM_OBJ_DIR):
 	mkdir -p $@
-$(DEP_DIR):
+$(SIM_DEP_DIR):
+	mkdir -p $@
+$(SDL_GL_OBJ_DIR):
+	mkdir -p $@
+$(SDL_GL_DEP_DIR):
 	mkdir -p $@
 $(OBJ_DIR_RELEASE):
 	mkdir -p $@
@@ -53,24 +61,33 @@ $(OBJ_DIR_DEBUG):
 $(OBJ_DIR_PROFILE):
 	mkdir -p $@
 
-dirs: $(SIM_OBJ_DIR) $(DEP_DIR) $(OBJ_DIR)
+dirs: $(SIM_OBJ_DIR) $(SIM_DEP_DIR) $(SIM_OBJ_DIR) $(SDL_GL_DEP_DIR) $(OBJ_DIR)
 
-$(SIM_OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(SIM_OBJ_DIR) $(DEP_DIR)
-	g++ -std=gnu++17 -g -W -Wall -Werror -MT $@ -MMD -MP -MF $(DEP_DIR)$*.d -c $< -o $@
+$(SIM_OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(SIM_OBJ_DIR) $(SIM_DEP_DIR)
+	g++ -std=gnu++17 -g -W -Wall -Werror -MT $@ -MMD -MP -MF $(SIM_DEP_DIR)$*.d -c $< -o $@
 
-$(DEP_DIR)%.d: $(SIM_OBJ_DIR)%.o
+$(SDL_GL_OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(SDL_GL_OBJ_DIR) $(SDL_GL_DEP_DIR)
+	g++ -std=gnu++17 -g -W -Wall -Werror -MT $@ -MMD -MP -MF $(SDL_GL_DEP_DIR)$*.d -DGLIMBIBE $(shell pkg-config --cflags sdl2) -c $< -o $@
 
-include $(wildcard $(DEP_DIR)*.d)
+$(SIM_DEP_DIR)%.d: $(SIM_OBJ_DIR)%.o
 
-all: imbibe
+$(SDL_GL_DEP_DIR)%.d: $(SDL_GL_OBJ_DIR)%.o
+
+include $(wildcard $(SIM_DEP_DIR)*.d)
+include $(wildcard $(SDL_GL_DEP_DIR)*.d)
+
+all: imbibe simbibe glimbibe
 
 clean:
 	rm -rf build
 
 simbibe: $(IMBIBE_SIM_OBJS) $(IMBIBE_RESOURCES)
-	g++ -std=gnu++98 -g -o $@ $(IMBIBE_SIM_OBJS)
+	g++  $(IMBIBE_SIM_OBJS) -g -o $@
 
-imbibe: $(OBJ_DIR)imbibe.exe $(IMBIBE_RESOURCES)
+glimbibe: $(IMBIBE_SDL_GL_OBJS) $(IMBIBE_RESOURCES)
+	g++  $(IMBIBE_SDL_GL_OBJS) -g $(shell pkg-config --libs sdl2) -lGL -o $@
+
+imbibe: $(OBJ_DIR)imbibe.exe $(IMBIBE_SDL_GL_OBJS)
 	cd workspace && \
 	  $(DOSBOX) \
 	    -c "S:" \

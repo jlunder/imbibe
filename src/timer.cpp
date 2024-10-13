@@ -58,7 +58,7 @@ extern uint16_t asm_timer_inwb(uint16_t port);
 
 #elif BUILD_MSDOS_GCC_IA16
 // TODO
-#elif BUILD_POSIX_SIM
+#elif BUILD_POSIX
 
 inline void asm_timer_enter_crit() {}
 inline void asm_timer_leave_crit() {}

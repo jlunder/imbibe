@@ -73,7 +73,7 @@ void __far *stack_arena::alloc(segsize_t size) {
   ++m_live_count;
 #if BUILD_MSDOS
   return reinterpret_cast<void __far *>(m_seg + result);
-#elif BUILD_POSIX_SIM
+#elif BUILD_POSIX
   (void)result;
   void *p = ::malloc(size);
   m_allocated.push_back(p);
@@ -84,7 +84,7 @@ void __far *stack_arena::alloc(segsize_t size) {
 }
 
 void stack_arena::free(void __far *p) {
-#if BUILD_POSIX_SIM
+#if BUILD_POSIX
   bool found = false;
   for (std::vector<void *>::iterator i = m_allocated.begin();
        i != m_allocated.end(); ++i) {
