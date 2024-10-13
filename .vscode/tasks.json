@@ -2,6 +2,24 @@
     "tasks": [
         {
             "type": "shell",
+            "label": "Makefile build glimbibe",
+            "command": "/usr/bin/make",
+            "args": [
+                "glimbibe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
             "label": "Makefile build simbibe",
             "command": "/usr/bin/make",
             "args": [

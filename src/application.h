@@ -16,6 +16,7 @@ void teardown();
 
 void run_loop();
 
+void do_external_abort();
 void do_quit_from_anywhere();
 void do_immediate_quit_from_anywhere();
 void do_next_from_intro();

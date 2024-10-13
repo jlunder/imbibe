@@ -10,6 +10,8 @@
 #include "resource_manager.h"
 #include "timer.h"
 
+#include <atomic>
+
 #define logf_imbibe(...) disable_logf("IMBIBE: " __VA_ARGS__)
 
 #if BUILD_MSDOS
@@ -166,6 +168,9 @@ void sim::step_animate(uint32_t anim_ms) {
            (unsigned long)anim_ms);
 }
 
+void sim::step_frame() {
+}
+
 #elif BUILD_POSIX
 
 #if BUILD_POSIX_SIM
@@ -183,7 +188,7 @@ uint16_t dummy_screen[4000];
 uint32_t now_ms = 0;
 uint32_t pit_tick_counter = 0;
 void pit_tick_counter_int_handler() { ++pit_tick_counter; }
-void (*pit_int_handler)() = pit_tick_counter_int_handler;
+std::atomic<void (*)()> pit_int_handler = pit_tick_counter_int_handler;
 
 void advance_time_to(uint32_t to_ms);
 
@@ -202,7 +207,7 @@ void sim::advance_time_to(uint32_t to_ms) {
 
   while (now_ms != to_ms) {
     if (pit_int_handler != pit_tick_counter_int_handler) {
-      pit_int_handler();
+      (*pit_int_handler)();
     }
     ++now_ms;
   }

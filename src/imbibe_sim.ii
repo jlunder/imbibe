@@ -74,6 +74,9 @@ void sim::step_animate(uint32_t anim_ms) {
   // assert desired anim_ms achieved
 }
 
+void sim::step_frame() {
+}
+
 bool keyboard::key_event_available() {
   assert(sim::key_seq_p < (sim::key_seq + LENGTHOF(sim::key_seq)));
   return (sim::key_seq_p->ms > 0) && (sim::key_seq_p->ms <= sim::now_ms);

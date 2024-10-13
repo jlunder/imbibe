@@ -15,6 +15,7 @@
         "utility": "cpp",
         "system_error": "cpp",
         "random": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "chrono": "cpp"
     }
 }

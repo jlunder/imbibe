@@ -10,6 +10,12 @@
 #define logf_imbibe(...) disable_logf("IMBIBE: " __VA_ARGS__)
 #endif
 
+#include <atomic>
+#include <thread>
+
+#include "application.h"
+#include "keyboard.h"
+
 void imbibe_main();
 
 namespace sim {
@@ -19,16 +25,55 @@ extern uint32_t now_ms;
 
 extern void advance_time_to(uint32_t to_ms);
 
+std::atomic<uint32_t> drawn_to_buf_seq = 0;
+std::atomic<bool> quitting = false;
+void timer_thread_main();
+
 } // namespace sim
 
-// Based on minimal SDL2 + OpenGL3 example by https://github.com/koute
+void sim::step_idle() {
+  std::this_thread::sleep_for(std::chrono::milliseconds(5));
+}
+
+void sim::step_poll() {}
+
+void sim::step_animate(uint32_t anim_ms) {
+  (void)anim_ms;
+  // assert desired anim_ms achieved
+}
+
+void sim::step_frame() { ++sim::drawn_to_buf_seq; }
+
+void sim::timer_thread_main() {
+  auto epoch = std::chrono::high_resolution_clock::now();
+  auto last = epoch;
+  int32_t target_millis = 1;
+
+  while (!quitting) {
+    auto target = epoch + std::chrono::milliseconds(target_millis);
+    std::this_thread::sleep_until(target);
+    auto now = std::chrono::high_resolution_clock::now();
+    int32_t millis_passed = (now - epoch) / std::chrono::milliseconds(1);
+    if (millis_passed >= target_millis) {
+      advance_time_to(millis_passed);
+      last = now;
+    } else {
+      ++target_millis;
+    }
+  }
+}
+
+bool keyboard::key_event_available() { return false; }
+
+key_code_t keyboard::read_key_event() { return 0; }
+
+// OpenGL shim based on minimal SDL2 + OpenGL3 example by
+// https://github.com/koute
 
 #define GL_GLEXT_PROTOTYPES
 
 #include <SDL.h>
 #include <SDL_opengl.h>
-
-#include <stdio.h>
 
 #include "ibm_font.h"
 
@@ -162,8 +207,8 @@ void GLAPIENTRY log_gl_callback(GLenum source, GLenum type, GLuint id,
   (void)length;
   (void)userParam;
   logf_any("GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-              (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type,
-              severity, message);
+           (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type,
+           severity, message);
 }
 
 GLuint compile_shader(GLenum shader_type, GLchar const *shader_source) {
@@ -216,6 +261,12 @@ int main(int argc, char *argv[]) {
   (void)ibm_font_bits_8x8;
   (void)ibm_font_bits_8x8_thin;
 
+  std::thread timer_thread(sim::timer_thread_main);
+  std::thread main_thread([]() {
+    imbibe_main();
+    sim::quitting = true;
+  });
+
   // During init, enable debug output
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(log_gl_callback, 0);
@@ -236,7 +287,7 @@ int main(int argc, char *argv[]) {
   static const int char_cell_width_px = 8;
   static const int width_px = width_chars * char_cell_width_px;
   static const int height_chars = 25;
-  static const int char_cell_height_px = 16;
+  static const int char_cell_height_px = 14;
   static const int height_px = height_chars * char_cell_height_px;
 
   static const int window_width = width_px * 2;
@@ -422,38 +473,34 @@ int main(int argc, char *argv[]) {
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D_ARRAY, font_texture);
 
-  bool done = false;
-  uint64_t count = 0;
-  while (!done) {
-    glClear(GL_COLOR_BUFFER_BIT);
+  uint32_t output_rendered_seq = 0;
+  while (!sim::quitting) {
+    uint32_t drawn_to_buf_seq = sim::drawn_to_buf_seq;
+    if (output_rendered_seq != drawn_to_buf_seq) {
+      glClear(GL_COLOR_BUFFER_BIT);
 
-    glBindVertexArray(rasterize_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, rasterize_contents_vbo);
+      glBindVertexArray(rasterize_vao);
+      glBindBuffer(GL_ARRAY_BUFFER, rasterize_contents_vbo);
 
-    rasterize_contents_t g_rasterize_contents_data[width_chars * height_chars];
-    for (size_t i = 0; i < height_chars; ++i) {
-      for (size_t j = 0; j < width_chars; ++j) {
-        size_t n = i * width_chars + j;
-        g_rasterize_contents_data[n].i_char = (GLubyte)((n + count) % 256);
-        g_rasterize_contents_data[n].i_attr =
-            (GLubyte)((n + (n / 256) * 61) % 256);
-      }
+      glBufferData(GL_ARRAY_BUFFER, sizeof(sim::dummy_screen),
+                   sim::dummy_screen, GL_DYNAMIC_DRAW);
+
+      glDrawArrays(GL_POINTS, 0, width_chars * height_chars);
+
+      SDL_GL_SwapWindow(window);
+
+      output_rendered_seq = drawn_to_buf_seq;
+    } else {
+      // Try not to suck up all the CPU
+      SDL_Delay(10);
     }
-    ++count;
-
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_rasterize_contents_data),
-                 g_rasterize_contents_data, GL_DYNAMIC_DRAW);
-
-    glDrawArrays(GL_POINTS, 0, width_chars * height_chars);
-
-    SDL_GL_SwapWindow(window);
-    SDL_Delay(100);
 
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT ||
           (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_ESCAPE)) {
-        done = true;
+        // This application function alone may be called from an external thread
+        application::do_external_abort();
       }
     }
   }
@@ -461,6 +508,9 @@ int main(int argc, char *argv[]) {
   SDL_GL_DeleteContext(context);
   SDL_DestroyWindow(window);
   SDL_Quit();
+
+  main_thread.join();
+  timer_thread.join();
 
   return 0;
 }

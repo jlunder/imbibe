@@ -45,7 +45,7 @@ bool s_showing_viewer;
 imstring s_viewer_article;
 bool s_showing_quit_prompt;
 
-bool s_quitting;
+bool s_quitting = false;
 
 timer s_frame_timer;
 timer s_idle_timer;
@@ -93,7 +93,7 @@ void application::setup() {
   s_last_showing_viewer = s_showing_viewer = false;
   s_last_viewer_article = s_viewer_article = NULL;
   s_last_showing_quit_prompt = s_showing_quit_prompt = false;
-  s_quitting = false;
+  // s_quitting = false;
 
   s_win.setup();
   s_main.setup();
@@ -169,6 +169,7 @@ void application::run_loop() {
   idle();
   s_frame_timer.read_ms();
 
+  __sync_synchronize();
   while (!s_quitting) {
     sim::step_poll();
     poll_input();
@@ -196,6 +197,10 @@ void application::run_loop() {
     // s_win->repaint(rect(60, 4, 70, 8));
     // s_win->repaint(rect(60, 20, 70, 20));
     s_win->present();
+    sim::step_frame();
+
+    // For the while loop test
+    __sync_synchronize();
   }
 }
 
@@ -280,6 +285,11 @@ screen_element &application::focused_screen() {
       return *s_outro_screen;
     }
   }
+}
+
+void application::do_external_abort() {
+  s_quitting = true;
+  __sync_synchronize();
 }
 
 void application::do_quit_from_anywhere() {
@@ -372,6 +382,7 @@ void application::internal_do_cancel_prompts() {
 }
 
 void application::update_transitions() {
+  __sync_synchronize();
   if (s_quitting) {
     return;
   }

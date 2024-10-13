@@ -19,6 +19,7 @@ namespace sim {
 extern void step_poll();
 extern void step_idle();
 extern void step_animate(uint32_t anim_ms);
+extern void step_frame();
 
 } // namespace sim
 
