@@ -3,7 +3,7 @@
 clear
 rm -f build/gltest
 mkdir -p build
-export MAKEFLAGS="src/gltest.cpp --std=gnu++17 -W -Wall -g $(pkg-config --cflags --libs sdl2) -lGL -o build/gltest"
+export MAKEFLAGS="src/gltest.cxx --std=gnu++17 -W -Wall -g $(pkg-config --cflags --libs sdl2) -lGL -o build/gltest"
 echo g++ $MAKEFLAGS
 g++ $MAKEFLAGS
 if [ -f build/gltest ]; then
