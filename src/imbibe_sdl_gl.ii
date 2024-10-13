@@ -23,6 +23,8 @@ namespace sim {
 extern uint16_t dummy_screen[4000];
 extern uint32_t now_ms;
 
+std::atomic<key_code_t> last_key;
+
 extern void advance_time_to(uint32_t to_ms);
 
 std::atomic<uint32_t> drawn_to_buf_seq = 0;
@@ -63,9 +65,12 @@ void sim::timer_thread_main() {
   }
 }
 
-bool keyboard::key_event_available() { return false; }
+bool keyboard::key_event_available() { return sim::last_key != 0; }
 
-key_code_t keyboard::read_key_event() { return 0; }
+key_code_t keyboard::read_key_event() {
+  key_code_t k = sim::last_key.exchange(0);
+  return k;
+}
 
 // OpenGL shim based on minimal SDL2 + OpenGL3 example by
 // https://github.com/koute
@@ -253,6 +258,69 @@ GLuint compile_shader(GLenum shader_type, GLchar const *shader_source) {
   return shader;
 }
 
+key_code_t encode_sdl_key(SDL_Keymod mods, SDL_Keycode code) {
+  if (code >= ' ' && code < 127) {
+    if (mods & KMOD_ALT) {
+      switch (code) {
+      case SDLK_q:
+        return key_code::alt_q;
+      case SDLK_x:
+        return key_code::alt_x;
+      }
+    } else if (mods & KMOD_CTRL) {
+      if (code >= 'a' && code <= 'z') {
+        return key_code::control_a + (code - 'a');
+      } else {
+        switch (code) {
+        case SDLK_BACKSPACE:
+          return key_code::control_backspace;
+        }
+      }
+    } else if (mods & KMOD_SHIFT) {
+      if (code >= 'a' && code <= 'z') {
+        return 'A' + (code - 'a');
+      } else {
+        return code;
+      }
+    } else {
+      return code;
+    }
+  } else {
+    if (mods & KMOD_ALT) {
+    } else if (mods & KMOD_CTRL) {
+    } else if (mods & KMOD_SHIFT) {
+    } else {
+      switch (code) {
+      case SDLK_RETURN:
+      case SDLK_RETURN2:
+      case SDLK_KP_ENTER:
+        return key_code::enter;
+      case SDLK_ESCAPE:
+        return key_code::escape;
+      case SDLK_UP:
+        return key_code::up;
+      case SDLK_DOWN:
+        return key_code::down;
+      case SDLK_LEFT:
+        return key_code::left;
+      case SDLK_RIGHT:
+        return key_code::right;
+      case SDLK_HOME:
+        return key_code::home;
+      case SDLK_END:
+        return key_code::end;
+      case SDLK_PAGEUP:
+        return key_code::pgup;
+      case SDLK_PAGEDOWN:
+        return key_code::pgdown;
+      }
+    }
+  }
+
+  // Fallback: tell caller, do nothing
+  return 0;
+}
+
 int main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
@@ -291,7 +359,7 @@ int main(int argc, char *argv[]) {
   static const int height_px = height_chars * char_cell_height_px;
 
   static const int window_width = width_px * 2;
-  static const int window_height = height_px * 2 * 6 / 5;
+  static const int window_height = window_width * 3 / 4;
 
   SDL_Window *window = SDL_CreateWindow(
       "Imbibe", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, window_width,
@@ -497,10 +565,16 @@ int main(int argc, char *argv[]) {
 
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-      if (event.type == SDL_QUIT ||
-          (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_ESCAPE)) {
+      if (event.type == SDL_QUIT) {
         // This application function alone may be called from an external thread
         application::do_external_abort();
+      } else if (event.type == SDL_KEYDOWN) {
+        SDL_Keymod mods = SDL_GetModState();
+        SDL_Keycode code = event.key.keysym.sym;
+        key_code_t key = encode_sdl_key(mods, code);
+        if (key != 0) {
+          sim::last_key = key;
+        }
       }
     }
   }
