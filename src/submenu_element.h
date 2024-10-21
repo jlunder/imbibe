@@ -17,6 +17,7 @@ public:
   virtual bool handle_key(key_code_t key);
   virtual void animate(anim_time_t delta_ms);
   virtual bool active() const;
+  virtual bool opaque() const;
   virtual void paint(graphics *g);
 
   void activate(imstring const &config);
@@ -29,9 +30,6 @@ public:
 
 private:
   struct submenu_option {
-    point label_pos;
-    point unselected_pos;
-    point selected_pos;
     imstring label;
     imstring view_path;
   };

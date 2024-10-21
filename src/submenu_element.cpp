@@ -68,7 +68,7 @@ bool submenu_element::try_unpack_menu_config() {
   if (!data.try_skip_string() || !data.try_unpack(&submenus_count)) {
     return false;
   }
-
+  m_submenus.reserve(submenus_count);
   for (segsize_t i = 0; i < submenus_count; ++i) {
     imstring submenu_path;
     if (!data.try_skip<coord_t>() || !data.try_skip<coord_t>() ||
@@ -92,7 +92,8 @@ bool submenu_element::try_unpack_submenu_config(imstring const &config,
                                                 submenu *out_submenu) {
   coord_t const window_height = frame().height();
 
-  segsize_t cfg_size = resource_manager::fetch_data(config, &out_submenu->config);
+  segsize_t cfg_size =
+      resource_manager::fetch_data(config, &out_submenu->config);
   if (!out_submenu->config) {
     return false;
   }
@@ -167,8 +168,13 @@ bool submenu_element::try_unpack_submenu_config(imstring const &config,
   out_submenu->option_origin = point(0, all_options_y);
   out_submenu->option_height =
       (coord_t)out_submenu->option_unselected_background.height();
-  out_submenu->menu_height = out_submenu->menu_footer_pos.y +
-                             (coord_t)out_submenu->menu_footer.height();
+  out_submenu->menu_height =
+      out_submenu->menu_footer_pos.y + out_submenu->menu_footer.height();
+  if (out_submenu->menu_height < frame().height()) {
+    out_submenu->menu_height = frame().height();
+    out_submenu->menu_footer_pos.y =
+        out_submenu->menu_height - out_submenu->menu_footer.height();
+  }
   assert((window_height * 3) / (out_submenu->option_height * 4) > 0);
   out_submenu->page_jump = min<segsize_t>(
       1, (window_height * 3) / (out_submenu->option_height * 4) - 1);
@@ -193,7 +199,8 @@ void submenu_element::poll() {}
 bool submenu_element::handle_key(key_code_t key) {
   switch (key) {
   case key_code::escape:
-    application::do_quit_from_anywhere();
+  case key_code::left:
+    application::do_back_from_submenu();
     return true;
 
   case key_code::up:
@@ -236,6 +243,10 @@ bool submenu_element::active() const {
   return m_active || !m_transition_in_out.done();
 }
 
+bool submenu_element::opaque() const {
+  return m_active && m_transition_in_out.done();
+}
+
 void submenu_element::animate(anim_time_t delta_ms) {
   if (m_selected_option != m_last_selected_option) {
     m_hide_option_transition.reset(0, frame().width(), 300, 150);
@@ -266,6 +277,7 @@ void submenu_element::animate(anim_time_t delta_ms) {
         cur_y, target_y,
         min(500, abs(m_scroll_y.value() - target_y) * (1000 / 100)));
   }
+  m_transition_in_out.update(delta_ms);
   m_hide_option_transition.update(delta_ms);
   m_show_option_transition.update(delta_ms);
   m_scroll_y.update(delta_ms);
@@ -276,57 +288,57 @@ void submenu_element::animate(anim_time_t delta_ms) {
 
 void submenu_element::paint(graphics *g) {
   graphics::subregion_state ss1;
+  graphics::subregion_state ss2;
   g->enter_subregion(point(0, -m_scroll_y.value()), frame(), &ss1);
 
   g->draw_tbm(m_submenu->menu_header_pos.x, m_submenu->menu_header_pos.y,
-              m_submenu->menu_footer);
+              m_submenu->menu_header);
+  coord_t unselected_y = m_submenu->menu_header.height();
+  coord_t label_y =
+      m_submenu->menu_header.height() + m_submenu->option_label_offset.y;
+  for (segsize_t i = 0; i < m_submenu->options.size(); ++i) {
+    submenu_option const &option = m_submenu->options[i];
+    g->draw_tbm(0, unselected_y, m_submenu->option_unselected_background);
+    g->draw_text(m_submenu->option_label_offset.x, label_y,
+                 m_submenu->option_unselected_label_attribute, option.label);
+    unselected_y += m_submenu->option_unselected_background.height();
+    label_y += m_submenu->option_height;
+  }
+  while (label_y < m_submenu->menu_footer_pos.y) {
+    g->draw_tbm(0, unselected_y, m_submenu->option_unselected_background);
+    label_y += m_submenu->option_height;
+  }
   g->draw_tbm(m_submenu->menu_footer_pos.x, m_submenu->menu_footer_pos.y,
               m_submenu->menu_footer);
 
-  for (segsize_t i = 0; i < m_submenu->options.size(); ++i) {
-    if (i == m_selected_option) {
-      continue;
-    }
-    submenu_option const &option = m_submenu->options[i];
-    point pos = option.unselected_pos;
-    g->draw_tbm(pos.x, pos.y, m_submenu->option_unselected_background);
-    pos = option.label_pos;
-    g->draw_text(pos.x, pos.y, m_submenu->option_unselected_label_attribute,
-                 option.label);
-  }
-
+  coord_t wipe_x = m_hide_option_transition.value();
   if (m_unselected_option < m_submenu->options.size()) {
-    graphics::subregion_state ss2;
-    g->enter_subregion(point(0, 0),
-                       rect(m_hide_option_transition.value(), 0,
-                            frame().width(), m_submenu->menu_height),
-                       &ss2);
-    submenu_option const &option = m_submenu->options[m_unselected_option];
-    point pos = option.unselected_pos;
-    g->draw_tbm(pos.x, pos.y, m_submenu->option_unselected_background);
-    pos = option.selected_pos;
-    g->draw_tbm(pos.x, pos.y, m_submenu->option_selected_background);
-    pos = option.label_pos;
-    g->draw_text(pos.x, pos.y, m_submenu->option_selected_label_attribute,
-                 option.label);
-    g->leave_subregion(&ss1);
+    rect clip(wipe_x, 0, frame().width(), m_submenu->menu_height);
+    g->enter_subregion(point(0, 0), clip, &ss2);
+    unselected_y = m_submenu->menu_header.height() +
+                   m_unselected_option * m_submenu->option_height;
+    g->draw_tbm(m_submenu->option_selected_offset.x,
+                unselected_y + m_submenu->option_selected_offset.y,
+                m_submenu->option_selected_background);
+    g->draw_text(m_submenu->option_label_offset.x,
+                 unselected_y + m_submenu->option_label_offset.y,
+                 m_submenu->option_selected_label_attribute,
+                 m_submenu->options[m_unselected_option].label);
+    g->leave_subregion(&ss2);
   }
-
   if (m_selected_option < m_submenu->options.size()) {
-    graphics::subregion_state ss2;
-    g->enter_subregion(
-        point(0, 0),
-        rect(0, 0, m_hide_option_transition.value(), m_submenu->menu_height),
-        &ss2);
-    submenu_option const &option = m_submenu->options[m_selected_option];
-    point pos = option.unselected_pos;
-    g->draw_tbm(pos.x, pos.y, m_submenu->option_unselected_background);
-    pos = option.selected_pos;
-    g->draw_tbm(pos.x, pos.y, m_submenu->option_selected_background);
-    pos = option.label_pos;
-    g->draw_text(pos.x, pos.y, m_submenu->option_selected_label_attribute,
-                 option.label);
-    g->leave_subregion(&ss1);
+    rect clip(0, 0, wipe_x, m_submenu->menu_height);
+    g->enter_subregion(point(0, 0), clip, &ss2);
+    unselected_y = m_submenu->menu_header.height() +
+                   m_selected_option * m_submenu->option_height;
+    g->draw_tbm(m_submenu->option_selected_offset.x,
+                unselected_y + m_submenu->option_selected_offset.y,
+                m_submenu->option_selected_background);
+    g->draw_text(m_submenu->option_label_offset.x,
+                 unselected_y + m_submenu->option_label_offset.y,
+                 m_submenu->option_selected_label_attribute,
+                 m_submenu->options[m_selected_option].label);
+    g->leave_subregion(&ss2);
   }
 
   g->leave_subregion(&ss1);

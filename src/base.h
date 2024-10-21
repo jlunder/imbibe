@@ -237,7 +237,7 @@ template <class T> inline T max(T x, T y) { return (x > y) ? x : y; }
 // template <class T> inline T max(T x, T y, T z) { return max(max(x, y), z); }
 
 template <class T> inline T clamp(T x, T lower, T upper) {
-  assert(lower < upper);
+  assert(lower <= upper);
   return max(min(x, upper), lower);
 }
 
