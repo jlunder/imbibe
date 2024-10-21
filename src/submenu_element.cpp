@@ -176,7 +176,7 @@ bool submenu_element::try_unpack_submenu_config(imstring const &config,
         out_submenu->menu_height - out_submenu->menu_footer.height();
   }
   assert((window_height * 3) / (out_submenu->option_height * 4) > 0);
-  out_submenu->page_jump = min<segsize_t>(
+  out_submenu->page_jump = (segsize_t)max<coord_t>(
       1, (window_height * 3) / (out_submenu->option_height * 4) - 1);
   if (out_submenu->page_jump >= submenu_option_count) {
     out_submenu->page_jump = submenu_option_count - 1;
@@ -301,12 +301,12 @@ void submenu_element::paint(graphics *g) {
     g->draw_tbm(0, unselected_y, m_submenu->option_unselected_background);
     g->draw_text(m_submenu->option_label_offset.x, label_y,
                  m_submenu->option_unselected_label_attribute, option.label);
-    unselected_y += m_submenu->option_unselected_background.height();
+    unselected_y += m_submenu->option_height;
     label_y += m_submenu->option_height;
   }
-  while (label_y < m_submenu->menu_footer_pos.y) {
+  while (unselected_y < m_submenu->menu_footer_pos.y) {
     g->draw_tbm(0, unselected_y, m_submenu->option_unselected_background);
-    label_y += m_submenu->option_height;
+    unselected_y += m_submenu->option_height;
   }
   g->draw_tbm(m_submenu->menu_footer_pos.x, m_submenu->menu_footer_pos.y,
               m_submenu->menu_footer);
