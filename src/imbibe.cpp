@@ -10,8 +10,6 @@
 #include "resource_manager.h"
 #include "timer.h"
 
-#include <atomic>
-
 #define logf_imbibe(...) disable_logf("IMBIBE: " __VA_ARGS__)
 
 #if BUILD_MSDOS
@@ -172,6 +170,8 @@ void sim::step_frame() {
 }
 
 #elif BUILD_POSIX
+
+#include <atomic>
 
 #if BUILD_POSIX_SIM
 #include "imbibe_sim.ii"

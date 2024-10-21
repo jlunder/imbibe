@@ -132,7 +132,7 @@ extern unsigned _dos_lseek(int handle, long offset, int whence,
 #define PRs "%s"
 
 extern void __sync_synchronize();
-#pragma aux __sync_synchronize = "" modify memory;
+#pragma aux __sync_synchronize = "" modify;
 
 #elif BUILD_POSIX
 
