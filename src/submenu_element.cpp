@@ -249,8 +249,8 @@ bool submenu_element::opaque() const {
 
 void submenu_element::animate(anim_time_t delta_ms) {
   if (m_selected_option != m_last_selected_option) {
-    m_hide_option_transition.reset(0, frame().width(), 300, 150);
-    m_show_option_transition.reset(0, frame().width(), 300, 150);
+    m_hide_option_transition.reset(0, frame().width(), 100);
+    m_show_option_transition.reset(0, frame().width(), 100);
     m_unselected_option = m_last_selected_option;
     m_last_selected_option = m_selected_option;
 
@@ -365,6 +365,8 @@ void submenu_element::deactivate() { m_active = false; }
 
 void submenu_element::enter_from_menu() {
   m_transition_in_out.reset(frame().width(), 0, 300);
+  m_selected_option = 0;
+  m_last_selected_option = SEGSIZE_INVALID;
 }
 
 void submenu_element::leave_to_menu() {
