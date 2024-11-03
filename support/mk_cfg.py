@@ -10,7 +10,6 @@ import dataclasses
 import logging
 import os
 import json
-import numpy as np
 import struct
 import sys
 
@@ -19,6 +18,7 @@ logger = logging.getLogger(__appname__)
 
 @dataclasses.dataclass
 class Args:
+    verbose: bool = False
     root_path: str = None
     input_path: str = None
     output_path: str = None
