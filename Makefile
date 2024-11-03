@@ -25,8 +25,8 @@ CC_OPT = $(CC_OPT_$(VERSION)) -2 -bt=dos -fpc -w5 -ze
 
 CC = wpp
 
-DOSBOX = dosbox-x
-DOSBOX_BUILD = dosbox-x -conf dosbox-build.conf
+DOSBOX = dosbox-x -fastlaunch
+DOSBOX_BUILD = dosbox-x -fastlaunch -conf dosbox-build.conf 2> /dev/null
 
 IMBIBE_HEADERS = $(wildcard $(SRC_DIR)*.h)
 IMBIBE_SOURCES = $(wildcard $(SRC_DIR)*.cpp)
