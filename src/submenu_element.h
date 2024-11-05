@@ -6,7 +6,7 @@
 #include "imstring.h"
 #include "map.h"
 #include "screen_element.h"
-#include "tbm_element.h"
+#include "tbm.h"
 #include "tweens.h"
 #include "vector.h"
 
@@ -25,8 +25,6 @@ public:
 
   void enter_from_menu();
   void leave_to_menu();
-  void enter_from_viewer();
-  void leave_to_viewer();
 
 private:
   struct submenu_option {
@@ -45,6 +43,7 @@ private:
     point option_label_offset;
     attribute_t option_unselected_label_attribute;
     attribute_t option_selected_label_attribute;
+    imstring submenu_label;
 
     // computed values
     point menu_header_pos;

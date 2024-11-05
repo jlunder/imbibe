@@ -17,5 +17,6 @@
         "random": "cpp",
         "algorithm": "cpp",
         "chrono": "cpp"
-    }
+    },
+    "makefile.configureOnOpen": true
 }

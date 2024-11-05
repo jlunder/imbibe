@@ -64,6 +64,12 @@ template <class T, class TEasing> class value_tween : public tween {
 public:
   value_tween() : m_from(0), m_delta(0), m_value(0) {}
 
+  void reset(T n_value) {
+    m_from = n_value;
+    m_delta = 0;
+    m_value = n_value;
+  }
+
   void reset(T n_from, T n_to, anim_time_t n_duration,
              anim_time_t n_delay = 0) {
     aux_reset(n_duration, -n_delay);

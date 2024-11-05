@@ -36,23 +36,23 @@ void submenu_element::layout(coord_t window_width, coord_t window_height) {
   //                       aux_menu_element::option_defs[i].name,
   //                       (int)o->selected_overlay.width(),
   //                       (int)o->selected_overlay.height());
-  //     o->hide_transition.reset(0, 0, 0);
-  //     o->show_transition.reset(0, 0, 0);
+  //     o->hide_transition.reset(0);
+  //     o->show_transition.reset(0);
   //     hot_y1 += 16;
   //     hot_y2 += 16;
   //     sel_y += 16;
   //   }
   // }
 
-  m_scroll_y.reset(0, 0, 0);
+  m_scroll_y.reset(0);
 
   m_selected_option = 0;
   m_last_selected_option = SEGSIZE_INVALID;
 }
 
 bool submenu_element::try_unpack_menu_config() {
-  segsize_t cfg_size =
-      resource_manager::fetch_data(application::s_menu_config, &m_menu_config);
+  segsize_t cfg_size = resource_manager::fetch_data(
+      imstring(application::s_menu_config), &m_menu_config);
   if (!m_menu_config) {
     return false;
   }
@@ -345,6 +345,11 @@ void submenu_element::paint(graphics *g) {
 }
 
 void submenu_element::activate(imstring const &config) {
+  if (m_transition_in_out.done()) {
+    assert(!"should be running a transition animation by now");
+    m_transition_in_out.reset(0);
+  }
+
   map<imstring, submenu *>::iterator i = m_submenus_by_name.find(config);
   if (i == m_submenus_by_name.end()) {
     assert(!"invalid submenu path");
@@ -352,12 +357,11 @@ void submenu_element::activate(imstring const &config) {
   }
   m_submenu = i->ref;
   assert(m_submenu);
-  m_last_selected_option = m_submenu->options.size();
 
-  if (m_transition_in_out.done()) {
-    assert(!"should be running a transition animation by now");
-    m_transition_in_out.reset(0, 0, 0);
-  }
+  m_last_selected_option = SEGSIZE_INVALID;
+  m_selected_option = 0;
+  m_scroll_y.reset(0);
+
   m_active = true;
 }
 
@@ -365,14 +369,8 @@ void submenu_element::deactivate() { m_active = false; }
 
 void submenu_element::enter_from_menu() {
   m_transition_in_out.reset(frame().width(), 0, 300);
-  m_selected_option = 0;
-  m_last_selected_option = SEGSIZE_INVALID;
 }
 
 void submenu_element::leave_to_menu() {
   m_transition_in_out.reset(0, frame().width(), 300);
 }
-
-void submenu_element::enter_from_viewer() {}
-
-void submenu_element::leave_to_viewer() {}

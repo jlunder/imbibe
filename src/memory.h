@@ -22,6 +22,8 @@ typedef int16_t segdiff_t;
 
 #define SEGSIZE_MAX UINT16_MAX
 #define SEGSIZE_INVALID UINT16_MAX
+#define SEGDIFF_MAX INT16_MAX
+#define SEGDIFF_MIN INT16_MIN
 
 inline void const __far *normalize_segmented(void const __far *p) {
 #if BUILD_MSDOS

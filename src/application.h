@@ -17,17 +17,16 @@ void teardown();
 void run_loop();
 
 void do_external_abort();
-void do_quit_from_anywhere();
-void do_immediate_quit_from_anywhere();
 void do_next_from_intro();
-void do_submenu_from_menu(imstring config);
-void do_viewer_from_menu(imstring article);
-void do_viewer_from_submenu(imstring article);
-void do_back_from_submenu();
-void do_back_from_viewer();
+void do_quit_from_anywhere();
 void do_confirm_from_quit_prompt();
 void do_back_from_quit_prompt();
+void do_immediate_quit_from_anywhere();
 void do_next_from_outro();
+void do_submenu_from_menu(imstring config);
+void do_back_from_submenu();
+void do_viewer_from_menu_or_submenu(imstring label, imstring article_path);
+void do_back_from_viewer();
 
 } // namespace application
 

@@ -34,15 +34,14 @@ coord_t s_display_width;
 coord_t s_display_height;
 
 mode_t s_last_mode;
-imstring s_last_submenu_config;
 bool s_last_showing_viewer;
-imstring s_last_viewer_article;
 bool s_last_showing_quit_prompt;
 
 mode_t s_mode;
 imstring s_submenu_config;
 bool s_showing_viewer;
-imstring s_viewer_article;
+imstring s_viewer_label;
+imstring s_viewer_article_path;
 bool s_showing_quit_prompt;
 
 bool s_quitting = false;
@@ -74,7 +73,7 @@ void activate_menu();
 void deactivate_menu();
 void activate_submenu(imstring config);
 void deactivate_submenu();
-void activate_viewer(imstring article);
+void activate_viewer(imstring label, imstring article_path);
 void deactivate_viewer();
 void activate_quit_prompt();
 void deactivate_quit_prompt();
@@ -89,9 +88,10 @@ void application::setup() {
 
   s_last_mode = mode_none;
   s_mode = mode_intro;
-  s_last_submenu_config = s_submenu_config = NULL;
+  s_submenu_config = imstring();
   s_last_showing_viewer = s_showing_viewer = false;
-  s_last_viewer_article = s_viewer_article = NULL;
+  s_viewer_label = imstring();
+  s_viewer_article_path = imstring();
   s_last_showing_quit_prompt = s_showing_quit_prompt = false;
   // s_quitting = false;
 
@@ -292,21 +292,6 @@ void application::do_external_abort() {
   __sync_synchronize();
 }
 
-void application::do_quit_from_anywhere() {
-  if (s_mode == mode_outro) {
-    return;
-  } else if (s_mode == mode_intro) {
-    do_immediate_quit_from_anywhere();
-  } else {
-    s_showing_quit_prompt = true;
-  }
-}
-
-void application::do_immediate_quit_from_anywhere() {
-  internal_do_cancel_prompts();
-  s_mode = mode_outro;
-}
-
 void application::do_next_from_intro() {
   assert(s_mode == mode_intro);
   assert(!s_showing_viewer);
@@ -316,49 +301,14 @@ void application::do_next_from_intro() {
   s_mode = mode_menu;
 }
 
-void application::do_submenu_from_menu(imstring config) {
-  assert(s_mode == mode_menu);
-  assert(!s_showing_viewer);
-  assert(!s_showing_quit_prompt);
-  internal_do_cancel_prompts();
-  s_submenu_screen->enter_from_menu();
-  s_submenu_config = config;
-  s_mode = mode_submenu;
-}
-
-void application::do_viewer_from_menu(imstring article) {
-  assert(s_mode == mode_menu);
-  assert(!s_showing_viewer);
-  assert(!s_showing_quit_prompt);
-  s_viewer_article = article;
-  s_showing_viewer = true;
-}
-
-void application::do_viewer_from_submenu(imstring article) {
-  assert(s_mode == mode_submenu);
-  assert(!s_showing_viewer);
-  assert(!s_showing_quit_prompt);
-  s_submenu_screen->leave_to_viewer();
-  s_viewer_article = article;
-  s_showing_viewer = true;
-}
-
-void application::do_back_from_submenu() {
-  assert(s_mode == mode_submenu);
-  assert(!s_showing_viewer);
-  assert(!s_showing_quit_prompt);
-  s_submenu_screen->leave_to_menu();
-  s_mode = mode_menu;
-}
-
-void application::do_back_from_viewer() {
-  assert((s_mode == mode_menu) || (s_mode == mode_submenu));
-  assert(s_showing_viewer);
-  assert(!s_showing_quit_prompt);
-  if (s_mode == mode_submenu) {
-    s_submenu_screen->enter_from_viewer();
+void application::do_quit_from_anywhere() {
+  if (s_mode == mode_outro) {
+    return;
+  } else if (s_mode == mode_intro) {
+    do_immediate_quit_from_anywhere();
+  } else {
+    s_showing_quit_prompt = true;
   }
-  s_showing_viewer = false;
 }
 
 void application::do_confirm_from_quit_prompt() {
@@ -372,9 +322,50 @@ void application::do_back_from_quit_prompt() {
   s_showing_quit_prompt = false;
 }
 
+void application::do_immediate_quit_from_anywhere() {
+  internal_do_cancel_prompts();
+  s_mode = mode_outro;
+}
+
 void application::do_next_from_outro() {
   // this one is immediate
   s_quitting = true;
+}
+
+void application::do_submenu_from_menu(imstring config) {
+  assert(s_mode == mode_menu);
+  assert(!s_showing_viewer);
+  assert(!s_showing_quit_prompt);
+  internal_do_cancel_prompts();
+  s_submenu_screen->enter_from_menu();
+  s_submenu_config = config;
+  s_mode = mode_submenu;
+}
+
+void application::do_back_from_submenu() {
+  assert(s_mode == mode_submenu);
+  assert(!s_showing_viewer);
+  assert(!s_showing_quit_prompt);
+  s_submenu_screen->leave_to_menu();
+  s_mode = mode_menu;
+}
+
+void application::do_viewer_from_menu_or_submenu(imstring label,
+                                                 imstring article_path) {
+  assert((s_mode == mode_menu) || (s_mode == mode_submenu));
+  assert(!s_showing_viewer);
+  assert(!s_showing_quit_prompt);
+  s_viewer_label = label;
+  s_viewer_article_path = article_path;
+  s_showing_viewer = true;
+}
+
+void application::do_back_from_viewer() {
+  assert((s_mode == mode_menu) || (s_mode == mode_submenu));
+  assert(s_showing_viewer);
+  assert(!s_showing_quit_prompt);
+  s_viewer_screen->leave_to_menu();
+  s_showing_viewer = false;
 }
 
 void application::internal_do_cancel_prompts() {
@@ -396,8 +387,8 @@ void application::update_transitions() {
   }
 
   if (s_showing_viewer != s_last_showing_viewer) {
-    if (s_showing_viewer && !s_viewer_article.null_or_empty()) {
-      activate_viewer(s_viewer_article);
+    if (s_showing_viewer && !s_viewer_article_path.null_or_empty()) {
+      activate_viewer(s_viewer_label, s_viewer_article_path);
     } else {
       deactivate_viewer();
     }
@@ -471,26 +462,27 @@ void application::activate_submenu(imstring config) {
   assert(s_last_mode == mode_none);
   assert(!config.null_or_empty());
   s_submenu_screen->activate(s_submenu_config);
-  s_last_submenu_config = config;
   s_last_mode = mode_submenu;
 }
 
 void application::deactivate_submenu() {
   assert(s_last_mode == mode_submenu);
   s_submenu_screen->deactivate();
+  s_submenu_config = imstring();
   s_last_mode = mode_none;
 }
 
-void application::activate_viewer(imstring article) {
+void application::activate_viewer(imstring label, imstring article_path) {
   assert((s_last_mode == mode_menu) || (s_last_mode == mode_submenu));
-  assert(!article.null_or_empty());
-  s_last_viewer_article = article;
+  assert(!article_path.null_or_empty());
+  s_viewer_screen->activate(label, article_path);
   s_last_showing_viewer = true;
 }
 
 void application::deactivate_viewer() {
   assert(s_last_showing_viewer);
-  s_last_viewer_article = NULL;
+  s_viewer_screen->deactivate();
+  s_viewer_article_path = imstring();
   s_last_showing_viewer = false;
 }
 

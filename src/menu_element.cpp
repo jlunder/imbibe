@@ -34,7 +34,7 @@ void menu_element::layout(coord_t window_width, coord_t window_height) {
   (void)window_height;
   coord_t width;
   {
-    m_background = resource_manager::fetch_tbm("assets/menu-bg.tbm");
+    m_background = resource_manager::fetch_tbm(imstring("assets/menu-bg.tbm"));
     width = m_background.width();
     m_options.reserve(aux_menu_element::options_length);
     coord_t hot_y1 = 10;
@@ -45,14 +45,14 @@ void menu_element::layout(coord_t window_width, coord_t window_height) {
       menu_option *o = &m_options.back();
       o->hot.assign(0, hot_y1, width, hot_y2);
       o->selected_pos = point(0, sel_y);
-      o->selected_overlay =
-          resource_manager::fetch_tbm(aux_menu_element::option_defs[i].name);
+      o->selected_overlay = resource_manager::fetch_tbm(
+          imstring(aux_menu_element::option_defs[i].name));
       logf_menu_element(
           "loaded TBM %s: %d x %d\n", aux_menu_element::option_defs[i].name,
           (int)o->selected_overlay.width(), (int)o->selected_overlay.height());
-      o->config = aux_menu_element::option_defs[i].config;
-      o->hide_transition.reset(0, 0, 0);
-      o->show_transition.reset(0, 0, 0);
+      o->config = imstring(aux_menu_element::option_defs[i].config);
+      o->hide_transition.reset(0);
+      o->show_transition.reset(0);
       hot_y1 += 16;
       hot_y2 += 16;
       sel_y += 16;
@@ -60,7 +60,7 @@ void menu_element::layout(coord_t window_width, coord_t window_height) {
   }
   // set_frame(0, 0, width, m_background.height());
   set_frame(0, 0, window_width, window_height);
-  m_scroll_y.reset(0, 0, 0);
+  m_scroll_y.reset(0);
 
   m_selected_option = 0;
   m_last_selected_option = m_options.size();
@@ -109,7 +109,7 @@ void menu_element::animate(anim_time_t delta_ms) {
       m_options[m_last_selected_option].hide_transition.reset(
           0, m_background.width(), 300);
     }
-    m_options[m_selected_option].hide_transition.reset(0, 0, 0);
+    m_options[m_selected_option].hide_transition.reset(0);
     m_options[m_selected_option].show_transition.reset(0, m_background.width(),
                                                        300, 150);
     m_last_selected_option = m_selected_option;

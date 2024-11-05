@@ -81,7 +81,7 @@ bool unpacker::try_unpack_string(imstring *out_str, segsize_t *out_len) {
   if (!try_unpack_string(&str, out_len)) {
     return false;
   }
-  *out_str = str;
+  *out_str = imstring::copy(str);
   return true;
 }
 

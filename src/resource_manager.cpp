@@ -227,7 +227,7 @@ segsize_t resource_manager::load_data_at_hash(imstring const &name, hash_t hash,
     s_first_free_index = s_index.size();
     index_entry e;
     e.data = weak_immutable();
-    e.name = NULL;
+    e.name = imstring();
     while (s_index.size() < (target - 1)) {
       e.next_free = s_index.size() + 1;
       s_index.push_back(e);
