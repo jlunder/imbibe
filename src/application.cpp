@@ -161,6 +161,10 @@ void application::teardown() {
   s_outro_screen.teardown();
   s_quit_prompt.teardown();
 
+  s_submenu_config = imstring();
+  s_viewer_label = imstring();
+  s_viewer_article_path = imstring();
+
   logf_application("bye!\n");
 }
 

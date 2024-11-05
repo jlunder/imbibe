@@ -5,16 +5,19 @@
 #include "imstring.h"
 #include "vector.h"
 
+#define logf_imstring(...) disable_logf("IMSTRING: " __VA_ARGS__)
+#define IMSTRING_LOG_INTEGRITY 0
+
 namespace aux_imstring {
 // anonymous struct
-uint32_t IMSTRING_DATA s_null_pad;
-uint8_t IMSTRING_DATA s_dynamic_pool[s_dynamic_pool_size];
+uint32_t IMSTRING_POOL s_null_pad;
+uint8_t IMSTRING_POOL s_dynamic_pool[s_dynamic_pool_size];
 
 struct dynamic_header;
 
 #if BUILD_MSDOS
-typedef dynamic_header IMSTRING_DATA *dynamic_header_ptr_t;
-typedef uint8_t IMSTRING_DATA *pool_ptr_t;
+typedef dynamic_header IMSTRING_POOL *dynamic_header_ptr_t;
+typedef uint8_t IMSTRING_POOL *pool_ptr_t;
 #else
 template <class T, uint8_t __far *base, segsize_t range> struct based_ptr {
   typedef T __far *far_pointer_type;
@@ -190,7 +193,7 @@ static inline dynamic_header_ptr_t as_header(pool_ptr_t pool_ptr) {
 #if BUILD_MSDOS
   assert(pool_ptr >= s_dynamic_pool);
   assert((pool_ptr - s_dynamic_pool) % s_page_size == 0);
-  return reinterpret_cast<dynamic_header_ptr_t>(pool_ptr)
+  return reinterpret_cast<dynamic_header_ptr_t>(pool_ptr);
 #else
   assert((pool_ptr - s_dynamic_pool) % s_page_size == 0);
   return dynamic_header_ptr_t(pool_ptr);
@@ -227,13 +230,41 @@ static inline void set_prev_free(dynamic_header_ptr_t header,
 }
 
 #if BUILD_DEBUG
+segsize_t offset_from_header(dynamic_header_ptr_t header) {
+  if (!header) {
+    return SEGSIZE_INVALID;
+  }
+  return as_pool(header) - s_dynamic_pool;
+}
+
 bool check_integrity() {
   dynamic_header_ptr_t header = as_header(s_dynamic_pool);
   dynamic_header_ptr_t expected_prev_free = NULL;
   dynamic_header_ptr_t expected_next_free = s_first_free;
   dynamic_header_ptr_t pool_end =
       as_header(s_dynamic_pool + s_dynamic_pool_size);
+#if IMSTRING_LOG_INTEGRITY
+  logf_imstring("check_integrity: first_free=%5u, header[0]=%5u/%u refs\n",
+                (unsigned)offset_from_header(s_first_free),
+                (unsigned)header->size, (unsigned)header->ref_count);
+#endif
   while (header < pool_end) {
+#if IMSTRING_LOG_INTEGRITY
+    if (header->ref_count == 0) {
+      logf_imstring("  header[%5u]=%5u <-%5u/%5u->\n",
+                    (unsigned)offset_from_header(header),
+                    (unsigned)header->size,
+                    (unsigned)offset_from_header(header->prev_free),
+                    (unsigned)offset_from_header(header->next_free));
+    } else {
+      logf_imstring(
+          "  header[%5u]=%5u (%u refs) \"%s\"\n",
+          (unsigned)offset_from_header(header), (unsigned)header->size,
+          (unsigned)header->ref_count,
+          (char const *)(static_cast<uint8_t __far *>(
+              aux_imstring::as_pool(header) + aux_imstring::s_str_offset)));
+    }
+#endif
     if (header->ref_count == 0) {
       // this is a free block
       // check that this was the free block linked in proper order
@@ -255,6 +286,22 @@ bool check_integrity() {
   // the last block's next free should be null
   assert(!expected_next_free);
   return true;
+}
+
+void log_live() {
+  dynamic_header_ptr_t header = as_header(s_dynamic_pool);
+  dynamic_header_ptr_t pool_end =
+      as_header(s_dynamic_pool + s_dynamic_pool_size);
+  while (header < pool_end) {
+    if (header->ref_count != 0) {
+      logf_any("IMSTRING: live string [%u] (x%u): \"%s\"\n",
+               (unsigned)offset_from_header(header),
+               (unsigned)header->ref_count,
+               (char const *)(static_cast<uint8_t __far *>(as_pool(header) +
+                                                           s_str_offset)));
+    }
+    header = next_consecutive(header);
+  }
 }
 #endif
 
@@ -303,8 +350,9 @@ dynamic_header_ptr_t alloc_dynamic(segsize_t raw_size) {
       set_prev_free(next_header, split_header);
     }
   } else {
+    // Assert that alloc_pages isn't GREATER than avail_pages
+    assert(alloc_pages == avail_pages);
     // Whole block was needed, just link the prev and next blocks to each other
-    assert(alloc_pages == header->size);
     if (prev_header) {
       set_next_free(prev_header, next_header);
     } else {
@@ -315,12 +363,24 @@ dynamic_header_ptr_t alloc_dynamic(segsize_t raw_size) {
     }
   }
   assert(check_integrity());
+  logf_imstring("alloc [%u] (len %u)\n", (unsigned)offset_from_header(header),
+                (unsigned)raw_size);
   return header;
 }
 
 void free_dynamic(dynamic_header_ptr_t header) {
   assert(header);
   assert(header->ref_count == 0);
+  logf_imstring("free [%u] (len %u)\n", (unsigned)offset_from_header(header),
+                (unsigned)header->size);
+  header->size = round_to_page(s_str_offset + header->size) - s_str_offset;
+  // Edge case: the pool is 100% FULL
+  if (!s_first_free) {
+    s_first_free = header;
+    header->prev_free = NULL;
+    header->next_free = NULL;
+    return;
+  }
   // Find the free blocks before and after this block, bracketing it
   dynamic_header_ptr_t prev_header;
   dynamic_header_ptr_t next_header;
@@ -328,11 +388,12 @@ void free_dynamic(dynamic_header_ptr_t header) {
     prev_header = NULL;
     next_header = s_first_free;
   } else {
+    assert(s_first_free < header);
     prev_header = s_first_free;
     next_header = next_consecutive(header);
     dynamic_header_ptr_t pool_end =
         as_header(s_dynamic_pool + s_dynamic_pool_size);
-    for (;;) {
+    do {
       // Advance the free block iterator
       if (prev_header) {
         // We are walking through the free block list from its beginning,
@@ -351,25 +412,25 @@ void free_dynamic(dynamic_header_ptr_t header) {
         // We are walking through consecutive blocks from the header we are
         // trying to free, to see if we find a free one, from which we can
         // locate the preceding free block directly
-        dynamic_header_ptr_t next_next = next_consecutive(next_header);
-        if (next_next == pool_end) {
+        if (next_header->ref_count == 0) {
+          // Found a succeeding free block!
+          prev_header = prev_free(next_header);
+          break;
+        }
+        // Not yet -- advance one
+        next_header = next_consecutive(next_header);
+        if (next_header == pool_end) {
           next_header = NULL;
-        } else {
-          next_header = next_next;
-          if (next_next->ref_count == 0) {
-            // Found a succeeding free block!
-            prev_header = prev_free(next_header);
-            break;
-          }
         }
       }
-    }
+    } while (prev_header || next_header);
   }
-  assert(header->ref_count == 0);
   if (prev_header) {
     if (next_consecutive(prev_header) == header) {
       // adjacent: coalesce with prev_header
-      prev_header->size += round_to_page(s_str_offset + header->size);
+      assert(header->size ==
+             (round_to_page(s_str_offset + header->size) - s_str_offset));
+      prev_header->size += s_str_offset + header->size;
       header = prev_header;
     } else {
       set_next_free(prev_header, header);
@@ -382,9 +443,14 @@ void free_dynamic(dynamic_header_ptr_t header) {
   if (next_header) {
     if (next_consecutive(header) == next_header) {
       // adjacent: coalesce with next_header
-      header->size += round_to_page(s_str_offset + header->size);
-    } else {
-      set_next_free(header, next_header);
+      assert(next_header->size ==
+             (round_to_page(s_str_offset + next_header->size) - s_str_offset));
+      header->size += s_str_offset + next_header->size;
+      next_header = next_free(next_header);
+    }
+    set_next_free(header, next_header);
+    // next_header may become null through coalesce
+    if (next_header) {
       set_prev_free(next_header, header);
     }
   }
@@ -394,14 +460,24 @@ void free_dynamic(dynamic_header_ptr_t header) {
 } // namespace aux_imstring
 
 char __far *imstring::alloc_dynamic(segsize_t raw_size) {
-  return reinterpret_cast<char __far *>(static_cast<uint8_t __far *>(
+  char __far *str = reinterpret_cast<char __far *>(static_cast<uint8_t __far *>(
       aux_imstring::as_pool(aux_imstring::alloc_dynamic(raw_size)) +
       aux_imstring::s_str_offset));
+#if BUILD_MSDOS
+  logf_imstring("allocated " PRpF ", seg=0x%04X, expect=%04X\n", str,
+                (unsigned)FP_SEG(str), (unsigned)__segname(IMSTRING_POOL_NAME));
+#endif
+  assert(aux_imstring::is_dynamic(str));
+  return str;
 }
 
 void imstring::ref_dynamic(char const __far *str) {
+  assert(aux_imstring::check_integrity());
   aux_imstring::dynamic_header_ptr_t header =
       aux_imstring::header_from_str(str);
+  logf_imstring("ref [%u] (len %u, x%u+1)\n",
+                (unsigned)aux_imstring::offset_from_header(header),
+                (unsigned)header->size, (unsigned)header->ref_count);
   assert(header->ref_count > 0);
   assert(header->ref_count < 10000);
   ++header->ref_count;
@@ -411,6 +487,9 @@ void imstring::unref_dynamic(char const __far *str) {
   assert(aux_imstring::check_integrity());
   aux_imstring::dynamic_header_ptr_t header =
       aux_imstring::header_from_str(str);
+  logf_imstring("unref [%u] (len %u, x%u-1)\n",
+                (unsigned)aux_imstring::offset_from_header(header),
+                (unsigned)header->size, (unsigned)header->ref_count);
   assert(header->ref_count > 0);
   assert(header->ref_count < 10000);
   --header->ref_count;
@@ -464,6 +543,9 @@ void imstring::setup() {
 }
 
 void imstring::teardown() {
+#if BUILD_DEBUG
+  aux_imstring::log_live();
+#endif
   assert(aux_imstring::s_first_free ==
          aux_imstring::as_header(aux_imstring::s_dynamic_pool));
   assert(aux_imstring::s_first_free->ref_count == 0);

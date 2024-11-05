@@ -1,17 +1,18 @@
 #ifndef __IMSTRING_H_INCLUDED
 #define __IMSTRING_H_INCLUDED
 
-#define IMSTRING_DATA __based(__segname("imstring_DATA"))
+#define IMSTRING_POOL_NAME "imstring_pool_DATA"
+#define IMSTRING_POOL __based(__segname(IMSTRING_POOL_NAME))
 
 namespace aux_imstring {
 static segsize_t const s_page_size = 16;
 static segsize_t const s_dynamic_pool_size = s_page_size * 2048;
 
-extern uint8_t IMSTRING_DATA s_dynamic_pool[s_dynamic_pool_size];
+extern uint8_t IMSTRING_POOL s_dynamic_pool[s_dynamic_pool_size];
 
 static inline bool is_dynamic(char const __far *str) {
 #if BUILD_MSDOS
-  return FP_SEG(str) == __segname("imstring_DATA");
+  return FP_SEG(str) == __segname(IMSTRING_POOL_NAME);
 #elif BUILD_POSIX
   return ((uint8_t const __far *)str >= aux_imstring::s_dynamic_pool) &&
          ((uint8_t const __far *)str <
