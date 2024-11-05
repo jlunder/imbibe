@@ -16,7 +16,8 @@
         "system_error": "cpp",
         "random": "cpp",
         "algorithm": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "streambuf": "cpp"
     },
     "makefile.configureOnOpen": true
 }

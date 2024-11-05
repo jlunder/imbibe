@@ -4,7 +4,7 @@
 #include "imbibe.h"
 
 #include "screen_element.h"
-#include "tbm_element.h"
+#include "tbm.h"
 #include "tweens.h"
 
 class menu_element : public screen_element {

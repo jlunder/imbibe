@@ -131,6 +131,92 @@ private:
   color_t const *m_fade_lut;
 };
 
+static const uint8_t s_brightness[16] = {
+    0,     2,     3,     2 + 3,     1,     1 + 2,     1 + 3,     1 + 2 + 3,
+    1 + 0, 2 + 2, 2 + 3, 3 + 2 + 3, 2 + 1, 3 + 1 + 2, 3 + 1 + 3, 4 + 1 + 2 + 3};
+
+class blend_termel_line_op {
+public:
+  explicit blend_termel_line_op(uint8_t n_fade) {
+    assert(n_fade <= termviz::fade_steps);
+    m_fade_src_lut = termviz::fade_seqs[termviz::fade_steps - n_fade];
+    m_fade_dest_lut = termviz::fade_seqs[n_fade];
+  }
+
+  void transfer_line(termel_t __far *dest, termel_t const __far *src,
+                     segsize_t count) const {
+    for (segsize_t j = 0; j < count; ++j) {
+      termel_t dest_te = dest[j];
+      uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      uint8_t dest_brt = s_brightness[dest_fg] + s_brightness[dest_bg];
+      termel_t src_te = src[j];
+      uint8_t src_fg = m_fade_src_lut[termel::foreground(src_te)];
+      uint8_t src_bg = m_fade_src_lut[termel::background(src_te)];
+      uint8_t src_brt = s_brightness[src_fg] + s_brightness[src_bg];
+      dest[j] =
+          termel::with_attribute(((dest_brt > src_brt) ? dest_te : src_te),
+                                 dest_fg | src_fg, dest_bg | src_bg);
+    }
+  }
+
+  void fill_line(termel_t __far *dest, termel_t src, segsize_t count) const {
+    uint8_t src_fg = m_fade_src_lut[termel::foreground(src)];
+    uint8_t src_bg = m_fade_src_lut[termel::background(src)];
+    uint8_t src_brt = s_brightness[src_fg] + s_brightness[src_bg];
+    for (segsize_t j = 0; j < count; ++j) {
+      termel_t dest_te = dest[j];
+      uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      uint8_t dest_brt = s_brightness[dest_fg] + s_brightness[dest_bg];
+      dest[j] = termel::with_attribute(((dest_brt > src_brt) ? dest_te : src),
+                                       dest_fg | src_fg, dest_bg | src_bg);
+    }
+  }
+
+private:
+  color_t const *m_fade_src_lut;
+  color_t const *m_fade_dest_lut;
+};
+
+class blend_color_line_op {
+public:
+  explicit blend_color_line_op(uint8_t n_fade) {
+    assert(n_fade <= termviz::fade_steps);
+    m_fade_src_lut = termviz::fade_seqs[n_fade];
+    m_fade_dest_lut = termviz::fade_seqs[termviz::fade_steps - n_fade];
+  }
+
+  void transfer_line(termel_t __far *dest, termel_t const __far *src,
+                     segsize_t count) const {
+    for (segsize_t j = 0; j < count; ++j) {
+      termel_t dest_te = dest[j];
+      uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      uint8_t src_fg = m_fade_src_lut[termel::foreground(src[j])];
+      uint8_t src_bg = m_fade_src_lut[termel::background(src[j])];
+      dest[j] =
+          termel::with_attribute(dest_te, dest_fg | src_fg, dest_bg | src_bg);
+    }
+  }
+
+  void fill_line(termel_t __far *dest, termel_t src, segsize_t count) const {
+    uint8_t src_fg = m_fade_src_lut[termel::foreground(src)];
+    uint8_t src_bg = m_fade_src_lut[termel::background(src)];
+    for (segsize_t j = 0; j < count; ++j) {
+      termel_t dest_te = dest[j];
+      uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      dest[j] =
+          termel::with_attribute(dest_te, dest_fg | src_fg, dest_bg | src_bg);
+    }
+  }
+
+private:
+  color_t const *m_fade_src_lut;
+  color_t const *m_fade_dest_lut;
+};
+
 bool bitmap_transform_params::compute_transform(graphics *g, coord_t x,
                                                 coord_t y, coord_t width,
                                                 coord_t height,
@@ -160,6 +246,23 @@ bool prepare_plain_tbm_transform_params(graphics *g, tbm const &t, coord_t x,
   }
 
   return true;
+}
+
+template <class TLineOp>
+void fill(graphics *g, rect const &r, termel_t t, TLineOp op) {
+  rect cr = g->clip() & (g->origin() + r);
+  if (cr.trivial()) {
+    return;
+  }
+
+  segsize_t rows = cr.height();
+  segsize_t stride = g->b()->width();
+  segsize_t cols = cr.width();
+  termel_t __far *pp = g->b()->data() + cr.y1 * stride + cr.x1;
+  for (segsize_t r = 0; r < rows; ++r) {
+    op.fill_line(pp, t, cols);
+    pp += stride;
+  }
 }
 
 template <class TLineOp>
@@ -326,30 +429,12 @@ void graphics::leave_subregion(subregion_state const *restore) {
                 m_clip.y2);
 }
 
-void graphics::draw_rectangle(rect const &r, termel_t p) {
-  assert(m_clip.x1 >= 0);
-  assert(m_clip.y1 >= 0);
-  assert(m_clip.reasonable());
-  assert(r.reasonable());
+void graphics::draw_rectangle(rect const &r, termel_t t) {
+  aux_graphics::fill(this, r, t, aux_graphics::copy_line_op());
+}
 
-  rect cr = m_clip & (m_origin + r);
-  if (cr.trivial()) {
-    return;
-  }
-
-  logf_graphics("clipped draw_rectangle %d, %d, %d, %d; %c, %02X\n", cx1, cy1,
-                cx2, cy2, p.character(), p.attribute().value());
-
-  segsize_t rows = cr.height();
-  segsize_t stride = m_b->width();
-  segsize_t cols = cr.width();
-  termel_t __far *pp = m_b->data() + cr.y1 * stride + cr.x1;
-  for (segsize_t r = 0; r < rows; ++r) {
-    for (segsize_t c = 0; c < cols; ++c) {
-      pp[c] = p;
-    }
-    pp += stride;
-  }
+void graphics::blend_rectangle(rect const &r, termel_t t, uint8_t fade) {
+  aux_graphics::fill(this, r, t, aux_graphics::blend_color_line_op(fade));
 }
 
 void graphics::draw_text(coord_t x, coord_t y, attribute_t attr,

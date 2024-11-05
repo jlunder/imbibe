@@ -7,7 +7,6 @@
 #include "immutable.h"
 #include "keyboard.h"
 #include "resource_manager.h"
-#include "tbm.h"
 #include "termviz.h"
 #include "unpacker.h"
 
@@ -234,6 +233,10 @@ bool submenu_element::handle_key(key_code_t key) {
   case key_code::right:
   case key_code::enter:
   case ' ':
+    assert(m_selected_option < m_submenu->options.size());
+    application::do_viewer_from_menu_or_submenu(
+        m_submenu->options[m_selected_option].label,
+        m_submenu->options[m_selected_option].view_path);
     break;
   }
   return false;

@@ -342,6 +342,7 @@ public:
   static color_t background(termel_t te) {
     return (color_t)((te >> 12) & 0x07);
   }
+  static attribute_t attribute(termel_t te) { return (attribute_t)(te >> 8); }
   static bool blink(termel_t te) { return (bool)((te >> 15) & 0x01); }
 };
 

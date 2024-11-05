@@ -34,7 +34,12 @@ public:
                       termel_t p) {
     draw_rectangle(rect(x1, y1, x2, y2), p);
   }
+  void blend_rectangle(coord_t x1, coord_t y1, coord_t x2, coord_t y2,
+                       termel_t p, uint8_t fade) {
+    blend_rectangle(rect(x1, y1, x2, y2), p, fade);
+  }
   void draw_rectangle(rect const &r, termel_t p);
+  void blend_rectangle(rect const &r, termel_t p, uint8_t fade);
 #if BUILD_FAR_DATA
   void draw_text(coord_t x, coord_t y, attribute_t attr, char const *s);
 #else
