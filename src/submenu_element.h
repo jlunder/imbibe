@@ -28,13 +28,15 @@ public:
 
 private:
   struct submenu_option {
-    imstring label;
-    imstring view_path;
+    imstring title;
+    imstring filename;
+    imstring resource;
   };
 
   struct submenu {
     // config
     immutable config;
+    imstring title;
     tbm menu_header;
     tbm menu_footer;
     tbm option_unselected_background;
@@ -43,7 +45,6 @@ private:
     point option_label_offset;
     attribute_t option_unselected_label_attribute;
     attribute_t option_selected_label_attribute;
-    imstring submenu_label;
 
     // computed values
     point menu_header_pos;

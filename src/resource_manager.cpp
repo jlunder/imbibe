@@ -168,7 +168,7 @@ segsize_t resource_manager::find_or_load_data(imstring const &name,
   assert(s_hash_mask == (s_name_hash.size() - 1));
   assert(s_hash_mask == 15 || s_hash_mask == 31 || s_hash_mask == 63 ||
          s_hash_mask == 127 || s_hash_mask == 255 || s_hash_mask == 511);
-  logf_resource_manager("find_or_load_data '" PRsF "'\n", name.c_str());
+  logf_resource_manager("find_or_load_data '%" PRsF "'\n", name.c_str());
   hash_t name_hash = fletcher16_str(name.c_str());
   logf_resource_manager("  fletcher16_str = %04x\n", (unsigned)name_hash);
   segsize_t hint = (name_hash + (name_hash >> 8)) & s_hash_mask;
@@ -199,7 +199,7 @@ segsize_t resource_manager::find_or_load_data(imstring const &name,
         }
         return s_index[index].size;
       } else {
-        logf_resource_manager("  clashing names: '" PRsF "', '" PRsF "'\n",
+        logf_resource_manager("  clashing names: '%" PRsF "', '%" PRsF "'\n",
                               s_index[index].name.c_str(), name.c_str());
         // otherwise fall through
       }
@@ -270,7 +270,7 @@ void __far *resource_manager::load_data_from_file(imstring const &name,
   char const *op = "open";
   (void)op;
 
-  snprintf(path_buf, sizeof path_buf, "testdata/" PRsF, name.c_str());
+  snprintf(path_buf, sizeof path_buf, "testdata/%" PRsF, name.c_str());
   err = _dos_open(path_buf, O_RDONLY, &handle);
   if (err != 0) {
     goto fail_return;
@@ -301,7 +301,7 @@ void __far *resource_manager::load_data_from_file(imstring const &name,
     }
     temp_data = data_from_reclaim_header(header);
     temp_size = (segsize_t)size;
-    logf_resource_manager("load data " PRpF " -> header " PRpF "\n", temp_data,
+    logf_resource_manager("load data %" PRpF " -> header %" PRpF "\n", temp_data,
                           header);
   }
 
@@ -330,7 +330,7 @@ void __far *resource_manager::load_data_from_file(imstring const &name,
   {
     err = _dos_close(handle);
     if (err != 0) {
-      logf_resource_manager("ignoring error %u during close, file '" PRsF "'\n",
+      logf_resource_manager("ignoring error %u during close, file '%" PRsF "'\n",
                             err, name.c_str());
     }
   }
@@ -346,14 +346,14 @@ fail_return:
   if (handle != -1) {
     _dos_close(handle);
   }
-  logf_resource_manager("error during %s (%u), file '" PRsF "'\n", op, err,
+  logf_resource_manager("error during %s (%u), file '%" PRsF "'\n", op, err,
                         name.c_str());
   return NULL;
 }
 
 void resource_manager::reclaim_loaded_data(void __far *data) {
   reclaim_header __far *header = reclaim_header_from_data(data);
-  logf_resource_manager("reclaim " PRpF " -> header " PRpF " = %u\n", data,
+  logf_resource_manager("reclaim %" PRpF " -> header %" PRpF " = %u\n", data,
                         header, header->index);
   assert(header->index < s_index.size());
 
@@ -401,14 +401,14 @@ im_ptr<tbm> resource_manager::fetch_tbm(imstring const &name) {
       logf_resource_manager("  !entry.resource\n");
       reclaim_header __far *header =
           reinterpret_cast<reclaim_header __far *>(::_fmalloc(sizeof(reclaim_header) + sizeof(bitmap)));
-      logf_resource_manager("  header = " PRpF ", .name = " PRsF ", .index = %u\n", header,
+      logf_resource_manager("  header = %" PRpF ", .name = %" PRsF ", .index = %u\n", header,
                             name.c_str(), (unsigned)index);
       header->name = name.c_str();
       header->index = index;
       entry.resource = header + 1;
-      logf_resource_manager("  entry.resource = " PRpF "\n", header);
+      logf_resource_manager("  entry.resource = %" PRpF "\n", header);
       new (entry.resource) bitmap;
-      logf_resource_manager("  converting data at " PRpF " (%u bytes)\n", entry.data,
+      logf_resource_manager("  converting data at %" PRpF " (%u bytes)\n", entry.data,
                             (unsigned)entry.size);
       tbm::to_bitmap(unpacker(entry.data, entry.size),
                      *reinterpret_cast<bitmap *>(entry.resource));
@@ -433,7 +433,7 @@ void resource_manager::reclaim_loaded_data(void __far *data) {
   segsize_t index = header->index;
   index_entry &entry = s_index[index];
   logf_resource_manager(
-      "reclaim_loaded_data " PRpF ": header=" PRpF ", entry.resource=" PRpF ", .name=" PRsF "\n", data,
+      "reclaim_loaded_data %" PRpF ": header=%" PRpF ", entry.resource=%" PRpF ", .name=%" PRsF "\n", data,
       header, entry.resource, entry.name.c_str());
   assert(reinterpret_cast<void *>(entry.resource) == data);
   assert(entry.name == imstring(name));

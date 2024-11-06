@@ -99,7 +99,7 @@ public:
     } else {
       m_value = value;
       aux_reset(n_duration,
-                TEasing::compute_time(value, n_from, n_to, n_duration));
+                TEasing::compute_time(value, n_from, n_to - n_from, n_duration));
     }
     m_value = done() ? n_to : n_from;
   }
@@ -153,8 +153,10 @@ public:
 
   static anim_time_t compute_time(T value, T from, T delta,
                                   anim_time_t duration) {
-    assert(value >= from);
-    assert(value <= from + delta);
+    assert(((delta > 0) && (value >= from)) ||
+           ((delta < 0) && (value <= from)));
+    assert(((delta > 0) && (value <= from + delta)) ||
+           ((delta < 0) && (value >= from + delta)));
     return (anim_time_t)(((value - from) * (large_anim_time_t)duration) /
                          delta);
   }

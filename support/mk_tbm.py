@@ -602,7 +602,7 @@ def encode_rle(img: Image) -> tuple[int, bytes]:
         # assert bytes(decoded) == img.data[i].tobytes()
     encoded = np.array(lines, np.uint16).tobytes() + rle_bytes
     assert len(lines) == img.data.shape[0]
-    assert pos < 16000
+    assert pos < 30000
     return (TBM_FORMAT_RLE, encoded)
 
 

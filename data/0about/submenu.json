@@ -1,4 +1,5 @@
 {
+    "title": "About",
     "menu-header": "./subm-top.bin",
     "menu-footer": "assets/subm-bot.bin",
     "option-unselected-background": "assets/subm-opt.bin",
@@ -15,24 +16,24 @@
     "option-selected-label-attribute": "hi-white:blue",
     "options": [
         {
-            "label": "From the editor: what it was, then",
-            "viewer-file": "./viewer/ABOUT.TXT"
+            "title": "From the editor: what it was, then",
+            "resource": "./viewer/ABOUT.TXT"
         },
         {
-            "label": "From the editor: what it is, now",
-            "viewer-file": "./viewer/ABOUT3.txt"
+            "title": "From the editor: what it is, now",
+            "resource": "./viewer/ABOUT3.txt"
         },
         {
-            "label": "From the coder: deflections, complaints, bluster",
-            "viewer-file": "./viewer/ABOUT-HJ.TXT"
+            "title": "From the coder: deflections, complaints, bluster",
+            "resource": "./viewer/ABOUT-HJ.TXT"
         },
         {
-            "label": "About the recipes",
-            "viewer-file": "./viewer/RECIPES.TXT"
+            "title": "About the recipes",
+            "resource": "./viewer/RECIPES.TXT"
         },
         {
-            "label": "Contributors",
-            "viewer-file": "./viewer/-CONTRIB.TXT"
+            "title": "Contributors",
+            "resource": "./viewer/-CONTRIB.TXT"
         }
     ]
 }

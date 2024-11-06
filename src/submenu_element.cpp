@@ -18,35 +18,13 @@ void submenu_element::layout(coord_t window_width, coord_t window_height) {
   if (!try_unpack_menu_config()) {
     assert(!"nnoooooooo");
   }
-  // {
-  //   width = m_background.width();
-  //   m_options.reserve(aux_menu_element::options_length);
-  //   coord_t hot_y1 = 10;
-  //   coord_t hot_y2 = 16;
-  //   coord_t sel_y = 12;
-  //   for (segsize_t i = 0; i < aux_menu_element::options_length; ++i) {
-  //     m_options.push_back();
-  //     menu_option *o = &m_options.back();
-  //     o->hot.assign(0, hot_y1, width, hot_y2);
-  //     o->selected_pos = point(0, sel_y);
-  //     o->selected_overlay =
-  //         resource_manager::fetch_tbm(aux_menu_element::option_defs[i].name);
-  //     logf_menu_element("loaded TBM %s: %d x %d\n",
-  //                       aux_menu_element::option_defs[i].name,
-  //                       (int)o->selected_overlay.width(),
-  //                       (int)o->selected_overlay.height());
-  //     o->hide_transition.reset(0);
-  //     o->show_transition.reset(0);
-  //     hot_y1 += 16;
-  //     hot_y2 += 16;
-  //     sel_y += 16;
-  //   }
-  // }
 
   m_scroll_y.reset(0);
 
   m_selected_option = 0;
   m_last_selected_option = SEGSIZE_INVALID;
+
+  m_transition_in_out.reset(frame().width());
 }
 
 bool submenu_element::try_unpack_menu_config() {
@@ -110,7 +88,8 @@ bool submenu_element::try_unpack_submenu_config(imstring const &config,
   imstring option_unselected_background_name;
   imstring option_selected_background_name;
   segsize_t submenu_option_count;
-  if (!data.try_unpack_string(&menu_header_name) ||
+  if (!data.try_unpack_string(&out_submenu->title) ||
+      !data.try_unpack_string(&menu_header_name) ||
       !data.try_unpack_string(&menu_footer_name) ||
       !data.try_unpack_string(&option_unselected_background_name) ||
       !data.try_unpack_string(&option_selected_background_name) ||
@@ -153,7 +132,7 @@ bool submenu_element::try_unpack_submenu_config(imstring const &config,
   // compute layout
   if ((5000 / submenu_option_count) == 0) {
     logf_submenu_element(
-        "Too many options (%u) in submenu " PRpF
+        "Too many options (%u) in submenu %" PRpF
         " (or background is too tall, %dtm)\n",
         (unsigned)submenu_option_count, config.c_str(),
         (int)out_submenu->option_unselected_background.height());
@@ -184,8 +163,9 @@ bool submenu_element::try_unpack_submenu_config(imstring const &config,
   out_submenu->options.reserve(submenu_option_count);
   for (segsize_t i = 0; i < submenu_option_count; ++i) {
     out_submenu->options.push_back();
-    if (!data.try_unpack_string(&out_submenu->options[i].label) ||
-        !data.try_unpack_string(&out_submenu->options[i].view_path)) {
+    if (!data.try_unpack_string(&out_submenu->options[i].title) ||
+        !data.try_unpack_string(&out_submenu->options[i].filename) ||
+        !data.try_unpack_string(&out_submenu->options[i].resource)) {
       return false;
     }
   }
@@ -235,8 +215,11 @@ bool submenu_element::handle_key(key_code_t key) {
   case ' ':
     assert(m_selected_option < m_submenu->options.size());
     application::do_viewer_from_menu_or_submenu(
-        m_submenu->options[m_selected_option].label,
-        m_submenu->options[m_selected_option].view_path);
+        imstring::format(" %-12" PRsF " | %" PRsF " - %" PRsF,
+                         m_submenu->options[m_selected_option].filename.c_str(),
+                         m_submenu->title.c_str(),
+                         m_submenu->options[m_selected_option].title.c_str()),
+        m_submenu->options[m_selected_option].resource);
     break;
   }
   return false;
@@ -303,7 +286,7 @@ void submenu_element::paint(graphics *g) {
     submenu_option const &option = m_submenu->options[i];
     g->draw_tbm(0, unselected_y, m_submenu->option_unselected_background);
     g->draw_text(m_submenu->option_label_offset.x, label_y,
-                 m_submenu->option_unselected_label_attribute, option.label);
+                 m_submenu->option_unselected_label_attribute, option.title);
     unselected_y += m_submenu->option_height;
     label_y += m_submenu->option_height;
   }
@@ -326,7 +309,7 @@ void submenu_element::paint(graphics *g) {
     g->draw_text(m_submenu->option_label_offset.x,
                  unselected_y + m_submenu->option_label_offset.y,
                  m_submenu->option_selected_label_attribute,
-                 m_submenu->options[m_unselected_option].label);
+                 m_submenu->options[m_unselected_option].title);
     g->leave_subregion(&ss2);
   }
   if (m_selected_option < m_submenu->options.size()) {
@@ -340,7 +323,7 @@ void submenu_element::paint(graphics *g) {
     g->draw_text(m_submenu->option_label_offset.x,
                  unselected_y + m_submenu->option_label_offset.y,
                  m_submenu->option_selected_label_attribute,
-                 m_submenu->options[m_selected_option].label);
+                 m_submenu->options[m_selected_option].title);
     g->leave_subregion(&ss2);
   }
 
@@ -371,9 +354,12 @@ void submenu_element::activate(imstring const &config) {
 void submenu_element::deactivate() { m_active = false; }
 
 void submenu_element::enter_from_menu() {
-  m_transition_in_out.reset(frame().width(), 0, 300);
+  m_transition_in_out.reset_from_value(frame().width(), 0, 300,
+                                       m_transition_in_out.value());
+  m_scroll_y.reset(0);
 }
 
 void submenu_element::leave_to_menu() {
-  m_transition_in_out.reset(0, frame().width(), 300);
+  m_transition_in_out.reset_from_value(0, frame().width(), 300,
+                                       m_transition_in_out.value());
 }

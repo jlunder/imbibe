@@ -6,6 +6,7 @@
 #include "imstring.h"
 #include "screen_element.h"
 #include "tbm.h"
+#include "termviz.h"
 #include "tweens.h"
 
 class viewer_element : public screen_element {
@@ -15,17 +16,20 @@ public:
   virtual bool handle_key(key_code_t key);
   virtual void animate(anim_time_t delta_ms);
   virtual bool active() const;
+  virtual bool opaque() const;
+  virtual void paint(graphics *g);
 
-  void activate(imstring const &view_label, imstring const &view_path);
+  void activate(imstring const &title, imstring const &resource);
   void deactivate();
 
-  void enter_from_menu();
-  void leave_to_menu();
+  void enter_from_menu_or_submenu();
+  void leave_to_menu_or_submenu();
 
 private:
-  imstring m_view_label;
-  imstring m_view_path;
+  imstring m_title;
   tbm m_viewing;
+  termel_t m_background;
+  termel_t m_title_background;
 
   linear_tween<coord_t> m_transition_in_out;
   linear_tween<coord_t> m_scroll_y;

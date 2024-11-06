@@ -123,13 +123,13 @@ extern unsigned _dos_lseek(int handle, long offset, int whence,
 
 #define __packed__
 
-#define PRpF "%Fp"
-#define PRpN "%Np"
-#define PRp "%p"
+#define PRpF "Fp"
+#define PRpN "Np"
+#define PRp "p"
 
-#define PRsF "%Fs"
-#define PRsN "%Ns"
-#define PRs "%s"
+#define PRsF "Fs"
+#define PRsN "Ns"
+#define PRs "s"
 
 extern void __sync_synchronize();
 #pragma aux __sync_synchronize = "" modify;
@@ -156,13 +156,13 @@ extern void __sync_synchronize();
        ? reinterpret_cast<void __far *>(sim::dummy_screen)                     \
        : reinterpret_cast<void __far *>((uintptr_t)(s) + (uintptr_t)(o)))
 
-#define PRpF "%p"
-#define PRpN "%p"
-#define PRp "%p"
+#define PRpF "p"
+#define PRpN "p"
+#define PRp "p"
 
-#define PRsF "%s"
-#define PRsN "%s"
-#define PRs "%s"
+#define PRsF "s"
+#define PRsN "s"
+#define PRs "s"
 
 namespace sim {
 extern uint16_t dummy_screen[4000];

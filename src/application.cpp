@@ -40,8 +40,8 @@ bool s_last_showing_quit_prompt;
 mode_t s_mode;
 imstring s_submenu_config;
 bool s_showing_viewer;
-imstring s_viewer_label;
-imstring s_viewer_article_path;
+imstring s_viewer_title;
+imstring s_viewer_resource;
 bool s_showing_quit_prompt;
 
 bool s_quitting = false;
@@ -73,7 +73,7 @@ void activate_menu();
 void deactivate_menu();
 void activate_submenu(imstring config);
 void deactivate_submenu();
-void activate_viewer(imstring label, imstring article_path);
+void activate_viewer(imstring title, imstring article_path);
 void deactivate_viewer();
 void activate_quit_prompt();
 void deactivate_quit_prompt();
@@ -90,8 +90,8 @@ void application::setup() {
   s_mode = mode_intro;
   s_submenu_config = imstring();
   s_last_showing_viewer = s_showing_viewer = false;
-  s_viewer_label = imstring();
-  s_viewer_article_path = imstring();
+  s_viewer_title = imstring();
+  s_viewer_resource = imstring();
   s_last_showing_quit_prompt = s_showing_quit_prompt = false;
   // s_quitting = false;
 
@@ -162,8 +162,8 @@ void application::teardown() {
   s_quit_prompt.teardown();
 
   s_submenu_config = imstring();
-  s_viewer_label = imstring();
-  s_viewer_article_path = imstring();
+  s_viewer_title = imstring();
+  s_viewer_resource = imstring();
 
   logf_application("bye!\n");
 }
@@ -354,13 +354,14 @@ void application::do_back_from_submenu() {
   s_mode = mode_menu;
 }
 
-void application::do_viewer_from_menu_or_submenu(imstring label,
-                                                 imstring article_path) {
+void application::do_viewer_from_menu_or_submenu(imstring title,
+                                                 imstring resource) {
   assert((s_mode == mode_menu) || (s_mode == mode_submenu));
   assert(!s_showing_viewer);
   assert(!s_showing_quit_prompt);
-  s_viewer_label = label;
-  s_viewer_article_path = article_path;
+  s_viewer_screen->enter_from_menu_or_submenu();
+  s_viewer_title = title;
+  s_viewer_resource = resource;
   s_showing_viewer = true;
 }
 
@@ -368,7 +369,7 @@ void application::do_back_from_viewer() {
   assert((s_mode == mode_menu) || (s_mode == mode_submenu));
   assert(s_showing_viewer);
   assert(!s_showing_quit_prompt);
-  s_viewer_screen->leave_to_menu();
+  s_viewer_screen->leave_to_menu_or_submenu();
   s_showing_viewer = false;
 }
 
@@ -391,8 +392,8 @@ void application::update_transitions() {
   }
 
   if (s_showing_viewer != s_last_showing_viewer) {
-    if (s_showing_viewer && !s_viewer_article_path.null_or_empty()) {
-      activate_viewer(s_viewer_label, s_viewer_article_path);
+    if (s_showing_viewer && !s_viewer_resource.null_or_empty()) {
+      activate_viewer(s_viewer_title, s_viewer_resource);
     } else {
       deactivate_viewer();
     }
@@ -476,17 +477,17 @@ void application::deactivate_submenu() {
   s_last_mode = mode_none;
 }
 
-void application::activate_viewer(imstring label, imstring article_path) {
+void application::activate_viewer(imstring title, imstring article_path) {
   assert((s_last_mode == mode_menu) || (s_last_mode == mode_submenu));
   assert(!article_path.null_or_empty());
-  s_viewer_screen->activate(label, article_path);
+  s_viewer_screen->activate(title, article_path);
   s_last_showing_viewer = true;
 }
 
 void application::deactivate_viewer() {
   assert(s_last_showing_viewer);
   s_viewer_screen->deactivate();
-  s_viewer_article_path = imstring();
+  s_viewer_resource = imstring();
   s_last_showing_viewer = false;
 }
 

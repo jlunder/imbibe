@@ -85,16 +85,19 @@ class MenuConfig:
 
 @dataclasses.dataclass
 class SubmenuConfigOption:
-    label: str
-    viewer_file: str
+    title: str
+    filename: str
+    resource: str
 
     def normalize_paths(self, args: Args, input_path: str):
-        self.viewer_file = normalize_path(self.viewer_file, args, input_path)
+        self.filename = os.path.basename(self.resource)
+        self.resource = normalize_path(os.path.splitext(self.resource)[0] + ".bin", args, input_path)
         return self
 
 
 @dataclasses.dataclass
 class SubmenuConfig:
+    title: str
     menu_header: str
     menu_footer: str
     option_unselected_background: str
@@ -212,7 +215,11 @@ def parse_menu_config_options(opts_data: list[dict]) -> list[MenuConfigOption]:
 
 def parse_submenu_config_options(opts_data: list[dict]) -> list[SubmenuConfigOption]:
     return [
-        SubmenuConfigOption(label=d["label"], viewer_file=d["viewer-file"])
+        SubmenuConfigOption(
+            title=d["title"],
+            filename=os.path.basename(d["resource"]),
+            resource=d["resource"],
+        )
         for d in opts_data
     ]
 
@@ -237,6 +244,7 @@ def read_json_config(args: Args, input_path: str):
             ).normalize_paths(args, input_path)
         elif t == "submenu":
             return SubmenuConfig(
+                title=data["title"],
                 menu_header=data["menu-header"],
                 menu_footer=data["menu-footer"],
                 option_unselected_background=data["option-unselected-background"],
@@ -299,7 +307,8 @@ def write_submenu_cfg(args: Args, output_path: str, cfg: SubmenuConfig) -> bool 
     logger.info("Writing submenu config '%s'", output_path)
     with open(output_path, "wb") as f:
         rec = (
-            (cfg.menu_header.encode() + b"\0")
+            (cfg.title.encode() + b"\0")
+            + (cfg.menu_header.encode() + b"\0")
             + (cfg.menu_footer.encode() + b"\0")
             + (cfg.option_unselected_background.encode() + b"\0")
             + (cfg.option_selected_background.encode() + b"\0")
@@ -315,7 +324,9 @@ def write_submenu_cfg(args: Args, output_path: str, cfg: SubmenuConfig) -> bool 
             + struct.pack("<H", len(cfg.options))
             + b"".join(
                 [
-                    (o.label.encode() + b"\0") + (o.viewer_file.encode() + b"\0")
+                    (o.title.encode() + b"\0")
+                    + (o.filename.encode() + b"\0")
+                    + (o.resource.encode() + b"\0")
                     for o in cfg.options
                 ]
             )

@@ -464,7 +464,7 @@ char __far *imstring::alloc_dynamic(segsize_t raw_size) {
       aux_imstring::as_pool(aux_imstring::alloc_dynamic(raw_size)) +
       aux_imstring::s_str_offset));
 #if BUILD_MSDOS
-  logf_imstring("allocated " PRpF ", seg=0x%04X, expect=%04X\n", str,
+  logf_imstring("allocated %" PRpF ", seg=0x%04X, expect=%04X\n", str,
                 (unsigned)FP_SEG(str), (unsigned)__segname(IMSTRING_POOL_NAME));
 #endif
   assert(aux_imstring::is_dynamic(str));

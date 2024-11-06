@@ -25,7 +25,7 @@ void do_immediate_quit_from_anywhere();
 void do_next_from_outro();
 void do_submenu_from_menu(imstring config);
 void do_back_from_submenu();
-void do_viewer_from_menu_or_submenu(imstring label, imstring article_path);
+void do_viewer_from_menu_or_submenu(imstring title, imstring resource);
 void do_back_from_viewer();
 
 } // namespace application
