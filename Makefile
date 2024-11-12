@@ -118,11 +118,11 @@ build/data/%.bin: data/%.txt support/mk_txt_bin.py Makefile
 build/data/%.bin: data/%.TXT support/mk_txt_bin.py Makefile
 	$(call MAKE_BIN_FROM_TXT)
 
-# build/data/%.bin: data/%.ans support/mk_txt_bin.py Makefile
-# 	$(call MAKE_BIN_FROM_TXT)
+build/data/%.bin: data/%.ans support/mk_txt_bin.py Makefile
+	$(call MAKE_BIN_FROM_TXT)
 
-# build/data/%.bin: data/%.ANS support/mk_txt_bin.py Makefile
-# 	$(call MAKE_BIN_FROM_TXT)
+build/data/%.bin: data/%.ANS support/mk_txt_bin.py Makefile
+	$(call MAKE_BIN_FROM_TXT)
 
 testdata/%.cfg: data/%.json support/mk_cfg.py Makefile
 	mkdir -p $(dir $@)

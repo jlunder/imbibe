@@ -5,6 +5,7 @@ workspace/*
 old/
 imbibe/
 datasrc/
+__pycache__/
 *.ERR
 RUN.LOG
 simbibe

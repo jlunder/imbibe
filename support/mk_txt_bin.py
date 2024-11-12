@@ -14,6 +14,8 @@ import struct
 import sys
 from typing import BinaryIO, Iterable
 
+from ansi import DosAnsi
+
 logger = logging.getLogger(__appname__)
 
 
@@ -58,27 +60,27 @@ def make_arg_parser():
 arg_parser: argparse.ArgumentParser = make_arg_parser()
 
 
-def tab_dist(pos: int, tab_size: int = 8)-> int:
+def tab_dist(pos: int, tab_size: int = 8) -> int:
     return tab_size - (pos % tab_size)
 
 
-def convert_simple_wrap(args: Args, inf:BinaryIO) -> Iterable[bytes]:
-    TAB = ord('\t')
-    SPACE = ord(' ')
-    CR = ord('\r')
+def convert_simple_wrap(args: Args, inf: BinaryIO) -> Iterable[bytes]:
+    TAB = ord("\t")
+    SPACE = ord(" ")
+    CR = ord("\r")
     NUL = 0
-    LF = ord('\n')
+    LF = ord("\n")
     EOF = 26
     attr = args.default_attr
     page_width = args.page_width
-    line = b''
+    line = b""
     for c in inf.read():
         pos = len(line) // 2
         assert pos < page_width
         if c == TAB:
             expanded = bytes([SPACE, attr]) * tab_dist(pos)
         elif c in [CR, NUL]:
-            expanded = b''
+            expanded = b""
         elif c == LF:
             expanded = bytes([SPACE, attr]) * (page_width - pos)
         elif c == EOF:
@@ -87,13 +89,10 @@ def convert_simple_wrap(args: Args, inf:BinaryIO) -> Iterable[bytes]:
             expanded = bytes([c, attr])
         line += expanded
         while len(line) >= page_width * 2:
-            yield line[:page_width * 2]
-            line = line[page_width * 2:]
+            yield line[: page_width * 2]
+            line = line[page_width * 2 :]
     if len(line) > 0:
         yield line + bytes([SPACE, attr]) * (page_width - len(line) // 2)
-
-
-
 
 
 # def convert_fancy_wrap(args: Args, input_path: Path, output_path: Path):
@@ -126,7 +125,13 @@ def convert_simple_wrap(args: Args, inf:BinaryIO) -> Iterable[bytes]:
 #                     if pos + len(ws) >= page_width:
 #                         flush_line
 
-#                     bin_line += (b' ' + cur_attr) * 
+#                     bin_line += (b' ' + cur_attr) *
+
+
+def convert_ansi(args: Args, inf: BinaryIO) -> Iterable[bytes]:
+    da = DosAnsi(cols=args.page_width, logger=logger)
+    da.feed(inf.read())
+    return da.tiles.tobytes()
 
 
 def main(args: Args):
