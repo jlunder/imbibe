@@ -15,6 +15,7 @@ import re
 import struct
 import sys
 
+from ansi import *
 from sauce import *
 
 logger = logging.getLogger(__appname__)
@@ -50,6 +51,7 @@ class Args:
     input_format: str = IN_DETECT
     input_width: int = None
     key: str = None
+    fill: str = None
     opaque: bool = False
     input_path: str = None
     output_path: str = None
@@ -60,7 +62,7 @@ class ImageInfo:
     format: str = IN_OTHER
     data_size: int = None
     width: int = 80
-    height: int = 25
+    height: int | None = None
     flags: int = 0
     args: list[str] | None = None
 
@@ -139,7 +141,7 @@ def parse_args_key(args_key: str | None) -> tuple[int, int]:
     return key_mask, key
 
 
-def read_bintext(args: Args, input_path: str):
+def read_image(args: Args, input_path: str) -> Image:
     logger.info("Opening %s", input_path)
     try:
         with open(input_path, "rb") as f:
@@ -148,7 +150,7 @@ def read_bintext(args: Args, input_path: str):
         logger.error("%s", e)
         return None
     sauce = parse_sauce(data)
-    if not (sauce is None):
+    if sauce is not None:
         equals_arg_re = re.compile(b"^(--?[a-zA-Z_-]+)=(.*)$")
         if (len(sauce.title) > 0) and (sauce.title[-1] == ord(b":")):
             img_args = []
@@ -179,18 +181,45 @@ def read_bintext(args: Args, input_path: str):
             args=img_args,
         )
     else:
+        _, ext = os.path.splitext(input_path)
+        if ext.lower() == ".bin":
+            inf = ImageInfo(format=IN_BINTEXT)
+        else:
+            inf = ImageInfo(format=IN_ANSI)
         logger.warning(
-            "Input file '%s' does not have valid SAUCE, assuming BINTEXT", input_path
+            f"Input file '{input_path}' does not have valid SAUCE, assuming {inf.format} based on extension '{ext}'",
         )
-        inf = ImageInfo(format=IN_BINTEXT)
     if inf.args != None:
         logger.info("Parsing extra image args: %r", inf.args)
         args = arg_parser.parse_args(
             inf.args + [input_path], namespace=dataclasses.replace(args)
         )
-    if inf.format != IN_BINTEXT:
-        logger.error("Only BINTEXT input is supported, this is %s", inf.format.upper())
-        return None
+
+    if inf.format == IN_BINTEXT:
+        inf, img_data = parse_bintext_data(inf, data)
+    elif inf.format == IN_ASCII or inf.format == IN_ANSI:
+        fill = None
+        if args.fill:
+            _, fill = parse_args_key(args.fill)
+        inf, img_data = parse_ansi_data(inf, fill, data)
+    else:
+        assert not "WTF format?"
+
+    key = None
+    mask = np.ones(img_data.shape)
+    if args.key:
+        key_mask, key = parse_args_key(args.key)
+        logger.info("Using key value %04x, mask %04x", key, key_mask)
+        if key_mask == 0:
+            logger.warning(
+                "The key mask is 0, which means it will match anything "
+                + "and your output will be transparent"
+            )
+        mask = np.vectorize(lambda x: int((x & key_mask) != key))(img_data)
+    return Image(flags=inf.flags, data=img_data, mask_key=key, mask=mask)
+
+
+def parse_bintext_data(inf: ImageInfo, data: bytes) -> tuple[ImageInfo, np.ndarray]:
     if not inf.data_size:
         inf.data_size = len(data)
     if not inf.width:
@@ -212,18 +241,24 @@ def read_bintext(args: Args, input_path: str):
         np.frombuffer(data, dtype=np.uint16, count=inf.width * inf.height),
         (inf.height, inf.width),
     )
-    key = None
-    mask = np.ones(img_data.shape)
-    if args.key:
-        key_mask, key = parse_args_key(args.key)
-        logger.info("Using key value %04x, mask %04x", key, key_mask)
-        if key_mask == 0:
-            logger.warning(
-                "The key mask is 0, which means it will match anything "
-                + "and your output will be transparent"
-            )
-        mask = np.vectorize(lambda x: int((x & key_mask) != key))(img_data)
-    return Image(flags=inf.flags, data=img_data, mask_key=key, mask=mask)
+    return (inf, img_data)
+
+
+def parse_ansi_data(
+    inf: ImageInfo, fill: int | None, data: bytes
+) -> tuple[ImageInfo, np.ndarray]:
+    if not inf.width:
+        inf.width = 80
+        logger.info("No width specified, guessing %d", inf.width)
+
+    da = DosAnsi(cols=inf.width, fill=fill, logger=logger)
+    da.feed(data)
+    if not inf.height:
+        inf.height = da.rows_used
+    tiles = np.reshape(da.tiles[: inf.width * inf.height], (inf.height, inf.width))
+    assert da.cols == inf.width
+    assert da.rows_used <= da.tiles.shape[0] // da.cols
+    return (inf, tiles)
 
 
 def normalizer(img: Image) -> list[list[int]]:
@@ -315,7 +350,6 @@ def write_bintext(args: Args, input_path: str, img: Image) -> bool | None:
     file_size = len(norm_bytes)
     with open(output_path, "wb") as f:
         f.write(norm_bytes)
-        f.write()
         f.write(make_bintext_sauce(file_size, norm_data.shape[1], img.flags & 0xFF))
 
 
@@ -555,7 +589,7 @@ def write_tbm(args: Args, input_path: str, img: Image) -> bool | None:
 def main(args: Args):
     assert len(args.input_path) == 1
     input_path = args.input_path[0]
-    img = read_bintext(args, input_path)
+    img = read_image(args, input_path)
     if img == None:
         return 1
     if args.normalize:

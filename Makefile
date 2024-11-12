@@ -39,7 +39,8 @@ IMBIBE_SDL_GL_DEPS = $(patsubst $(SRC_DIR)%.cpp,$(SDL_GL_DEP_DIR)%.d,$(IMBIBE_SO
 
 IMBIBE_RESOURCES = \
 	$(patsubst data/%.bin,testdata/%.tbm,$(wildcard data/*/*.bin)) \
-	$(patsubst data/%.bin,testdata/%.tbm,$(wildcard data/*/viewer/*.bin)) \
+	$(patsubst data/%.ans,testdata/%.tbm,$(wildcard data/*/viewer/*.ans)) \
+	$(patsubst data/%.ANS,testdata/%.tbm,$(wildcard data/*/viewer/*.ANS)) \
 	$(patsubst data/%.txt,testdata/%.tbm,$(wildcard data/*/viewer/*.txt)) \
 	$(patsubst data/%.TXT,testdata/%.tbm,$(wildcard data/*/viewer/*.TXT)) \
 	$(patsubst data/%.json,testdata/%.cfg,$(wildcard data/*/*.json)) \
@@ -96,33 +97,21 @@ imbibe: $(OBJ_DIR)imbibe.exe $(IMBIBE_SDL_GL_OBJS)
 	    -c "`echo $< | tr '/' '\\' ` > RUN.LOG"
 #	    -c "exit"
 
-define MAKE_TBM_FROM_BIN =
+define MAKE_TBM_FROM =
 	mkdir -p $(dir $@)
 	support/mk_tbm.py -v -o $@ $<
 endef
 
-define MAKE_BIN_FROM_TXT =
-	mkdir -p $(dir $@)
-	support/mk_txt_bin.py -v -o $@ $<
-endef
-
 testdata/%.tbm: data/%.bin support/mk_tbm.py Makefile
-	$(call MAKE_TBM_FROM_BIN)
-
-testdata/%.tbm: build/data/%.bin support/mk_tbm.py Makefile
-	$(call MAKE_TBM_FROM_BIN)
-
-build/data/%.bin: data/%.txt support/mk_txt_bin.py Makefile
-	$(call MAKE_BIN_FROM_TXT)
-
-build/data/%.bin: data/%.TXT support/mk_txt_bin.py Makefile
-	$(call MAKE_BIN_FROM_TXT)
-
-build/data/%.bin: data/%.ans support/mk_txt_bin.py Makefile
-	$(call MAKE_BIN_FROM_TXT)
-
-build/data/%.bin: data/%.ANS support/mk_txt_bin.py Makefile
-	$(call MAKE_BIN_FROM_TXT)
+	$(call MAKE_TBM_FROM)
+testdata/%.tbm: data/%.ans support/mk_tbm.py Makefile
+	$(call MAKE_TBM_FROM)
+testdata/%.tbm: data/%.ANS support/mk_tbm.py Makefile
+	$(call MAKE_TBM_FROM)
+testdata/%.tbm: data/%.txt support/mk_tbm.py Makefile
+	$(call MAKE_TBM_FROM)
+testdata/%.tbm: data/%.TXT support/mk_tbm.py Makefile
+	$(call MAKE_TBM_FROM)
 
 testdata/%.cfg: data/%.json support/mk_cfg.py Makefile
 	mkdir -p $(dir $@)
