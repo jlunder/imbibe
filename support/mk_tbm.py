@@ -15,6 +15,8 @@ import re
 import struct
 import sys
 
+from sauce import *
+
 logger = logging.getLogger(__appname__)
 
 OUT_AUTO = "auto"
@@ -32,12 +34,6 @@ IN_TBM = "tbm"
 IN_OTHER = "other"
 
 MAX_INPUT_SIZE = 1 << 20
-
-FLAGS_ICE_COLOR = 0x0001
-FLAGS_FONT_8PX = 0x0002
-FLAGS_FONT_9PX = 0x0004
-FLAGS_ASPECT_LEGACY = 0x0008
-FLAGS_ASPECT_SQUARE = 0x0010
 
 TBM_FORMAT_FLAT = 0x0100
 TBM_FORMAT_RLE = 0x0200
@@ -117,194 +113,6 @@ def make_arg_parser():
 arg_parser: argparse.ArgumentParser = make_arg_parser()
 
 
-def parse_sauce(data: bin):
-    sauce_rec_len = 128
-    sauce_rec_id = b"SAUCE"
-    if len(data) < sauce_rec_len:
-        logger.info("File is too short (%d) to have a SAUCE record", len(data))
-        return None
-    sauce_rec = data[-sauce_rec_len:]
-    if sauce_rec[: len(sauce_rec_id)] != sauce_rec_id:
-        logger.info("File does not have SAUCE header magic")
-        return None
-    title: bytes
-    (
-        id,
-        version,
-        title,
-        author,
-        group,
-        date,
-        fsize,
-        dtype,
-        ftype,
-        tinfo1,
-        tinfo2,
-        tinfo3,
-        tinfo4,
-        ncomments,
-        flags,
-        tinfos,
-    ) = struct.unpack("<5s2s35s20s20s8sLBBHHHHBB22s", sauce_rec)
-
-    if version != b"00":
-        logger.warning(
-            "SAUCE header has unexpected version (%02X %02X, expected %02X %02X)",
-            version[0],
-            version[1],
-            ord("0"),
-            ord("0"),
-        )
-
-    title, author, group = (title.rstrip(), author.rstrip(), group.rstrip())
-    logger.info(
-        "id = %s; version = %s; title = %r; author = %r; group = %r; "
-        + "date = %r; fsize = %d; dtype = %d; ftype = %d; tinfo1 = %d; "
-        + "tinfo2 = %d; tinfo3 = %d; tinfo4 = %d; ncomments = %d; "
-        + "flags = %02X; tinfos = %r",
-        id,
-        version,
-        title,
-        author,
-        group,
-        date,
-        fsize,
-        dtype,
-        ftype,
-        tinfo1,
-        tinfo2,
-        tinfo3,
-        tinfo4,
-        ncomments,
-        flags,
-        tinfos.rstrip(b"\0"),
-    )
-
-    sauce_comment_id = b"COMNT"
-    sauce_comment_len = 64
-    sauce_full_len = sauce_rec_len + (
-        len(sauce_comment_id) + sauce_comment_len * ncomments if ncomments > 0 else 0
-    )
-
-    if sauce_full_len >= len(data):
-        logger.warning(
-            "File is too short (%d) to fit full SAUCE with %d comments",
-            len(data),
-            sauce_full_len,
-            ncomments,
-        )
-        ncomments = 0
-        sauce_full_len = sauce_rec_len
-    if ncomments and (
-        data[-sauce_full_len:][: len(sauce_comment_id)] != sauce_comment_id
-    ):
-        logger.warning(
-            "File does not have a valid SAUCE comment header (expected at %d)",
-            len(data) - sauce_full_len,
-        )
-        ncomments = 0
-        sauce_full_len = sauce_rec_len
-
-    if fsize > 0 and len(data) - sauce_full_len <= fsize:
-        logger.warning(
-            "SAUCE file size (%d) is inconsistent with the actual file "
-            + "(%d - %d SAUCE = %d)",
-            fsize,
-            len(data),
-            sauce_full_len,
-            len(data) - sauce_full_len,
-        )
-        fsize = 0
-
-    computed_eof_pos = len(data) - sauce_full_len - 1
-    if data[computed_eof_pos] == 0x1A:
-        actual_fsize = computed_eof_pos
-    else:
-        actual_fsize = len(data) - sauce_full_len
-        logger.warning("Did not find expected EOF at %d", computed_eof_pos)
-
-    if fsize and (actual_fsize != fsize):
-        logger.info(
-            "SAUCE filesize %d does not match actual data length %d",
-            fsize,
-            actual_fsize,
-        )
-
-    equals_arg_re = re.compile(b"^(--?[a-zA-Z_-]+)=(.*)$")
-    if (len(title) > 0) and (title[-1] == ord(b":")):
-        img_args = []
-        for a in title.split(b":")[1:-1]:
-            m = equals_arg_re.match(a)
-            if m:
-                img_args.append(m.group(1))
-                img_args.append(m.group(2))
-            else:
-                img_args.append(a)
-        img_args = [b.decode("ascii") for b in img_args]
-    else:
-        img_args = None
-
-    if dtype == 1:
-        if ftype == 0:
-            return ImageInfo(
-                format=IN_ASCII,
-                data_size=used_fsize,
-                width=tinfo1 or None,
-                height=tinfo2 or None,
-                flags=flags,
-                args=img_args,
-            )
-        elif ftype == 1:
-            return ImageInfo(
-                format=IN_ASCII,
-                data_size=used_fsize,
-                width=tinfo1 or None,
-                height=tinfo2 or None,
-                flags=flags,
-                args=img_args,
-            )
-        elif ftype == 2:
-            return ImageInfo(
-                format=IN_ASCII,
-                data_size=used_fsize,
-                width=tinfo1 or None,
-                height=tinfo2 or None,
-                flags=flags,
-                args=img_args,
-            )
-    elif dtype == 5:
-        w = ftype * 2
-        if w == 0:
-            logger.warning("SAUCE has no width for BINTEXT, defaulting to 80")
-        if fsize:
-            used_fsize = fsize
-        else:
-            logger.warning(
-                "SAUCE has no filesize for BINTEXT, using actual data length"
-            )
-            used_fsize = actual_fsize
-        h = used_fsize // (w * 2)
-        if used_fsize != w * h * 2:
-            logger.warning(
-                "Computed dimensions (%dx%d) do not match filesize (%d)",
-                w,
-                h,
-                used_fsize,
-            )
-
-        return ImageInfo(
-            format=IN_BINTEXT,
-            data_size=used_fsize,
-            width=w or None,
-            height=h or None,
-            flags=flags,
-            args=img_args,
-        )
-    else:
-        logger.warning("Unsupported datatype %d in SAUCE", dtype)
-        return ImageInfo(format=IN_OTHER, data_size=used_fsize)
-
-
 def parse_args_key(args_key: str | None) -> tuple[int, int]:
     if (args_key == None) or (args_key == ""):
         return (0, -1)
@@ -339,8 +147,38 @@ def read_bintext(args: Args, input_path: str):
     except Exception as e:
         logger.error("%s", e)
         return None
-    inf = parse_sauce(data)
-    if inf == None:
+    sauce = parse_sauce(data)
+    if not (sauce is None):
+        equals_arg_re = re.compile(b"^(--?[a-zA-Z_-]+)=(.*)$")
+        if (len(sauce.title) > 0) and (sauce.title[-1] == ord(b":")):
+            img_args = []
+            for a in sauce.title.split(b":")[1:-1]:
+                m = equals_arg_re.match(a)
+                if m:
+                    img_args.append(m.group(1))
+                    img_args.append(m.group(2))
+                else:
+                    img_args.append(a)
+            img_args = [b.decode("ascii") for b in img_args]
+        else:
+            img_args = None
+        if sauce.format == Format.ASCII:
+            img_format = IN_ASCII
+        elif sauce.format == Format.ANSI:
+            img_format = IN_ANSI
+        elif sauce.format == Format.BINTEXT:
+            img_format = IN_BINTEXT
+        else:
+            img_format = IN_DETECT
+        inf = ImageInfo(
+            format=img_format,
+            data_size=sauce.data_size,
+            width=sauce.width,
+            height=sauce.height,
+            flags=sauce.flags,
+            args=img_args,
+        )
+    else:
         logger.warning(
             "Input file '%s' does not have valid SAUCE, assuming BINTEXT", input_path
         )
@@ -399,7 +237,7 @@ def normalizer(img: Image) -> list[list[int]]:
     def normalize_tm(termel: int) -> int:
         c = termel & 0xFF
         fg = (termel >> 8) & 0xF
-        if img.flags & FLAGS_ICE_COLOR:
+        if img.flags & TextFlags.ICE_COLOR:
             bg = (termel >> 12) & 0xF
             blink = 0
             can_invert = True
@@ -475,33 +313,10 @@ def write_bintext(args: Args, input_path: str, img: Image) -> bool | None:
     assert (norm_data.shape[1] > 0) and (norm_data.shape[1] // 2) < 256
     norm_bytes = norm_data.tobytes()
     file_size = len(norm_bytes)
-    sauce_dtype = 5
-    sauce_ftype = norm_data.shape[1] // 2
-    sauce_flags = img.flags & 0xFF
-    sauce = struct.pack(
-        "<5s2s35s20s20s8sLBBHHHHBB22s",
-        b"SAUCE",
-        b"00",
-        b" " * 35,
-        b" " * 20,
-        b" " * 20,
-        b"20240831",
-        file_size,
-        sauce_dtype,
-        sauce_ftype,
-        0,
-        0,
-        0,
-        0,
-        0,
-        sauce_flags,
-        b"",
-    )
-    assert len(sauce) == 128
     with open(output_path, "wb") as f:
         f.write(norm_bytes)
-        f.write(b"0x1A")
-        f.write(sauce)
+        f.write()
+        f.write(make_bintext_sauce(file_size, norm_data.shape[1], img.flags & 0xFF))
 
 
 def encode_flat(img: Image) -> tuple[int, bytes]:

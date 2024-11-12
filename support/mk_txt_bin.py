@@ -15,15 +15,10 @@ import sys
 from typing import BinaryIO, Iterable
 
 from ansi import DosAnsi
+from sauce import *
+
 
 logger = logging.getLogger(__appname__)
-
-
-FLAGS_ICE_COLOR = 0x0001
-FLAGS_FONT_8PX = 0x0002
-FLAGS_FONT_9PX = 0x0004
-FLAGS_ASPECT_LEGACY = 0x0008
-FLAGS_ASPECT_SQUARE = 0x0010
 
 
 @dataclasses.dataclass
@@ -128,10 +123,12 @@ def convert_simple_wrap(args: Args, inf: BinaryIO) -> Iterable[bytes]:
 #                     bin_line += (b' ' + cur_attr) *
 
 
-def convert_ansi(args: Args, inf: BinaryIO) -> Iterable[bytes]:
+def convert_ansi(args: Args, data: bytes) -> Iterable[bytes]:
     da = DosAnsi(cols=args.page_width, logger=logger)
-    da.feed(inf.read())
-    return da.tiles.tobytes()
+    da.feed(data)
+    b = da.tiles.tobytes()
+    for i in range(0, len(b), args.page_width * 2):
+        yield b[i : i + args.page_width * 2]
 
 
 def main(args: Args):
@@ -149,40 +146,26 @@ def main(args: Args):
 
     assert args.page_width % 2 == 0
     with open(args.input_path, "rb") as inf:
-        gen = convert_simple_wrap(args, inf)
+        data = inf.read()
+        sauce = parse_sauce(data, logger=logger)
+        gen = convert_ansi(args, data)
+
         with open(output_path, "wb") as outf:
             file_size = 0
             lines = 0
+
             for l in gen:
                 assert len(l) == args.page_width * 2
                 file_size += len(l)
                 lines += 1
                 outf.write(l)
-            sauce_dtype = 5
-            sauce_ftype = args.page_width // 2
-            sauce_flags = FLAGS_FONT_9PX | FLAGS_ASPECT_LEGACY
-            sauce = struct.pack(
-                "<1s5s2s35s20s20s8sLBBHHHHBB22s",
-                b"0x1A",
-                b"SAUCE",
-                b"00",
-                b" " * 35,
-                b" " * 20,
-                b" " * 20,
-                b"20240831",
-                file_size,
-                sauce_dtype,
-                sauce_ftype,
-                0,
-                0,
-                0,
-                0,
-                0,
-                sauce_flags,
-                b"",
-            )
-            assert len(sauce) == 129
-            outf.write(sauce)
+
+            if not (sauce is None):
+                flags = sauce.flags
+            else:
+                flags = TextFlags.FONT_9PX | TextFlags.ASPECT_LEGACY
+
+            outf.write(make_bintext_sauce(file_size, args.page_width, flags))
 
 
 if __name__ == "__main__":

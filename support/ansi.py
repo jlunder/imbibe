@@ -66,7 +66,8 @@ class DosAnsi:
     tiles: np.ndarray
 
     start_row: int
-    rows: int
+    screen_rows: int
+    total_rows: int | None
     cols: int
     linefeed_is_newline: bool
 
@@ -84,7 +85,8 @@ class DosAnsi:
 
     def __init__(
         self,
-        rows: int = 25,
+        screen_rows: int = 25,
+        total_rows: int | None= None,
         cols: int = 80,
         linefeed_is_newline: bool = False,
         logger: logging.Logger = None,
@@ -92,26 +94,26 @@ class DosAnsi:
         """Initializes the DosAnsi with rows*cols white-on-black spaces"""
         self.logger = logger
 
-        self.rows = rows
+        self.screen_rows = screen_rows
+        self.total_rows = total_rows
         self.cols = cols
         self.linefeed_is_newline = linefeed_is_newline
 
         self.reset()
 
     def reset(self):
-        self.tiles = np.full(
-            self.rows * self.cols,
-            0 | self.attribute,
-            dtype=np.uint16,
-        )
-
         self.start_row = 0
         self.cur_x = 0
         self.cur_y = 0
-        self.backscroll_top = self.backscroll_rows - self.rows
 
         self.reset_attribute_state()
         self.derive_attribute_code()
+
+        self.tiles = np.full(
+            self.screen_rows * self.cols,
+            0 | self.attribute,
+            dtype=np.uint16,
+        )
 
     def reset_attribute_state(self):
         self.cur_weight = Weight.NORMAL
@@ -147,31 +149,33 @@ class DosAnsi:
         self.attribute = (fg | (bg << 4)) << 8
 
     _trivial_sgr: dict[int, tuple[str, any]] = {
-        1: ("cur_weight", Weight.BOLD),
-        2: ("cur_weight", Weight.FAINT),
-        3: ("cur_italic", True),
-        4: ("cur_underline", True),
+        1: ("cur_weight", Weight.BOLD),  #!
+        # 2: ("cur_weight", Weight.FAINT),
+        # 3: ("cur_italic", True),
+        # 4: ("cur_underline", True),
         5: ("cur_blink", True),
-        6: ("cur_blink", True),  # fast blink
-        7: ("cur_reverse", True),
-        8: ("cur_conceal", True),
-        9: ("cur_strike", True),
-        # 10 .. 20: Font selection
-        21: ("cur_underline", True),  # double underline
-        22: ("cur_weight", Weight.NORMAL),
-        23: ("cur_italic", False),
-        24: ("cur_underline", False),
-        25: ("cur_blink", False),
-        # 26: use proportional font?
-        27: ("cur_reverse", False),
-        28: ("cur_conceal", False),
-        29: ("cur_strike", False),
-        # 50: disable proportional font?
-        # 38: set fg color extended
-        39: ("cur_fg", 7),
-        # 48: set bg color extended
-        49: ("cur_bg", 0),
+        # 6: ("cur_blink", True),  # fast blink
+        # 7: ("cur_reverse", True),
+        # 8: ("cur_conceal", True),
+        # 9: ("cur_strike", True),
+        # # 10 .. 20: Font selection
+        # 21: ("cur_underline", True),  # double underline
+        # 22: ("cur_weight", Weight.NORMAL),
+        # 23: ("cur_italic", False),
+        # 24: ("cur_underline", False),
+        # 25: ("cur_blink", False),
+        # # 26: use proportional font?
+        # 27: ("cur_reverse", False),
+        # 28: ("cur_conceal", False),
+        # 29: ("cur_strike", False),
+        # # 50: disable proportional font?
+        # # 38: set fg color extended
+        # 39: ("cur_fg", 7),
+        # # 48: set bg color extended
+        # 49: ("cur_bg", 0),
     }
+
+    _color_table = [0, 4, 2, 6, 1, 5, 3, 7]
 
     def _parse_sgr(self, params):
         """Handles <escape code>n[;k]m, which changes the graphic rendition"""
@@ -183,13 +187,15 @@ class DosAnsi:
             name, value = DosAnsi._trivial_sgr[param]
             self.__setattr__(name, value)
         elif param >= 30 and param <= 37:
-            self.cur_fg = param - 30
+            self.cur_fg = DosAnsi._color_table[param - 30]
         elif param >= 40 and param <= 47:
-            self.cur_bg = param - 40
-        elif param >= 90 and param <= 97:
-            self.cur_fg = param - 90 + 8
-        elif param >= 100 and param <= 107:
-            self.cur_bg = param - 100
+            self.cur_bg = DosAnsi._color_table[param - 40]
+        # elif param >= 90 and param <= 97:
+        #     self.cur_fg = DosAnsi._color_table[param - 90] + 8
+        # elif param >= 100 and param <= 107:
+        #     self.cur_bg = DosAnsi._color_table[param - 100]
+        else:
+            self.logger.warning(f"Unhandled SGR {param}")
 
         self.derive_attribute_code()
 
@@ -202,11 +208,11 @@ class DosAnsi:
             params,
             final,
         )
-        if final == b"r":  # TODO?
-            pass
-        # Save / restore xterm icon; we can ignore this.
-        elif final == b"t":
-            pass
+        # if final == b"r":  # TODO?
+        #     pass
+        # # Save / restore xterm icon; we can ignore this.
+        # elif final == b"t":
+        #     pass
         return data
 
     def _parse_csi(self, data):
@@ -250,21 +256,6 @@ class DosAnsi:
 
         return self._evaluate_csi_sequence(final, numbers, data)
 
-    def _fix_cursor(self):
-        """
-        Makes sure the cursor are within the boundaries of the current terminal
-        size.
-        """
-        if self.cur_x < 0:
-            self.cur_x = 0
-        while self.cur_x >= self.cols:
-            self.cur_y += 1
-            self.cur_x = self.cur_x - self.cols
-        if self.cur_y < 0:
-            self.cur_y = 0
-        if self.cur_y >= self.rows:
-            self.cur_y = self.rows - 1
-
     def _parse_sequence(self, data):
         """
         This method parses the input into the numeric arguments and
@@ -294,31 +285,33 @@ class DosAnsi:
             return self._parse_csi(data)
 
         elif esc_interm == b"":
-            if esc_final == b"7":  # Save cursor position / attributes
-                pass
-            elif esc_final == b"8":  # Restore cursor position / attributes
-                pass
-            elif (
-                esc_final in b"ABCIJK"
-            ):  # VT52 are sequences not supported due to conflicts
-                self.logger.warning(f"skipping VT52 sequence: {esc_text:r}")
-            elif esc_final == b"D":  # Line feed
-                pass
-            elif esc_final == b"E":  # New line
-                pass
-            elif esc_final == b"F":  # Move cursor to lower left corner of screen
-                pass
-            elif esc_final == b"G":  # Select UTF-8 (ignore?)
-                pass
-            elif esc_final == b"H":  # Set tab stop... implement?
-                pass
-            elif esc_final == b"M":  # Reverse line fee
-                pass
-            elif esc_final == b"c":  # Reset terminal
-                self.reset()
-            elif (
-                esc_final in b"=>NOPXZ\\]^_lm"
-            ):  # Ignored codes (not relevant for state / unused)
+            # if esc_final == b"7":  # Save cursor position / attributes
+            #     pass
+            # elif esc_final == b"8":  # Restore cursor position / attributes
+            #     pass
+            # elif (
+            #     esc_final in b"ABCIJK"
+            # ):  # VT52 are sequences not supported due to conflicts
+            #     self.logger.warning(f"skipping VT52 sequence: {esc_text:r}")
+            # elif esc_final == b"D":  # Line feed
+            #     pass
+            # elif esc_final == b"E":  # New line
+            #     pass
+            # elif esc_final == b"F":  # Move cursor to lower left corner of screen
+            #     pass
+            # elif esc_final == b"G":  # Select UTF-8 (ignore?)
+            #     pass
+            # elif esc_final == b"H":  # Set tab stop... implement?
+            #     pass
+            # elif esc_final == b"M":  # Reverse line fee
+            #     pass
+            # elif esc_final == b"c":  # Reset terminal
+            #     self.reset()
+            # elif (
+            #     esc_final in b"=>NOPXZ\\]^_lm"
+            # ):  # Ignored codes (not relevant for state / unused)
+            #     pass
+            if False:
                 pass
             elif esc_final in b"no|}~":  # Character set commands
                 self.logger.warning(
@@ -355,16 +348,17 @@ class DosAnsi:
 
             if esc_final == b"0":
                 # Switch to special graphics (line drawing) mode for G0
+                self.logger.warning("No support for DEC special line drawing mode")
                 pass
             else:  # Only case is ASCII move for G0
                 pass
 
-        elif esc_final in b"@G8" and esc_interm == b"%":
-            pass
+        # elif esc_final in b"@G8" and esc_interm == b"%":
+        #     pass
 
-        # Character size / alignment
-        elif esc_final in b"34568" and esc_interm == b"#":
-            pass
+        # # Character size / alignment
+        # elif esc_final in b"34568" and esc_interm == b"#":
+        #     pass
 
         elif esc_final in b"0123456789:;<=>?":  # Ignore unknown private sequences
             self.logger.warning(f"Skipping unknown private sequence: {esc_text:r}")
@@ -375,7 +369,7 @@ class DosAnsi:
         return data
 
     def _screen_index(self, x, y):
-        return (self.backscroll_top + y) * self.cols + x
+        return (self.start_row + y) * self.cols + x
 
     def _evaluate_csi_sequence(self, final, numbers, data):
         """
@@ -384,120 +378,122 @@ class DosAnsi:
         """
 
         # Insert indicated number of blanks
-        if final == b"@":
-            pass  # TODO?
+        # if final == b"@":
+        #     pass  # TODO?
+        if False:
+            pass
         # Move cursor up
         elif final == b"A":
             self.cur_y -= numbers[0]
         # Move cursor down
-        elif final in b"Be":
+        elif final in b"B": # also "e"
             self.cur_y += numbers[0]
         # Move cursor right
-        elif final in b"Ca":
+        elif final in b"C": # also "a"
             self.cur_x += numbers[0]
         # Move cursor left
         elif final == b"D":
             self.cur_x -= numbers[0]
-        # Move cursor down by # and over to column 1
-        elif final == b"E":
-            self.cur_y += numbers[0]
-            self.cur_x = 0
-        # Move cursor up by # and over to column 1
-        elif final == b"F":
-            self.cur_y -= numbers[0]
-            self.cur_x = 0
-        # Move cursor to indicated column in the current row
-        elif final in b"G`":
-            self.cur_x = numbers[0] - 1
-        # Sets cursor position
-        elif final in b"Hf":
-            self.cur_y = numbers[0] - 1  # 1-based indexes
-            self.cur_x = numbers[1] - 1  #
+        # # Move cursor down by # and over to column 1
+        # elif final == b"E":
+        #     self.cur_y += numbers[0]
+        #     self.cur_x = 0
+        # # Move cursor up by # and over to column 1
+        # elif final == b"F":
+        #     self.cur_y -= numbers[0]
+        #     self.cur_x = 0
+        # # Move cursor to indicated column in the current row
+        # elif final in b"G`":
+        #     self.cur_x = numbers[0] - 1
+        # # Sets cursor position
+        # elif final in b"Hf":
+        #     self.cur_y = numbers[0] - 1  # 1-based indexes
+        #     self.cur_x = numbers[1] - 1  #
 
-        # Move forward by number of tabs (implement?)
-        elif final == b"I":
-            pass
+        # # Move forward by number of tabs (implement?)
+        # elif final == b"I":
+        #     pass
 
-        # Clears (parts of) the screen.
-        elif final == b"J":
-            from_index = self._screen_index(0, 0)
-            to_index = self._screen_index(self.cols, self.rows)
-            # From cursor to end of screen
-            if numbers[0] == 0:
-                from_index = self._screen_index(self.cur_x, self.cur_y)
-            # From beginning to cursor
-            elif numbers[0] == 1:
-                to_index = self._screen_index(self.cur_x, self.cur_y)
-            # The whole screen
-            elif numbers[0] == 2:
-                pass
-            else:
-                self.logger.error(f"Unknown argument(s) in CSI command J{numbers}")
-                return data
-            self.tiles[from_index:to_index].fill(0 | self.attribute)
+        # # Clears (parts of) the screen.
+        # elif final == b"J":
+        #     from_index = self._screen_index(0, 0)
+        #     to_index = self._screen_index(self.cols, self.rows)
+        #     # From cursor to end of screen
+        #     if numbers[0] == 0:
+        #         from_index = self._screen_index(self.cur_x, self.cur_y)
+        #     # From beginning to cursor
+        #     elif numbers[0] == 1:
+        #         to_index = self._screen_index(self.cur_x, self.cur_y)
+        #     # The whole screen
+        #     elif numbers[0] == 2:
+        #         pass
+        #     else:
+        #         self.logger.error(f"Unknown argument(s) in CSI command J{numbers}")
+        #         return data
+        #     self.tiles[from_index:to_index].fill(0 | self.attribute)
 
-        # Clears (parts of) the line
-        elif final == b"K":
-            from_index = self._screen_index(0, self.cur_y)
-            to_index = self._screen_index(self.cols, self.cur_y)
-            # From cursor to end of line
-            if numbers[0] == 0:
-                from_index = self._screen_index(self.cur_x, self.cur_y)
-            # From beginning of line to cursor
-            elif numbers[0] == 1:
-                to_index = self._screen_index(self.cur_x, self.cur_y)
-            # The whole line
-            elif numbers[0] == 2:
-                pass
-            else:
-                self.logger.error(f"Unknown argument(s) in CSI command J{numbers}")
-                return data
-            self.tiles[from_index:to_index].fill(0 | self.attribute)
+        # # Clears (parts of) the line
+        # elif final == b"K":
+        #     from_index = self._screen_index(0, self.cur_y)
+        #     to_index = self._screen_index(self.cols, self.cur_y)
+        #     # From cursor to end of line
+        #     if numbers[0] == 0:
+        #         from_index = self._screen_index(self.cur_x, self.cur_y)
+        #     # From beginning of line to cursor
+        #     elif numbers[0] == 1:
+        #         to_index = self._screen_index(self.cur_x, self.cur_y)
+        #     # The whole line
+        #     elif numbers[0] == 2:
+        #         pass
+        #     else:
+        #         self.logger.error(f"Unknown argument(s) in CSI command J{numbers}")
+        #         return data
+        #     self.tiles[from_index:to_index].fill(0 | self.attribute)
 
-        # Insert # of blank lines at current row
-        elif final == b"L":
-            pass
-        # Delete # of blank lines at current row *OR* get mouse click... if no params and mouse on?
-        elif final == b"M":
-            pass
-        # Delete indicated number of characters
-        elif final == b"P":
-            pass
-        # Erase indicated number of characters to the right
-        elif final == b"X":
-            pass
+        # # Insert # of blank lines at current row
+        # elif final == b"L":
+        #     pass
+        # # Delete # of blank lines at current row *OR* get mouse click... if no params and mouse on?
+        # elif final == b"M":
+        #     pass
+        # # Delete indicated number of characters
+        # elif final == b"P":
+        #     pass
+        # # Erase indicated number of characters to the right
+        # elif final == b"X":
+        #     pass
 
-        # Move backward by number of tabs (implement?)
-        elif final == b"Z":
-            pass
+        # # Move backward by number of tabs (implement?)
+        # elif final == b"Z":
+        #     pass
 
-        # Repeat preceding character indicated number of times
-        elif final == b"b":
-            pass
+        # # Repeat preceding character indicated number of times
+        # elif final == b"b":
+        #     pass
 
-        # Move cursor to indicated row
-        elif final == b"d":
-            self.cur_y = numbers[0] - 1
+        # # Move cursor to indicated row
+        # elif final == b"d":
+        #     self.cur_y = numbers[0] - 1
 
-        elif final == b"g":  # TODO?
-            pass
-        elif final == b"h":  # TODO?
-            pass
-        elif final == b"l":  # TODO?
-            pass
+        # elif final == b"g":  # TODO?
+        #     pass
+        # elif final == b"h":  # TODO?
+        #     pass
+        # elif final == b"l":  # TODO?
+        #     pass
 
         # Sets color/boldness
         elif final == b"m":
             while numbers:
                 numbers = self._parse_sgr(numbers)
 
-        elif final in b"STcin":  # Ignore? Scrolling, etc
-            pass
+        # elif final in b"STcin":  # Ignore? Scrolling, etc
+        #     pass
 
         else:
             self.logger.error(f"Unknown CSI sequence: {final}{numbers}")
 
-        if final in "ILMPXZbghl":
+        if final in b"ILMPXZbghl":
             self.logger.warning(f"CSI sequence not implemented: {final}{numbers}")
 
         return data
@@ -505,55 +501,74 @@ class DosAnsi:
     def feed(self, data):
         """Feeds the terminal with input."""
         while data:
-            if data[0] == 26:
-                # EOF
+            assert self.cur_x >= 0
+            assert self.cur_x < self.cols
+            assert self.cur_y >= 0
+            assert self.cur_y < self.screen_rows
+            assert self.tiles.shape[0] == (self.start_row + self.screen_rows) * self.cols
+
+            if data[0] == 0x1A:  # 26, DOS EOF
                 break
 
             # If the data starts with \x1b, try to parse end evaluate a sequence.
-            if data[0] == 0x1B:
+            if data[0] == 0x1B:  # ESC
                 data = self._parse_sequence(data)
+                self._fix_cursor()
                 continue
 
             # If we end up here, the character should should just be
             # added to the current tile and the cursor should be updated.
             # Some characters such as \r, \n will only affect the cursor.
-            assert self.cur_x >= 0
-            assert self.cur_x < self.cols
-            assert self.cur_y >= 0
-            assert self.cur_y < self.rows
-            assert self.tiles.shape[0] == (self.start_row + self.rows) * self.cols
             a = data[0]
-            if a == b"\r":
+            if a == 0x0D:  # CR
                 self.cur_x = 0
-            elif a == b"\b":
-                self.cur_x -= 1
+            elif a == 0x08:  # BS
                 if self.cur_x > 0:
+                    self.cur_x -= 1
+                else:
                     if self.cur_y > 0:
                         self.cur_y -= 1
-                        self.cur_x += self.cols
+                        self.cur_x = self.cols - 1
                     else:
                         self.cur_x = 0
-            elif a == b"\n":
+            elif a == 0x0A:  # LF/NL
                 self.cur_y += 1
-                if self.cur_y >= self.rows:
-                    self.start_row += 1
-                    self.tiles += np.full(
-                        self.cols, 0 | self.attribute, dtype=np.uint16
-                    )
-                    self.cur_y -= 1
-                    assert self.cur_y <= self.rows
+                self._scroll_if_needed()
                 if self.linefeed_is_newline:
                     self.cur_x = 0
             elif a == 0x0F or a == 0:
                 pass
             else:
-                # If we're in graphics mode & the character is above 0x5F, use the special glyph.
-                if self.cur_graphics and a >= 0x5F:
-                    a = DosAnsi._special_graphics_chars[ord(a) - ord("`")]
-
                 self.tiles[self._screen_index(self.cur_x, self.cur_y)] = (
                     a | self.attribute
                 )
                 self.cur_x += 1
+                if self.cur_x >= self.cols:
+                    self.cur_y += 1
+                    self.cur_x -= self.cols
+                    self._scroll_if_needed()
             data = data[1:]
-        self._fix_cursor()
+
+    def _scroll_if_needed(self):
+        if self.cur_y >= self.screen_rows:
+            self.start_row += 1
+            self.tiles = np.concatenate(
+                [self.tiles, np.full(self.cols, 0 | self.attribute, dtype=np.uint16)]
+            )
+            self.cur_y -= 1
+        assert self.cur_y <= self.screen_rows
+
+    def _fix_cursor(self):
+        """
+        Makes sure the cursor are within the boundaries of the current terminal
+        size.
+        """
+        if self.cur_x < 0:
+            self.cur_x = 0
+        while self.cur_x >= self.cols:
+            self.cur_y += 1
+            self.cur_x = self.cur_x - self.cols
+        if self.cur_y < 0:
+            self.cur_y = 0
+        if self.cur_y >= self.screen_rows:
+            self.cur_y = self.screen_rows - 1

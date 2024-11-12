@@ -54,5 +54,17 @@
             ],
             "preLaunchTask": "Makefile build simbibe"
         },
+        {
+            "name": "Python Debugger: Current File with Arguments",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "support/mk_txt_bin.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                //"${command:pickArgs}"
+                "data/6gallery/viewer/CODEFENIX-EYES_OFF_MY_FRIES.ANS"
+            ]
+        }
     ]
 }
