@@ -10,6 +10,15 @@ void viewer_element::layout(coord_t window_width, coord_t window_height) {
   set_frame(0, 0, window_width, window_height);
   m_background = termel::from(' ', color::white, color::black);
   m_title_background = termel::from(' ', color::white, color::blue);
+
+  m_view_height = frame().height() - 1;
+  m_page_jump = m_view_height - 1;
+  m_scroll_height = 0;
+  m_scroll_y_target = 0;
+  m_scroll_y_target_last = 0;
+
+  m_scroll_y.reset(m_scroll_y_target);
+
   m_transition_in_out.reset(frame().width());
 }
 
@@ -18,8 +27,32 @@ void viewer_element::poll() {}
 bool viewer_element::handle_key(key_code_t key) {
   switch (key) {
   case key_code::escape:
+  case key_code::left:
     application::do_back_from_viewer();
     return true;
+
+  case key_code::up:
+    m_scroll_y_target = max<coord_t>(m_scroll_y_target - 1, 0);
+    break;
+  case key_code::pgup:
+    m_scroll_y_target = max<coord_t>(m_scroll_y_target - m_page_jump, 0);
+    break;
+
+  case key_code::down:
+    m_scroll_y_target = min<coord_t>(m_scroll_y_target + 1, m_scroll_height);
+    break;
+  case key_code::pgdown:
+    m_scroll_y_target =
+        min<coord_t>(m_scroll_y_target + m_page_jump, m_scroll_height);
+    break;
+
+  case key_code::home:
+    m_scroll_y_target = 0;
+    break;
+
+  case key_code::end:
+    m_scroll_y_target = m_scroll_height;
+    break;
   }
   return false;
 }
@@ -36,9 +69,18 @@ void viewer_element::animate(anim_time_t delta_ms) {
   m_transition_in_out.update(delta_ms);
   m_scroll_y.update(delta_ms);
 
+  if (m_scroll_y_target != m_scroll_y_target_last) {
+    m_scroll_y.reset(
+        m_scroll_y.value(), m_scroll_y_target,
+        min(500, abs(m_scroll_y.value() - m_scroll_y_target) * (1000 / 100)));
+    m_scroll_y_target_last = m_scroll_y_target;
+  }
+
   if (!active()) {
     m_viewing = tbm();
   }
+
+  request_repaint();
 }
 
 void viewer_element::paint(graphics *g) {
@@ -72,6 +114,12 @@ void viewer_element::activate(imstring const &title, imstring const &resource) {
 
   m_title = title;
   m_viewing = resource_manager::fetch_tbm(resource);
+
+  if (m_viewing.valid()) {
+    m_scroll_height = max<coord_t>(m_viewing.height() - m_view_height, 0);
+  }
+  m_scroll_y_target = 0;
+
   m_scroll_y.reset(0);
 
   m_active = true;

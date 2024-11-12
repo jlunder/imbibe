@@ -31,6 +31,12 @@ private:
   termel_t m_background;
   termel_t m_title_background;
 
+  coord_t m_page_jump;
+  coord_t m_scroll_height;
+  coord_t m_view_height;
+  coord_t m_scroll_y_target;
+  coord_t m_scroll_y_target_last;
+
   linear_tween<coord_t> m_transition_in_out;
   linear_tween<coord_t> m_scroll_y;
 
