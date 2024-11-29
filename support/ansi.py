@@ -32,6 +32,15 @@ import numpy as np
 import re
 from typing import Callable
 
+import __main__
+
+if "__appname__" in dict(__main__):
+    logging_name = dict(__main__)["__appname__"] + ".ansi"
+else:
+    logging_name = "ansi"
+
+logger = logging.getLogger(logging_name)
+
 
 class Weight(IntEnum):
     NORMAL = auto()
@@ -63,8 +72,6 @@ class DosAnsi:
 
     _color_table = [0, 4, 2, 6, 1, 5, 3, 7]
 
-    logger: logging.Logger
-
     tiles: np.ndarray
 
     start_row: int
@@ -83,16 +90,22 @@ class DosAnsi:
 
     cur_attribute: int
 
+    _already_warned: set[str]
+
+    def already_warned(self, name: str) -> None:
+        result = name in self._already_warned
+        self._already_warned.add(name)
+        return result
+
     def __init__(
         self,
         screen_rows: int = 25,
         cols: int = 80,
         fill: int = 0 | 0x0700,
         linefeed_is_newline: bool = False,
-        logger: logging.Logger = None,
     ):
         """Initializes the DosAnsi with rows*cols white-on-black spaces"""
-        self.logger = logger
+        self._already_warned = set()
 
         self.screen_rows = screen_rows
         self.rows_used = 1
@@ -183,7 +196,7 @@ class DosAnsi:
 
         # If there's no match, but there was an escape character, send warning and try to recover.
         if not esc_match:
-            self.logger.error(f"invalid escape sequence; data = {data[:20]:r}...")
+            logger.error(f"invalid escape sequence; data = {data[:20]:r}...")
             return data[1:]  # Skip the escape character and return.
 
         # Extract the intermediate and final characters, along with sequence text (for errors)
@@ -194,10 +207,10 @@ class DosAnsi:
         # If this is a CSI sequence, parse the CSI elements.
         if esc_final == b"[":
             if esc_interm:
-                self.logger.warning(f"Intermediate chars in CSI escape: {esc_text:r}")
+                logger.warning(f"Intermediate chars in CSI escape: {esc_text:r}")
             return self._parse_csi(data)
         else:
-            self.logger.error(f"Skipping unknown sequence: {esc_text:r}")
+            logger.error(f"Skipping unknown sequence: {esc_text:r}")
 
         return data
 
@@ -205,7 +218,7 @@ class DosAnsi:
         csi_match = DosAnsi._csi_parser.match(data)
 
         if not csi_match:
-            self.logger.error(f"invalid CSI sequence; data[:20] = {data[:20]:r}")
+            logger.error(f"invalid CSI sequence; data[:20] = {data[:20]:r}")
             return data
 
         params, interm, final = csi_match.groups()
@@ -213,27 +226,27 @@ class DosAnsi:
         data = data[csi_match.end() :]
 
         # Is this a private sequence? We can recognize some of them. We'll try to parse.
-        if DosAnsi._csi_priv_param_pattern.findall(
+        if final == b"t":
+            if not self.already_warned("csi_t"):
+                logger.warning("ignoring 't' private CSI sequences for RGB colors")
+            return data
+        elif DosAnsi._csi_priv_param_pattern.findall(
             params
         ) or DosAnsi._csi_priv_final_pattern.findall(final):
-            self.logger.warning(
-                "unimplemented private CSI sequence - %s(%s)%s",
-                interm + ":" if interm else "",
-                params,
-                final,
+            logger.warning(
+                "unimplemented private CSI sequence - %r",
+                (interm + b":" if interm else b"") + b"(" + params + b")" + final,
             )
             return data
 
         # The colon is not in any valid CSI sequences (currently).
         if b":" in params:
-            self.logger.error(f"CSI parameters contain invalid character: {csi_text:r}")
+            logger.error(f"CSI parameters contain invalid character: {csi_text:r}")
             return data
 
         # Standard CSI codes do not have intermediate characters; show an error if we find them.
         if interm:
-            self.logger.error(
-                f"CSI code with invalid intermediate characters: {csi_text:r}"
-            )
+            logger.error(f"CSI code with invalid intermediate characters: {csi_text:r}")
 
         # If arguments are omitted, add the default argument for this sequence.
         if params:
@@ -249,16 +262,16 @@ class DosAnsi:
             self.cur_y = min(self.cur_y + (numbers or [1])[0], self.screen_rows - 1)
         # Move cursor right
         elif final in b"C":  # also "a"
-            self.cur_x = max(self.cur_x - (numbers or [1])[0], 0)
+            self.cur_x = min(self.cur_x + (numbers or [1])[0], self.cols - 1)
         # Move cursor left
         elif final == b"D":
-            self.cur_x = min(self.cur_x + (numbers or [1])[0], self.cols - 1)
+            self.cur_x = max(self.cur_x - (numbers or [1])[0], 0)
         # Sets color/boldness
         elif final == b"m":
             while numbers:
                 numbers = self._parse_sgr(numbers or [0])
         else:
-            self.logger.error(f"Unknown CSI sequence: {final}{numbers}")
+            logger.error(f"Unknown CSI sequence: {final}{numbers}")
 
         return data
 
@@ -281,7 +294,7 @@ class DosAnsi:
             self.attribute_default = False
             self.cur_bg = DosAnsi._color_table[param - 40]
         else:
-            self.logger.warning(f"Unhandled SGR {param}")
+            logger.warning(f"Unhandled SGR {param}")
 
         self._derive_attribute_code()
 

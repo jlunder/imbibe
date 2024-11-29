@@ -1,7 +1,16 @@
 from dataclasses import dataclass
 from enum import Enum, IntFlag, auto
-import re
+import logging
 import struct
+
+import __main__
+
+if "__appname__" in dict(__main__):
+    logging_name = dict(__main__)["__appname__"] + ".sauce"
+else:
+    logging_name = "sauce"
+
+logger = logging.getLogger(logging_name)
 
 
 class TextFlags(IntFlag):
@@ -26,20 +35,19 @@ class SauceInfo:
     width: int | None = 80
     height: int | None = 25
     flags: TextFlags = 0
-    title: str = ''
+    title: str = ""
 
 
-def parse_sauce(data: bin, logger=None):
+def parse_sauce(data: bin):
     sauce_rec_len = 128
     sauce_rec_id = b"SAUCE"
+
     if len(data) < sauce_rec_len:
-        if logger is not None:
-            logger.info("File is too short (%d) to have a SAUCE record", len(data))
+        logger.info("File is too short (%d) to have a SAUCE record", len(data))
         return None
     sauce_rec = data[-sauce_rec_len:]
     if sauce_rec[: len(sauce_rec_id)] != sauce_rec_id:
-        if logger is not None:
-            logger.info("File does not have SAUCE header magic")
+        logger.info("File does not have SAUCE header magic")
         return None
     title: bytes
     (
@@ -61,7 +69,7 @@ def parse_sauce(data: bin, logger=None):
         tinfos,
     ) = struct.unpack("<5s2s35s20s20s8sLBBHHHHBB22s", sauce_rec)
 
-    if version != b"00" and logger is not None:
+    if version != b"00":
         logger.warning(
             "SAUCE header has unexpected version (%02X %02X, expected %02X %02X)",
             version[0],
@@ -71,29 +79,28 @@ def parse_sauce(data: bin, logger=None):
         )
 
     title, author, group = (title.rstrip(), author.rstrip(), group.rstrip())
-    if logger is not None:
-        logger.info(
-            "id = %s; version = %s; title = %r; author = %r; group = %r; "
-            + "date = %r; fsize = %d; dtype = %d; ftype = %d; tinfo1 = %d; "
-            + "tinfo2 = %d; tinfo3 = %d; tinfo4 = %d; ncomments = %d; "
-            + "flags = %02X; tinfos = %r",
-            id,
-            version,
-            title,
-            author,
-            group,
-            date,
-            fsize,
-            dtype,
-            ftype,
-            tinfo1,
-            tinfo2,
-            tinfo3,
-            tinfo4,
-            ncomments,
-            flags,
-            tinfos.rstrip(b"\0"),
-        )
+    logger.info(
+        "id = %s; version = %s; title = %r; author = %r; group = %r; "
+        + "date = %r; fsize = %d; dtype = %d; ftype = %d; tinfo1 = %d; "
+        + "tinfo2 = %d; tinfo3 = %d; tinfo4 = %d; ncomments = %d; "
+        + "flags = %02X; tinfos = %r",
+        id,
+        version,
+        title,
+        author,
+        group,
+        date,
+        fsize,
+        dtype,
+        ftype,
+        tinfo1,
+        tinfo2,
+        tinfo3,
+        tinfo4,
+        ncomments,
+        flags,
+        tinfos.rstrip(b"\0"),
+    )
 
     sauce_comment_id = b"COMNT"
     sauce_comment_len = 64
@@ -102,36 +109,33 @@ def parse_sauce(data: bin, logger=None):
     )
 
     if sauce_full_len >= len(data):
-        if logger is not None:
-            logger.warning(
-                "File is too short (%d) to fit full SAUCE with %d comments",
-                len(data),
-                sauce_full_len,
-                ncomments,
-            )
+        logger.warning(
+            "File is too short (%d) to fit full SAUCE with %d comments",
+            len(data),
+            sauce_full_len,
+            ncomments,
+        )
         ncomments = 0
         sauce_full_len = sauce_rec_len
     if ncomments and (
         data[-sauce_full_len:][: len(sauce_comment_id)] != sauce_comment_id
     ):
-        if logger is not None:
-            logger.warning(
-                "File does not have a valid SAUCE comment header (expected at %d)",
-                len(data) - sauce_full_len,
-            )
+        logger.warning(
+            "File does not have a valid SAUCE comment header (expected at %d)",
+            len(data) - sauce_full_len,
+        )
         ncomments = 0
         sauce_full_len = sauce_rec_len
 
     if fsize > 0 and len(data) - sauce_full_len <= fsize:
-        if logger is not None:
-            logger.warning(
-                "SAUCE file size (%d) is inconsistent with the actual file "
-                + "(%d - %d SAUCE = %d)",
-                fsize,
-                len(data),
-                sauce_full_len,
-                len(data) - sauce_full_len,
-            )
+        logger.warning(
+            "SAUCE file size (%d) is inconsistent with the actual file "
+            + "(%d - %d SAUCE = %d)",
+            fsize,
+            len(data),
+            sauce_full_len,
+            len(data) - sauce_full_len,
+        )
         fsize = 0
 
     computed_eof_pos = len(data) - sauce_full_len - 1
@@ -141,13 +145,13 @@ def parse_sauce(data: bin, logger=None):
         actual_fsize = len(data) - sauce_full_len
         logger.warning("Did not find expected EOF at %d", computed_eof_pos)
 
-    if fsize and (actual_fsize != fsize) and logger is not None:
+    if fsize and (actual_fsize != fsize):
         logger.info(
             "SAUCE filesize %d does not match actual data length %d",
             fsize,
             actual_fsize,
         )
-    
+
     if dtype == 1:
         if ftype == 0:
             format = Format.ASCII
@@ -170,17 +174,15 @@ def parse_sauce(data: bin, logger=None):
     elif dtype == 5:
         w = ftype * 2
         if w == 0:
-            if logger is not None:
-                logger.warning("SAUCE has no width for BINTEXT, defaulting to 80")
+            logger.warning("SAUCE has no width for BINTEXT, defaulting to 80")
         if not fsize:
             # This is more of a problem for bintext so complain about it
-            if logger is not None:
-                logger.warning(
-                    "SAUCE has no filesize for BINTEXT, using actual data length"
-                )
+            logger.warning(
+                "SAUCE has no filesize for BINTEXT, using actual data length"
+            )
             fsize = actual_fsize
         h = fsize // (w * 2)
-        if fsize != w * h * 2 and logger is not None:
+        if fsize != w * h * 2:
             logger.warning(
                 "Computed dimensions (%dx%d) do not match filesize (%d)",
                 w,
@@ -196,11 +198,10 @@ def parse_sauce(data: bin, logger=None):
             flags=flags,
         )
     else:
-        if logger is not None:
-            logger.warning("Unsupported datatype %d in SAUCE", dtype)
+        logger.warning("Unsupported datatype %d in SAUCE", dtype)
         return SauceInfo(
             format=Format.UNKNOWN,
-            data_size=used_fsize,
+            data_size=actual_fsize,
             width=None,
             height=None,
             flags=flags,

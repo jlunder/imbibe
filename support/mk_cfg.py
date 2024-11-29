@@ -90,8 +90,10 @@ class SubmenuConfigOption:
     resource: str
 
     def normalize_paths(self, args: Args, input_path: str):
-        self.filename = os.path.basename(self.resource)
-        self.resource = normalize_path(os.path.splitext(self.resource)[0] + ".bin", args, input_path)
+        self.filename = os.path.basename(self.resource).replace("__", " ")
+        self.resource = normalize_path(
+            os.path.splitext(self.resource)[0] + ".bin", args, input_path
+        )
         return self
 
 
