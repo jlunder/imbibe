@@ -46,7 +46,9 @@ IMBIBE_RESOURCES = \
 	$(patsubst data/%.json,testdata/%.cfg,$(wildcard data/*/*.json)) \
 	$(patsubst data/%.json,testdata/%.cfg,$(wildcard data/*.json))
 
-.PHONY: all clean deps dirs imbibe
+resources: $(IMBIBE_RESOURCES)
+
+.PHONY: all clean deps dirs imbibe resources
 .DEFAULT_GOAL: all
 
 $(SIM_OBJ_DIR):
@@ -99,7 +101,7 @@ imbibe: $(OBJ_DIR)imbibe.exe $(IMBIBE_SDL_GL_OBJS)
 
 define MAKE_TBM_FROM =
 	mkdir -p $(dir $@)
-	support/mk_tbm.py -v -o $@ $<
+	support/mk_tbm.py -o $@ $<
 endef
 
 testdata/%.tbm: data/%.bin support/mk_tbm.py Makefile
@@ -113,7 +115,7 @@ testdata/%.tbm: data/%.txt support/mk_tbm.py Makefile
 testdata/%.tbm: data/%.TXT support/mk_tbm.py Makefile
 	$(call MAKE_TBM_FROM)
 
-testdata/%.cfg: data/%.json support/mk_cfg.py Makefile
+testdata/%.cfg: data/%.json support/mk_cfg.py support/ansi.py Makefile
 	mkdir -p $(dir $@)
 	support/mk_cfg.py -v -r data -o $@ $<
 
