@@ -34,8 +34,8 @@ from typing import Callable
 
 import __main__
 
-if "__appname__" in dict(__main__):
-    logging_name = dict(__main__)["__appname__"] + ".ansi"
+if "__appname__" in dir(__main__):
+    logging_name = __main__.__appname__ + ".ansi"
 else:
     logging_name = "ansi"
 

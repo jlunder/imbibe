@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3 -O
 
 __appname__ = "mk_tbm"
 __author__ = "Joseph Lunderville <joe.lunderville@gmail.com>"
@@ -18,6 +18,7 @@ import sys
 
 from ansi import *
 from sauce import *
+from rle import *
 
 logger = logging.getLogger(__appname__)
 
@@ -106,7 +107,16 @@ def make_arg_parser():
         "--type",
         dest="output_subtype",
         metavar="SUBTYPE",
-        choices=["auto", "flat", "rle", "mask_flat", "mask_key", "mask_rle"],
+        choices=[
+            "auto",
+            "flat",
+            "rle",
+            "xbin",
+            "mask_flat",
+            "mask_key",
+            "mask_rle",
+            "mask_xbin",
+        ],
         help="output specific TBM subtype",
     )
     parser.add_argument("-k", "--key", type=str, help="attribute key for masked BINs")
@@ -162,19 +172,18 @@ def read_image(args: Args, input_path: str) -> Image:
     except Exception as e:
         logger.error("%s", e)
         return None
-    sauce = parse_sauce(data, logger_root_name=__appname__)
+    sauce = parse_sauce(data)
     if sauce is not None:
-        equals_arg_re = re.compile(b"^(--?[a-zA-Z_-]+)=(.*)$")
-        if (len(sauce.title) > 0) and (sauce.title[-1] == ord(b":")):
+        equals_arg_re = re.compile("^(--?[a-zA-Z_-]+)=(.*)$")
+        if (len(sauce.title) > 0) and (sauce.title[-1] == ":"):
             img_args = []
-            for a in sauce.title.split(b":")[1:-1]:
+            for a in sauce.title.split(":")[1:-1]:
                 m = equals_arg_re.match(a)
                 if m:
                     img_args.append(m.group(1))
                     img_args.append(m.group(2))
                 else:
                     img_args.append(a)
-            img_args = [b.decode("ascii") for b in img_args]
         else:
             img_args = None
         if sauce.format == Format.ASCII:
@@ -204,8 +213,15 @@ def read_image(args: Args, input_path: str) -> Image:
         )
     if inf.args != None:
         logger.info("Parsing extra image args: %r", inf.args)
-        args = arg_parser.parse_args(
-            inf.args + [input_path], namespace=dataclasses.replace(args)
+        inf_ns = arg_parser.parse_args(inf.args + [input_path], Args())
+        args.fill = inf_ns.fill if args.fill is None else args.fill
+        args.key = inf_ns.key if args.key is None else args.key
+        args.opaque = inf_ns.opaque if args.opaque is None else args.opaque
+        args.input_width = (
+            inf_ns.input_width if args.input_width is None else args.input_width
+        )
+        args.input_format = (
+            inf_ns.input_format if args.input_format is None else args.input_format
         )
 
     if inf.format == InputType.BINTEXT:
@@ -219,7 +235,7 @@ def read_image(args: Args, input_path: str) -> Image:
         assert not "WTF format?"
 
     key = None
-    mask = np.ones(img_data.shape)
+    mask = np.ones(img_data.shape, dtype=np.bool_)
     if args.key:
         key_mask, key = parse_args_key(args.key)
         logger.info("Using key value %04x, mask %04x", key, key_mask)
@@ -228,7 +244,7 @@ def read_image(args: Args, input_path: str) -> Image:
                 "The key mask is 0, which means it will match anything "
                 + "and your output will be transparent"
             )
-        mask = np.vectorize(lambda x: int((x & key_mask) != key))(img_data)
+        mask = np.vectorize(lambda x: int((x & key_mask) != key), [np.uint16])(img_data)
     return Image(flags=inf.flags, data=img_data, mask_key=key, mask=mask)
 
 
@@ -264,7 +280,7 @@ def parse_ansi_data(
         inf.width = 80
         logger.info("No width specified, guessing %d", inf.width)
 
-    da = DosAnsi(cols=inf.width, fill=fill, logger_root_name=__appname__)
+    da = DosAnsi(cols=inf.width, fill=fill)
     da.feed(data)
     if not inf.height:
         inf.height = da.rows_used
@@ -283,70 +299,12 @@ def parse_ansi_data(
     return (inf, tiles)
 
 
-def normalizer(img: Image, blank_c=32) -> list[list[int]]:
-    blank = set([0x00, 0x20, 0xFF])
-    inverse_blank = set([0xDB])
-    inverse = {0xDE: 0xDD, 0xDF: 0xDC}
-    # if img.flags & FLAGS_FONT_8PX:
-    #     inverse |= {0x08: 0x07, 0x0A: 0x09, 0xB2: 0xB0}
-
-    def normalize_tm(termel: int) -> int:
-        c = termel & 0xFF
-        fg = (termel >> 8) & 0xF
-        if img.flags & TextFlags.ICE_COLOR:
-            bg = (termel >> 12) & 0xF
-            blink = 0
-            can_invert = True
-        else:
-            bg = (termel >> 12) & 0x7
-            blink = (termel >> 15) & 0x1
-            can_invert = (fg & 0x80) == 0
-        if fg == bg:
-            # character not visible over background
-            c = blank_c
-            fg = 0
-            blink = 0
-        elif c in blank:
-            # foreground not used by this character
-            c = blank_c
-            fg = 0
-        elif not blink:
-            if c in inverse:
-                c = inverse[c]
-                fg, bg = bg, fg
-            elif c in inverse_blank:
-                if can_invert:
-                    c = blank_c
-                    fg, bg = 0, fg
-                else:
-                    # background entirely covered by this character
-                    bg = 0
-        return c | (fg << 8) | (bg << 12) | (blink << 15)
-
-    norms = [None] * (1 << 16)
-    for tm in range(len(norms)):
-        norm_tm = normalize_tm(tm)
-        if norm_tm == tm:
-            norms[tm] = [tm]
-        else:
-            if norms[norm_tm] == None:
-                norms[norm_tm] = []
-            norms[tm] = norms[norm_tm]
-            norms[tm].append(tm)
-    for tm in range(len(norms)):
-        assert tm in norms[tm]
-        for n in norms[tm]:
-            assert norms[n] is norms[tm]
-    # for tm in range(len(norms)):
-    #     if (len(norms[tm]) > 1) and (norms[tm][0] == tm):
-    #         c = lambda x: "%02X %X %X %d" % (
-    #             x & 0xFF,
-    #             (x >> 8) & 0xF,
-    #             (x >> 12) & 0x7,
-    #             x >> 15,
-    #         )
-    #         print("%s: %s" % (c(tm), ", ".join(map(c, norms[tm][1:]))))
-    return norms
+def img_equivalence(img: Image) -> Equivalence:
+    return make_cp437_equivalence(
+        font_w8=img.flags & TextFlags.FONT_8PX != 0,
+        ice_color=img.flags & TextFlags.ICE_COLOR != 0,
+        skip=True,
+    )
 
 
 def write_bintext(args: Args, input_path: str, img: Image) -> bool | None:
@@ -361,9 +319,12 @@ def write_bintext(args: Args, input_path: str, img: Image) -> bool | None:
             return None
     logger.info("Writing normalized BINTEXT '%s'", output_path)
 
-    norms = normalizer(img)
-    zero = norms[0x0000][0]
-    normalize = np.vectorize(lambda x, m: norms[x][0] if m else zero, [np.uint16])
+    equiv = img_equivalence(img)
+    if args.key:
+        _, skip = parse_args_key(args.key)
+    else:
+        skip = 0x0000
+    normalize = np.vectorize(lambda x, m: equiv.reps[x] if m else skip, [np.uint16])
     norm_data: np.ndarray = normalize(img.data, img.mask)
     assert (norm_data.shape[1] & 1) == 0
     assert (norm_data.shape[1] > 0) and (norm_data.shape[1] // 2) < 256
@@ -374,390 +335,53 @@ def write_bintext(args: Args, input_path: str, img: Image) -> bool | None:
         f.write(make_bintext_sauce(file_size, norm_data.shape[1], img.flags & 0xFF))
 
 
-def encode_flat(img: Image) -> tuple[int, bytes]:
+def tbm_encode_flat(img: Image) -> tuple[int, bytes]:
     return (TbmFormat.FLAT, img.data.tobytes())
 
 
-class RleEncoder:
-    runs: list[tuple]
-    copy_buf: list[int]
-    last: int
-    rep: int
-
-    def __init__(self):
-        self.runs = []
-        self.copy_buf = []
-        self.last = None
-        self.rep = 0
-
-    def commit_copy(self):
-        if len(self.copy_buf) > 0:
-            self.runs.append((0, self.copy_buf))
-            self.copy_buf = []
-
-    def commit_fill(self):
-        self.commit_copy()
-        if self.rep > 0:
-            self.runs.append((1, self.last, self.rep))
-            self.rep = 0
-
-    MAX_RUN = 128
-
-    def encode(self, src):
-
-        for cur in src:
-            if cur != self.last:
-                if self.rep >= 3:
-                    self.commit_copy()
-                    self.commit_fill()
-                else:
-                    while self.rep > 0:
-                        self.copy_buf.append(self.last)
-                        self.rep -= 1
-                        if len(self.copy_buf) >= RleEncoder.MAX_RUN:
-                            self.commit_copy()
-                self.last = cur
-                self.rep = 1
-            else:
-                self.rep += 1
-            if len(self.copy_buf) >= RleEncoder.MAX_RUN:
-                self.commit_copy()
-            if self.rep >= RleEncoder.MAX_RUN:
-                self.commit_copy()
-                self.commit_fill()
-        self.commit_copy()
-        self.commit_fill()
-
-    def data(self):
-        def run_bytes(run):
-            if run[0] == 0:
-                return (
-                    struct.pack("<B", (len(run[1]) & 0x7F) | 0x00)
-                    + np.array(run[1], dtype=np.uint16).tobytes()
-                )
-            elif run[0] == 1:
-                return struct.pack("<BH", (run[2] & 0x7F) | 0x80, run[1])
-
-        return b"".join(map(run_bytes, self.runs))
-
-    @staticmethod
-    def decode(rle_data: bytes) -> bytes:
-        decoded = b""
-        p = 0
-        while p < len(rle_data):
-            l = rle_data[p]
-            run_len = ((l - 1) & 0x7F) + 1
-            p += 1
-            if l & 0x80:
-                assert len(rle_data) >= p + 2
-                decoded += rle_data[p : p + 2] * run_len
-                p += 2
-            else:
-                assert len(rle_data) >= p + run_len * 2
-                decoded += rle_data[p : p + run_len * 2]
-                p += l * 2
-        return decoded
+def tbm_encode_rle(img: Image) -> tuple[int, bytes]:
+    return (TbmFormat.RLE, encode_rle(img.data))
 
 
-def encode_rle(img: Image) -> tuple[int, bytes]:
-    lines = []
-    pos = 2 * img.data.shape[0]
-    rle_bytes = bytes()
-    for i in range(img.data.shape[0]):
-        lines.append(pos)
-        encoder = RleEncoder()
-        encoder.encode(img.data[i])
-        data = encoder.data()
-        assert RleEncoder.decode(data) == img.data[i].tobytes()
-        rle_bytes += data
-        pos += len(data)
-    encoded = np.array(lines, np.uint16).tobytes() + rle_bytes
-    assert len(lines) == img.data.shape[0]
-    assert pos < 30000
-    return (TbmFormat.RLE, encoded)
+def tbm_encode_xbin(img: Image) -> tuple[int, bytes]:
+    return (TbmFormat.XBIN, encode_xbin(img.data))
 
 
-def encode_mask_flat(img: Image) -> tuple[int, bytes]:
+def tbm_encode_mask_flat(img: Image) -> bytes:
     encoded = np.packbits(img.mask, axis=-1).tobytes() + img.data.tobytes()
     return (TbmFormat.MASK_FLAT, encoded)
 
 
-def encode_mask_key(img: Image) -> tuple[int, bytes]:
+def tbm_encode_mask_key(img: Image) -> bytes:
     encoded = (
+        # struct.pack("<H", img.mask_key if img.mask_key != None else 0x0000)
         struct.pack("<H", img.mask_key if img.mask_key != None else 0x0000)
         + img.data.tobytes()
     )
     return (TbmFormat.MASK_KEY, encoded)
 
 
-def encode_mask_rle(img: Image) -> tuple[int, bytes]:
-    lines = []
-    pos = 2 * img.data.shape[0]
-    max_skip = 255
-    rle_bytes = bytes()
-    for i in range(img.data.shape[0]):
-        data = []
-        maybe_data = []
-        j = 0
-        # logger.info(
-        #     "RLE line %d: input mask %r",
-        #     i,
-        #     list(np.asarray(img.mask[i], np.uint8)),
-        # )
-        while j < img.data.shape[1]:
-            skip = 0
-            span = []
-            while (j < img.data.shape[1]) and (skip < max_skip) and not img.mask[i][j]:
-                skip += 1
-                j += 1
-            while (j < img.data.shape[1]) and (len(span) < max_skip) and img.mask[i][j]:
-                span.append(img.data[i][j])
-                j += 1
-            if len(span) > 0:
-                data += maybe_data
-                maybe_data = []
-                data.append(skip)
-                data.append(len(span))
-                data += list(np.array(span, np.uint16).tobytes())
-                # logger.info(
-                #     "RLE line %d: j=%d; skip %d, span %d", i, j, skip, len(span)
-                # )
-            else:
-                maybe_data.append(skip)
-                maybe_data.append(0)
-                # logger.info("RLE line %d: j=%d; MAYBE skip %d", i, j, skip)
-        # logger.info("RLE line %d: adding %r", i, data)
-        # logger.info("RLE line %d: discarding %r", i, maybe_data)
-        if len(data) == 0:
-            lines.append(0)
-        else:
-            lines.append(pos)
-            data += [0, 0]
-        rle_bytes += bytes(data)
-        pos += len(data)
-    encoded = np.array(lines, np.uint16).tobytes() + rle_bytes
-    assert len(lines) == img.data.shape[0]
-    assert pos < 30000
-    return (TbmFormat.MASK_RLE, encoded)
+def tbm_encode_mask_rle(img: Image) -> tuple[int, bytes]:
+    return (TbmFormat.MASK_RLE, encode_rle(img.data, img.mask))
 
 
-def encode_mask_xbin(img: Image) -> tuple[int, bytes]:
-    lines = []
-    pos = 2 * img.data.shape[0]
-    rle_bytes = bytes()
-    for i, (data_row, mask_row) in enumerate(zip(img.data, img.mask)):
-
-        def encode_skip(data, mask):
-            assert len(mask) > 0
-            assert len(data) == len(mask)
-            assert not mask[0]
-            max_len = max(len(data), 64)
-            for k in range(max_len):
-                if mask[k]:
-                    break
-            else:
-                k = max_len
-            assert k > 0
-            assert k <= 64
-            return (bytes([0b11000000 | (k - 1), 0, 0]), (data[k:], mask[k:]))
-
-        def encode_no_repeat(data, mask, count):
-            if count == 0:
-                return b"", (data, mask)
-
-            assert len(mask) >= count
-            assert len(data) == len(mask)
-            remain = count
-            b = b""
-            while remain > 0:
-                n = max(remain, 64)
-                assert all([not m for m in mask[:n]])
-                b += bytes([0b00000000 | (n - 1)]) + data[:n]
-                data, mask = data[n:], mask[n:]
-            return (b, (data, mask))
-
-        def should_encode_repeat_char(data, mask, j):
-            assert len(data) == len(mask)
-            data_len = len(mask) - j
-            return (
-                # a span of 1 expands the data, and checking here prevents
-                # index OOB
-                (data_len >= 2)
-                # run of 2 termels must be visible
-                and (mask[j + 0] and mask[j + 1])
-                # run of 2 termels must be the same
-                and (data[j + 0] == data[j + 1])
-                and (
-                    # if the data *ends* after 2, this is more efficient than
-                    # uncompressed subtlety -- otherwise it is the same,
-                    # because there will be an additional 1 byte of waste for
-                    # the header that *follows* this one
-                    (data_len == 2)
-                    # if the data is transparent afer 2, same as ending
-                    # this is because the transparency forces generation of a
-                    # skip, so the header is unavoidable and we do get a net
-                    # benefit from encoding as a repeat
-                    or ((data_len > 2) and not mask[j + 2])
-                    # if there is a run of 3, encoding as repeat is always better
-                    or ((data_len > 2) and (data[j + 1] == data[j + 2]))
-                )
-            )
-
-        def encode_repeat_char(data, mask):
-            assert len(mask) > 0
-            assert len(data) == len(mask)
-            assert mask[0]
-            c = data[0] & 0x00FF
-            max_len = max(len(data), 64)
-            attrs = []
-            for k in range(max_len):
-                if (data[k] & 0x00FF) != c or not mask[k]:
-                    break
-                attrs.append((data[k] & 0xFF00) >> 8)
-            else:
-                k = max_len
-            assert k > 0
-            assert k <= 64
-            assert k >= 2  # expect efficient coding
-            return (bytes([0b01000000 | (k - 1), c >> 0] + attrs), (data[k:], mask[k:]))
-
-        def should_encode_repeat_attr(data, mask, j):
-            assert len(data) == len(mask)
-            data_len = len(mask) - j
-            will_append = j > 0
-            return (
-                # a span of 1 expands the data, and checking here prevents
-                # index OOB
-                (data_len >= 2)
-                # run of 2 termels must be visible
-                and (mask[j + 0] and mask[j + 1])
-                # run of 2 termels must be the same
-                and (data[j + 0] == data[j + 1])
-                and (
-                    # if the data *ends* after 2, this is more efficient than
-                    # uncompressed subtlety -- otherwise it is the same,
-                    # because there will be an additional 1 byte of waste for
-                    # the header that *follows* this one
-                    (data_len == 2)
-                    # if the data is transparent afer 2, same as ending
-                    # this is because the transparency forces generation of a
-                    # skip, so the header is unavoidable and we do get a net
-                    # benefit from encoding as a repeat
-                    or ((data_len > 2) and not mask[j + 2])
-                    # if there is a run of 3, encoding as repeat is always better
-                    or ((data_len > 2) and (data[j + 1] == data[j + 2]))
-                )
-            )
-
-        def encode_repeat_attr(data, mask):
-            assert len(mask) > 0
-            assert len(data) == len(mask)
-            assert mask[0]
-            a = data[0] & 0xFF00
-            max_len = max(len(data), 64)
-            chars = []
-            for k in range(max_len):
-                if (data[k] & 0xFF00) != a or not mask[k]:
-                    break
-                chars.append(data[k] & 0x00FF)
-            else:
-                k = max_len
-            assert k > 0
-            assert k <= 64
-            assert k >= 2  # expect efficient coding
-            return (bytes([0b10000000 | (k - 1), a >> 8] + chars), (data[k:], mask[k:]))
-
-        def should_encode_repeat_termel(data, mask, j):
-            assert len(data) == len(mask)
-            data_len = len(mask) - j
-            # Are we comparing against an alternative where we append to an
-            # existing uncompressed span, or are we going to start a new span
-            # either exactly now or within the next couple termels regardless?
-            # I.e. should we include the cost of an extra header when deciding
-            # whether to start encoding a repeat here?
-            will_append = (j > 0) and (j < 62)
-            repeat_len = 0
-
-            return (
-                # a span of 1 expands the data, and checking here prevents
-                # index OOB
-                (data_len >= 2)
-                # run of 2 termels must be visible
-                and (mask[j + 0] and mask[j + 1])
-                # run of 2 termels must be the same
-                and (data[j + 0] == data[j + 1])
-                and (
-                    # if the data *ends* after 2, this is more efficient than
-                    # uncompressed subtlety -- otherwise it is the same,
-                    # because there will be an additional 1 byte of waste for
-                    # the header that *follows* this one
-                    (data_len == 2)
-                    # if the data is transparent afer 2, same as ending
-                    # this is because the transparency forces generation of a
-                    # skip, so the header is unavoidable and we do get a net
-                    # benefit from encoding as a repeat
-                    or ((data_len > 2) and not mask[j + 2])
-                    # if there is a run of 3, encoding as repeat is always better
-                    or ((data_len > 2) and (data[j + 1] == data[j + 2]))
-                )
-            )
-
-        def encode_repeat_termel(data, mask):
-            assert len(mask) > 0
-            assert len(data) == len(mask)
-            assert mask[0]
-            t = data[0]
-            max_len = max(len(data), 64)
-            for k in range(max_len):
-                if data[k] != t or not mask[k]:
-                    break
-            else:
-                k = max_len
-            assert k > 0
-            assert k <= 64
-            assert k >= 1  # expect efficient coding
-            return (
-                bytes([0b11000000 | (k - 1), (t & 0x00FF) >> 0, (t & 0xFF00) >> 8]),
-                (data[k:], mask[k:]),
-            )
-
-        while len(mask_row) > 0:
-            if not mask_row[j]:
-                b, (data_row, mask_row) = encode_no_repeat(data_row, mask_row, j)
-                b, (data_row, mask_row) = encode_skip(data_row, mask_row)
-                j = 0
-            elif should_encode_repeat_termel(data_row, mask_row, j):
-                b, (data_row, mask_row) = encode_no_repeat(data_row, mask_row, j)
-                b, (data_row, mask_row) = encode_repeat_termel(data_row, mask_row)
-                j = 0
-            elif should_encode_repeat_char(data_row, mask_row, j):
-                b, (data_row, mask_row) = encode_no_repeat(data_row, mask_row, j)
-                b, (data_row, mask_row) = encode_repeat_termel(data_row, mask_row)
-                j = 0
-            elif should_encode_repeat_attr(data_row, mask_row, j):
-                b, (data_row, mask_row) = encode_no_repeat(data_row, mask_row, j)
-                b, (data_row, mask_row) = encode_repeat_termel(data_row, mask_row)
-                j = 0
-            else:
-                j += 1
-            rle_bytes += b
-        # logger.info("RLE line %d: adding %r", i, data)
-        # logger.info("RLE line %d: discarding %r", i, maybe_data)
-        assert len(mask_row) == 0
-        assert len(data_row) == len(mask_row)
-        lines.append(pos)
-        pos += len(data)
-    encoded = np.array(lines, np.uint16).tobytes() + rle_bytes
-    assert len(lines) == img.data.shape[0]
-    assert pos < 30000
-    return (TbmFormat.MASK_RLE, encoded)
+def tbm_encode_mask_xbin(img: Image) -> tuple[int, bytes]:
+    return (
+        TbmFormat.MASK_XBIN,
+        encode_xbin(img.data, img.mask, img_equivalence(img)),
+    )
 
 
-def encode_smallest(img: Image) -> tuple[int, bytes]:
+def tbm_encode_smallest(img: Image) -> tuple[int, bytes]:
     if img.mask.all():
-        encodings = [encode_flat, encode_rle]
+        encodings = [tbm_encode_flat, tbm_encode_rle, tbm_encode_xbin]
     else:
-        encodings = [encode_mask_flat, encode_mask_key, encode_mask_rle]
+        encodings = [
+            tbm_encode_mask_flat,
+            tbm_encode_mask_key,
+            tbm_encode_mask_rle,
+            tbm_encode_mask_xbin,
+        ]
     alts = [e(img) for e in encodings]
     smallest = None
     for a in alts:
@@ -780,29 +404,37 @@ def write_tbm(args: Args, input_path: str, img: Image) -> bool | None:
                 "Output must be specified -- default would overwrite input file"
             )
             return None
-    norms = normalizer(img)
+    equiv = img_equivalence(img)
     if args.key:
-        _, zero = parse_args_key(args.key)
+        _, skip = parse_args_key(args.key)
     else:
-        zero = 0
-    zero = norms[zero][0]
-    normalize = np.vectorize(lambda x, m: norms[x][0] if m else zero, [np.uint16])
-    img.data = normalize(img.data, img.mask)
+        skip = 0
+    ones = np.ones(img.mask.shape, dtype=np.bool_)
+    img.data = equiv.reps[img.data] * img.mask + (ones * skip) * (ones & ~img.mask)
     if args.output_subtype == ImageEnc.AUTO:
         logger.info("Autodetecting smallest encoding")
-        fmt, encoded = encode_smallest(img)
+        fmt, encoded = tbm_encode_smallest(img)
     if args.output_subtype == ImageEnc.FLAT:
         logger.info("Encoding plain TBM")
-        fmt, encoded = encode_flat(img)
+        fmt, encoded = tbm_encode_flat(img)
+    if args.output_subtype == ImageEnc.RLE:
+        logger.info("Encoding RLE TBM")
+        fmt, encoded = tbm_encode_flat(img)
+    if args.output_subtype == ImageEnc.XBIN:
+        logger.info("Encoding XBIN RLE TBM")
+        fmt, encoded = tbm_encode_flat(img)
     elif args.output_subtype == ImageEnc.MASK_FLAT:
         logger.info("Encoding masked TBM")
-        fmt, encoded = encode_mask_flat(img)
+        fmt, encoded = tbm_encode_mask_flat(img)
     elif args.output_subtype == ImageEnc.MASK_KEY:
         logger.info("Encoding key masked TBM")
-        fmt, encoded = encode_mask_key(img)
+        fmt, encoded = tbm_encode_mask_key(img)
     elif args.output_subtype == ImageEnc.MASK_RLE:
         logger.info("Encoding RLE masked TBM")
-        fmt, encoded = encode_mask_key(img)
+        fmt, encoded = tbm_encode_mask_rle(img)
+    elif args.output_subtype == ImageEnc.MASK_XBIN:
+        logger.info("Encoding XBIN RLE masked TBM")
+        fmt, encoded = tbm_encode_mask_xbin(img)
     logger.info("Writing TBM '%s'", output_path)
     with open(output_path, "wb") as f:
         assert len(img.data.shape) == 2

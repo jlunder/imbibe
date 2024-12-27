@@ -5,8 +5,8 @@ import struct
 
 import __main__
 
-if "__appname__" in dict(__main__):
-    logging_name = dict(__main__)["__appname__"] + ".sauce"
+if "__appname__" in dir(__main__):
+    logging_name = __main__.__appname__ + ".sauce"
 else:
     logging_name = "sauce"
 
@@ -196,6 +196,7 @@ def parse_sauce(data: bin):
             width=w or None,
             height=h or None,
             flags=flags,
+            title=title.decode("cp437"),
         )
     else:
         logger.warning("Unsupported datatype %d in SAUCE", dtype)
@@ -205,6 +206,7 @@ def parse_sauce(data: bin):
             width=None,
             height=None,
             flags=flags,
+            title="",
         )
 
 

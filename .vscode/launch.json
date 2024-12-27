@@ -58,13 +58,14 @@
             "name": "Python Debugger: mk_tbm.py with current file",
             "type": "debugpy",
             "request": "launch",
-            "program": "support/mk_tbm.py",
+            "program": "${workspaceFolder}/support/mk_tbm.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "args": [
                 //"${command:pickArgs}"
                 "-v",
-                "-n",
+                "-o",
+                "build/test.tbm",
                 "${file}"
             ]
         }
