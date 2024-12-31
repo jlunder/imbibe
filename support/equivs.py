@@ -912,121 +912,115 @@ def make_font_c9(chars: list[bytes]) -> np.ndarray:
 
 
 def make_font_equivalence(
-    font: np.ndarray, ice_color: bool, allow_fg_remap: bool, skip_val: int | None
-) -> list[int]:
-    # Build up a list of all basic glyph equivalences
-    glyph_equiv: list[int] = []
-    for c, glyph in enumerate(font):
-        for eq in glyph_equiv:
-            if (glyph == font[eq]).all():
-                glyph_equiv.append(eq)
-                break
-        else:
-            glyph_equiv.append(c)
-
-    # # Try to remap the character from the skip_val so it's not in the glyph
-    # # equivalence in the first place
-    # skip_c = skip_val & 0xFF
-    # if glyph_equiv[skip_c] == skip_c:
-    #     for c, eq in enumerate(glyph_equiv):
-    #         if eq == skip_c and c != skip_c:
-    #             glyph_equiv = [c if ge == skip_c else ge for ge in glyph_equiv]
-    #             break
-
-    # Build up a list of all glyphs that are equivalent when inverted
-    distinct_cs: set[int] = set(glyph_equiv)
-    inv_glyph_equiv: dict[int, int] = {}
-    for c, glyph in enumerate(font):
-        for eq in distinct_cs:
-            if (~glyph == font[eq]).all():
-                inv_glyph_equiv[c] = eq
-                break
-
-    blank_glyph: list[bool] = [not g.any() for g in font]
-    full_glyph: list[bool] = [g.all() for g in font]
-
-    equivs_by_sig: dict[tuple[int, int, int], set[int]] = {}
+    font: np.ndarray,
+    ice_color: bool,
+    allow_fg_remap: bool,
+    skip_val: int | None = 0x0000,
+    alt_val: int | None = 0x0020,
+) -> Equivalence:
+    equivs_by_sig: dict[tuple, set[int]] = {}
     equivs: list[set[int]] = []
     for tm in range((1 << 16)):
+        blink = 0 if ice_color else (tm & 0x8000 != 0)
         c = tm & 0xFF
-        eq_c = glyph_equiv[c]
-        fg = (tm >> 8) & 0xF
-        if ice_color:
-            bg = (tm >> 12) & 0xF
-            blink = 0
-        else:
-            bg = (tm >> 12) & 0x7
-            blink = (tm >> 15) & 0x1
-
-        if allow_fg_remap and blank_glyph[c]:
-            effective_fg = None
-        elif blink:
-            effective_fg = fg | (bg << 4)
-        else:
-            effective_fg = fg
-
-        if full_glyph[c]:
-            effective_bg = None
-        elif blink:
-            effective_bg = bg | (fg << 4)
-        else:
-            effective_bg = bg
-
-        can_invert = blank_glyph[c] or ice_color or (effective_fg < 8 and not blink)
-        if allow_fg_remap and can_invert and (c in inv_glyph_equiv):
-            inv_eq_c = inv_glyph_equiv[c]
-            if inv_eq_c < eq_c:
-                eq_c = inv_eq_c
-                effective_fg, effective_bg = effective_bg, effective_fg
-
-        sig = (eq_c, effective_fg, effective_bg)
+        fg = (tm & 0x0F00) >> 8
+        bg = (tm & 0xF000) >> 12 if ice_color else (tm & 0x7000) >> 12
+        eff_fg = fg | (bg << 4) if blink else fg
+        render = np.array(font[c] * eff_fg + ~font[c] * bg, dtype=np.uint8)
+        render_sig = tuple(render.reshape((font.shape[1] * font.shape[2],)))
+        sig = render_sig if allow_fg_remap else (eff_fg,) + render_sig
         eq_set = equivs_by_sig.setdefault(sig, set())
         eq_set.add(tm)
         equivs.append(eq_set)
 
-    def best_rep(eq_set: set[int]) -> int:
-        for tm in sorted(eq_set):
-            if tm & 0xFF != skip_val & 0xFF:
-                return tm
-        for tm in sorted(eq_set):
-            if tm != skip_val:
-                return tm
-        assert not "skip_val doesn't have an alternative we can normalize to"
-
-    rep_table = [best_rep(equivs[tm]) for tm in range(1 << 16)]
-
-    def reps_look_same() -> bool:
-        reps: dict[int, np.ndarray] = {}
-        for tm, rep in list(enumerate(rep_table)) * 2:
-            blink = 0 if ice_color else (tm & 0x8000 != 0)
-            c = tm & 0xFF
-            fg = (tm & 0x0F00) >> 8
-            bg = (tm & 0xF000) >> 12 if ice_color else (tm & 0x7000) >> 8
-            eff_fg = fg | (bg << 4) if blink else fg
-            eff_bg = bg | (fg << 4) if blink else bg
-            render = font[c] * eff_fg + ~font[c] * eff_bg
-            if tm in reps:
-                assert (render == reps[tm]).all()
+    rep_table = list([None] * (1 << 16))
+    for eq_set in equivs_by_sig.values():
+        # Usually there's only one thing in the eq_set, so we have to return that
+        if len(eq_set) == 1:
+            rep = next(iter(eq_set))
+        # If the alt_val is exactly in the set, that's best
+        if alt_val in eq_set:
+            rep = alt_val
+        else:
+            eqs = sorted(eq_set)
+            # Find something close to alt_val that's not skip_val
+            for tm in eqs:
+                if (tm != skip_val) and ((tm & 0xFF) == (alt_val & 0xFF)):
+                    rep = tm
+                    break
             else:
-                reps[tm] = render
-        return True
-
-    assert reps_look_same()
+                # Okay just find something that's not close to skip_val
+                for tm in eqs:
+                    if tm & 0xFF != skip_val & 0xFF:
+                        rep = tm
+                        break
+                else:
+                    # Fine just find ANYTHING that's not exactly skip_val
+                    for tm in eqs:
+                        if tm != skip_val:
+                            rep = tm
+                            break
+                    else:
+                        assert (
+                            not "skip_val doesn't have an alternative we can normalize to"
+                        )
+        assert rep != skip_val
+        for tm in eq_set:
+            rep_table[tm] = rep
+    assert all([rep is not None for rep in rep_table])
 
     print("classes:", len(equivs_by_sig))
 
     return Equivalence(np.array(rep_table), skip_val)
 
 
-equiv_precise = Equivalence(np.array(range(1 << 16)))
-equiv_precise_skip = Equivalence(np.array([32] + list(range(1 << 16))[1:]), 0x0000)
-# equiv_cp437_w9_skip = make_cp437_equivalence(
-#     font_w8=False, ice_color=False, skip_val=0x0000
-# )
+cache_font_c8 = None
+cache_font_c9 = None
+# equiv_precise = Equivalence(np.array(range(1 << 16)))
+# equiv_precise_skip = Equivalence(np.array([32] + list(range(1 << 16))[1:]), 0x0000)
+cache_equiv_w9_noice_allowfg_skip00 = None
 
-f8x14 = make_font_c8(chars_r14)
-f8x8 = make_font_c8(chars_r8)
-f8x8_thin = make_font_c8(chars_r8_thin)
-f9x14 = make_font_c9(chars_r14)
-f9x8 = make_font_c9(chars_r8)
-f9x8_thin = make_font_c9(chars_r8_thin)
+
+def default_font_c8() -> np.ndarray:
+    global cache_font_c8
+    if cache_font_c8 is None:
+        cache_font_c8 = make_font_c8(chars_r8)
+    return cache_font_c8
+
+
+def default_font_c9() -> np.ndarray:
+    global cache_font_c9
+    if cache_font_c9 is None:
+        cache_font_c9 = make_font_c9(chars_r8)
+    return cache_font_c9
+
+
+def default_equivalence() -> Equivalence:
+    global cache_equiv_w9_noice_allowfg_skip00
+    if cache_equiv_w9_noice_allowfg_skip00 is None:
+        cache_equiv_w9_noice_allowfg_skip00 = make_font_equivalence(
+            default_font_c9(),
+            ice_color=False,
+            allow_fg_remap=True,
+            skip_val=0x0000,
+            alt_val=0x0020,
+        )
+    return cache_equiv_w9_noice_allowfg_skip00
+
+
+# f8x14 = make_font_c8(chars_r14)
+# f8x8 = make_font_c8(chars_r8)
+# f8x8_thin = make_font_c8(chars_r8_thin)
+# f9x14 = make_font_c9(chars_r14)
+# f9x8 = make_font_c9(chars_r8)
+# f9x8_thin = make_font_c9(chars_r8_thin)
+
+# for f, fn in [(f8x8, "f8x8"), (f9x8, "f9x8")]:
+#     for ic in [False, True]:
+#         for fr in [False, True]:
+#             equiv = make_font_equivalence(f, ic, fr, 0x0000)
+#             print(f"Equivalence({fn}, {ic}, {fr}, 0x0000) =")
+#             for tm, eq in enumerate(equiv.reps):
+#                 if tm != eq:
+#                     print(f"    [0x{tm:04X}] = 0x{eq:04X}")
+#             print()

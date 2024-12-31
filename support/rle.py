@@ -391,18 +391,13 @@ class XbinEncoding(RunEncoding):
             )
 
 
-equiv_precise = Equivalence(np.array(range(1 << 16)))
-equiv_precise_skip = Equivalence(np.array([32] + list(range(1 << 16))[1:]), 0x0000)
-equiv_cp437_w9_skip = make_cp437_equivalence(font_w8=False, ice_color=False, skip=True)
-
-
 def encode_rle(
     data: np.ndarray, mask: np.ndarray = None, equiv: Equivalence = None
 ) -> bytes:
     if mask is None:
         mask = np.ones(data.shape, dtype=np.bool_)
     if equiv is None:
-        equiv = equiv_cp437_w9_skip
+        equiv = default_equivalence()
     encoder = SearchEncoder(RleEncoding(equiv=equiv))
     return encoder.encode_file(data, mask)
 
@@ -413,6 +408,6 @@ def encode_xbin(
     if mask is None:
         mask = np.ones(data.shape, dtype=np.bool_)
     if equiv is None:
-        equiv = equiv_cp437_w9_skip
+        equiv = default_equivalence()
     encoder = SearchEncoder(XbinEncoding(equiv=equiv))
     return encoder.encode_file(data, mask)

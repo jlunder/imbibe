@@ -405,7 +405,7 @@ void draw_mask_xbin_tbm(graphics *g, aux_graphics::clip_params const &p,
     coord_t run_end = -1; // should be set in loop
     for (coord_t run_start = 0; run_start < p.source.x2; run_start = run_end) {
       uint8_t run_info = d.unpack<uint8_t>();
-      uint8_t run_length = ((run_info - 1) & 0x7F) + 1;
+      uint8_t run_length = (run_info & 0x3F) + 1;
       run_end = run_start + run_length;
       run_end = min(run_end, p.source.x2);
       switch (run_info & 0xC0) {

@@ -17,8 +17,9 @@ import struct
 import sys
 
 from ansi import *
-from sauce import *
+from equivs import *
 from rle import *
+from sauce import *
 
 logger = logging.getLogger(__appname__)
 
@@ -300,12 +301,14 @@ def parse_ansi_data(
     return (inf, tiles)
 
 
-def img_equivalence(img: Image) -> Equivalence:
-    return make_cp437_equivalence(
-        font_w8=img.flags & TextFlags.FONT_8PX != 0,
-        ice_color=img.flags & TextFlags.ICE_COLOR != 0,
-        skip=True,
-    )
+# def img_equivalence(img: Image) -> Equivalence:
+#     return make_font_equivalence(
+#         default_font_c8() if img.flags & TextFlags.FONT_8PX != 0 else default_font_c9(),
+#         ice_color=img.flags & TextFlags.ICE_COLOR != 0,
+#         allow_fg_remap=True,
+#         skip_val=0x0000,
+#         alt_val=0x0020,
+#     )
 
 
 def write_bintext(args: Args, input_path: str, img: Image) -> bool | None:
@@ -320,7 +323,7 @@ def write_bintext(args: Args, input_path: str, img: Image) -> bool | None:
             return None
     logger.info("Writing normalized BINTEXT '%s'", output_path)
 
-    equiv = img_equivalence(img)
+    equiv = default_equivalence()  # img_equivalence(img)
     if args.key:
         _, skip = parse_args_key(args.key)
     else:
@@ -369,7 +372,9 @@ def tbm_encode_mask_rle(img: Image) -> tuple[int, bytes]:
 def tbm_encode_mask_xbin(img: Image) -> tuple[int, bytes]:
     return (
         TbmFormat.MASK_XBIN,
-        encode_xbin(img.data, img.mask, img_equivalence(img)),
+        encode_xbin(
+            img.data, img.mask, default_equivalence()
+        ),  # img_equivalence(img)),
     )
 
 
@@ -405,7 +410,7 @@ def write_tbm(args: Args, input_path: str, img: Image) -> bool | None:
                 "Output must be specified -- default would overwrite input file"
             )
             return None
-    equiv = img_equivalence(img)
+    equiv = default_equivalence()  # img_equivalence(img)
     if args.key:
         _, skip = parse_args_key(args.key)
     else:
