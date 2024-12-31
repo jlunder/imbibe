@@ -24,18 +24,17 @@ public:
     fmt_mask_flat = 0x0300, // not supported yet
     fmt_mask_key = 0x0400,  // not supported yet
     fmt_mask_rle = 0x0500,
+    fmt_xbin = 0x0600,
+    fmt_mask_xbin = 0x0700,
   };
 };
 
-_Packed struct __packed__ tbm_header {
-  uint8_t width;
-  uint8_t height;
-  uint16_t flags;
-};
+static uint16_t const tbm_skip_tm = 0x0000;
 
-_Packed struct __packed__ tbm_span {
-  uint8_t skip;
-  uint8_t termel_count;
+_Packed struct __packed__ tbm_header {
+  uint16_t width;
+  uint16_t height;
+  uint16_t flags;
 };
 
 class tbm {

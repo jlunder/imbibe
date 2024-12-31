@@ -43,6 +43,8 @@ IMBIBE_RESOURCES = \
 	$(patsubst data/%.ANS,testdata/%.tbm,$(wildcard data/*/viewer/*.ANS)) \
 	$(patsubst data/%.txt,testdata/%.tbm,$(wildcard data/*/viewer/*.txt)) \
 	$(patsubst data/%.TXT,testdata/%.tbm,$(wildcard data/*/viewer/*.TXT)) \
+	$(patsubst data/%.ans,testdata/%.tbm,$(wildcard data/*/viewer/*.asc)) \
+	$(patsubst data/%.ans,testdata/%.tbm,$(wildcard data/*/viewer/*.ASC)) \
 	$(patsubst data/%.json,testdata/%.cfg,$(wildcard data/*/*.json)) \
 	$(patsubst data/%.json,testdata/%.cfg,$(wildcard data/*.json))
 

@@ -95,9 +95,27 @@ public:
                      segsize_t count) const {
     _fmemcpy(dest, src, count * sizeof(termel_t));
   }
+
   void fill_line(termel_t __far *dest, termel_t src, segsize_t count) const {
     for (segsize_t i = 0; i < count; ++i) {
       dest[i] = src;
+    }
+  }
+
+  void char_fill_attr_transfer_line(termel_t __far *dest, char src_c,
+                                    attribute_t const __far *src_attrs,
+                                    segsize_t count) const {
+    for (segsize_t i = 0; i < count; ++i) {
+      dest[i] = termel::from(src_c, src_attrs[i]);
+    }
+  }
+
+  void char_transfer_attr_fill_line(termel_t __far *dest,
+                                    char const __far *src_cs,
+                                    attribute_t src_attr,
+                                    segsize_t count) const {
+    for (segsize_t i = 0; i < count; ++i) {
+      dest[i] = termel::from(src_cs[i], src_attr);
     }
   }
 };
@@ -124,6 +142,23 @@ public:
                                m_fade_lut[termel::background(src)]);
     for (segsize_t i = 0; i < count; ++i) {
       dest[i] = te;
+    }
+  }
+
+  void char_fill_attr_transfer_line(termel_t __far *dest, char src_c,
+                                    attribute_t const __far *src_attrs,
+                                    segsize_t count) const {
+    for (segsize_t i = 0; i < count; ++i) {
+      dest[i] = termel::from(src_c, src_attrs[i]);
+    }
+  }
+
+  void char_transfer_attr_fill_line(termel_t __far *dest,
+                                    char const __far *src_cs,
+                                    attribute_t src_attr,
+                                    segsize_t count) const {
+    for (segsize_t i = 0; i < count; ++i) {
+      dest[i] = termel::from(src_cs[i], src_attr);
     }
   }
 
@@ -174,6 +209,42 @@ public:
     }
   }
 
+  void char_fill_attr_transfer_line(termel_t __far *dest, char src_c,
+                                    attribute_t const __far *src_attrs,
+                                    segsize_t count) const {
+    for (segsize_t j = 0; j < count; ++j) {
+      termel_t dest_te = dest[j];
+      uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      uint8_t dest_brt = s_brightness[dest_fg] + s_brightness[dest_bg];
+      termel_t src_attr = src_attrs[j];
+      uint8_t src_fg = m_fade_src_lut[termel::foreground(src_attr)];
+      uint8_t src_bg = m_fade_src_lut[termel::background(src_attr)];
+      uint8_t src_brt = s_brightness[src_fg] + s_brightness[src_bg];
+      dest[j] =
+          termel::from(((dest_brt > src_brt) ? termel::ch(dest_te) : src_c),
+                       dest_fg | src_fg, dest_bg | src_bg);
+    }
+  }
+
+  void char_transfer_attr_fill_line(termel_t __far *dest,
+                                    char const __far *src_cs,
+                                    attribute_t src_attr,
+                                    segsize_t count) const {
+    uint8_t src_fg = m_fade_src_lut[attribute::foreground(src_attr)];
+    uint8_t src_bg = m_fade_src_lut[attribute::background(src_attr)];
+    uint8_t src_brt = s_brightness[src_fg] + s_brightness[src_bg];
+    for (segsize_t j = 0; j < count; ++j) {
+      termel_t dest_te = dest[j];
+      uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      uint8_t dest_brt = s_brightness[dest_fg] + s_brightness[dest_bg];
+      dest[j] =
+          termel::from(((dest_brt > src_brt) ? termel::ch(dest_te) : src_cs[j]),
+                       dest_fg | src_fg, dest_bg | src_bg);
+    }
+  }
+
 private:
   color_t const *m_fade_src_lut;
   color_t const *m_fade_dest_lut;
@@ -203,6 +274,37 @@ public:
   void fill_line(termel_t __far *dest, termel_t src, segsize_t count) const {
     uint8_t src_fg = m_fade_src_lut[termel::foreground(src)];
     uint8_t src_bg = m_fade_src_lut[termel::background(src)];
+    for (segsize_t j = 0; j < count; ++j) {
+      termel_t dest_te = dest[j];
+      uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      dest[j] =
+          termel::with_attribute(dest_te, dest_fg | src_fg, dest_bg | src_bg);
+    }
+  }
+
+  void char_fill_attr_transfer_line(termel_t __far *dest, char src_c,
+                                    attribute_t const __far *src_attrs,
+                                    segsize_t count) const {
+    (void)src_c;
+    for (segsize_t j = 0; j < count; ++j) {
+      termel_t dest_te = dest[j];
+      uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      uint8_t src_fg = m_fade_src_lut[attribute::foreground(src_attrs[j])];
+      uint8_t src_bg = m_fade_src_lut[attribute::background(src_attrs[j])];
+      dest[j] =
+          termel::with_attribute(dest_te, dest_fg | src_fg, dest_bg | src_bg);
+    }
+  }
+
+  void char_transfer_attr_fill_line(termel_t __far *dest,
+                                    char const __far *src_cs,
+                                    attribute_t src_attr,
+                                    segsize_t count) const {
+    (void)src_cs;
+    uint8_t src_fg = m_fade_src_lut[attribute::foreground(src_attr)];
+    uint8_t src_bg = m_fade_src_lut[attribute::background(src_attr)];
     for (segsize_t j = 0; j < count; ++j) {
       termel_t dest_te = dest[j];
       uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
@@ -275,23 +377,27 @@ void draw_tbm(graphics *g, coord_t x, coord_t y, tbm const &t, TLineOp op) {
                                            tbm_h.height, p)) {
       p.transform(op);
     }
-  } else if ((tbm_h.flags & tbm_flags::flags_format) == tbm_flags::fmt_rle) {
+  } else {
     aux_graphics::clip_params p;
     if (!p.compute_clip(g, rect(x, y, x + tbm_h.width, y + tbm_h.height))) {
       return;
     }
     assert(p.source.y1 < tbm_h.height);
     assert(p.source.y2 <= tbm_h.height);
-    draw_rle_tbm(g, p, t, op);
-  } else if ((tbm_h.flags & tbm_flags::flags_format) ==
-             tbm_flags::fmt_mask_rle) {
-    aux_graphics::clip_params p;
-    if (!p.compute_clip(g, rect(x, y, x + tbm_h.width, y + tbm_h.height))) {
-      return;
+    switch (tbm_h.flags & tbm_flags::flags_format) {
+    case tbm_flags::fmt_rle:
+      draw_rle_tbm(g, p, t, op);
+      break;
+    case tbm_flags::fmt_xbin:
+      draw_xbin_tbm(g, p, t, op);
+      break;
+    case tbm_flags::fmt_mask_rle:
+      draw_mask_rle_tbm(g, p, t, op);
+      break;
+    case tbm_flags::fmt_mask_xbin:
+      draw_mask_xbin_tbm(g, p, t, op);
+      break;
     }
-    assert(p.source.y1 < tbm_h.height);
-    assert(p.source.y2 <= tbm_h.height);
-    draw_mask_rle_tbm(g, p, t, op);
   }
 }
 
@@ -340,46 +446,202 @@ void draw_rle_tbm(graphics *g, aux_graphics::clip_params const &p, tbm const &t,
 }
 
 template <class TLineOp>
-void draw_mask_rle_tbm(graphics *g, aux_graphics::clip_params const &p,
-                       tbm const &t, TLineOp op) {
+void draw_xbin_tbm(graphics *g, aux_graphics::clip_params const &p,
+                   tbm const &t, TLineOp op) {
   unpacker d(t.data_unpacker());
-  uint16_t const __far *lines = d.unpack_array<uint16_t>(p.source.y1);
+  segsize_t const __far *lines = d.unpack_array<segsize_t>(p.source.y1);
   termel_t __far *dest_p =
       g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
   segsize_t dest_stride = g->b()->width();
   for (coord_t i = p.source.y1; i < p.source.y2; ++i) {
-    if (lines[i] == 0) {
-      continue;
-    }
     d.seek_to(lines[i]);
-    coord_t span_end = -1; // should be set in loop
-    for (coord_t span_start = 0; span_start < p.source.x2;
-         span_start = span_end) {
-      tbm_span const __far &span = d.unpack<tbm_span>();
-      if ((span.skip == 0) && (span.termel_count == 0)) {
-        // early end-of-line
-        break;
-      }
-      span_start += span.skip;
-      if (span_start >= p.source.x2) {
-        break;
-      }
-      termel_t const __far *span_data =
-          d.unpack_array<termel_t>(span.termel_count);
-      span_end = span_start + span.termel_count;
-      if (span_end > p.source.x1) {
-        if (span_start < p.source.x1) {
-          span_data += p.source.x1 - span_start;
-          span_start = p.source.x1;
+    coord_t run_end = -1; // should be set in loop
+    for (coord_t run_start = 0; run_start < p.source.x2; run_start = run_end) {
+      uint8_t run_info = d.unpack<uint8_t>();
+      uint8_t run_length = (run_info & 0x3F) + 1;
+      run_end = run_start + run_length;
+      run_end = min(run_end, p.source.x2);
+      switch (run_info & 0xC0) {
+      case 0x00: {
+        // uncompressed run
+        termel_t const __far *run_termels =
+            d.unpack_array<termel_t>(run_length);
+        if (run_end > p.source.x1) {
+          if (run_start < p.source.x1) {
+            run_termels += p.source.x1 - run_start;
+            run_start = p.source.x1;
+          }
+          op.transfer_line(dest_p + run_start - p.source.x1, run_termels,
+                           run_end - run_start);
         }
-        if (span_end > p.source.x2) {
-          span_end = p.source.x2;
+      } break;
+      case 0x40: {
+        // char fill run
+        char run_c = d.unpack<char>();
+        attribute_t const __far *run_attrs =
+            d.unpack_array<attribute_t>(run_length);
+        if (run_end > p.source.x1) {
+          if (run_start < p.source.x1) {
+            run_attrs += p.source.x1 - run_start;
+            run_start = p.source.x1;
+          }
+          op.char_fill_attr_transfer_line(dest_p + run_start - p.source.x1,
+                                          run_c, run_attrs,
+                                          run_end - run_start);
         }
-        op.transfer_line(dest_p + span_start - p.source.x1, span_data,
-                         span_end - span_start);
+      } break;
+      case 0x80: {
+        // attr fill run
+        attribute_t run_attr = d.unpack<attribute_t>();
+        char const __far *run_cs = d.unpack_array<char>(run_length);
+        if (run_end > p.source.x1) {
+          if (run_start < p.source.x1) {
+            run_cs += p.source.x1 - run_start;
+            run_start = p.source.x1;
+          }
+          op.char_transfer_attr_fill_line(dest_p + run_start - p.source.x1,
+                                          run_cs, run_attr,
+                                          run_end - run_start);
+        }
+      } break;
+      case 0xC0: {
+        // termel fill run
+        termel_t run_tm = d.unpack<termel_t>();
+        if (run_end > p.source.x1) {
+          if (run_start < p.source.x1) {
+            run_start = p.source.x1;
+          }
+          op.fill_line(dest_p + run_start - p.source.x1, run_tm,
+                       run_end - run_start);
+        }
+      } break;
       }
-      assert(span_end > 0);
-      assert(span_end > span_start);
+      assert(run_end > 0);
+    }
+    dest_p += dest_stride;
+  }
+}
+
+template <class TLineOp>
+void draw_mask_rle_tbm(graphics *g, aux_graphics::clip_params const &p,
+                       tbm const &t, TLineOp op) {
+  unpacker d(t.data_unpacker());
+  segsize_t const __far *lines = d.unpack_array<segsize_t>(p.source.y1);
+  termel_t __far *dest_p =
+      g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
+  segsize_t dest_stride = g->b()->width();
+  for (coord_t i = p.source.y1; i < p.source.y2; ++i) {
+    d.seek_to(lines[i]);
+    coord_t run_end = -1; // should be set in loop
+    for (coord_t run_start = 0; run_start < p.source.x2; run_start = run_end) {
+      uint8_t run_info = d.unpack<uint8_t>();
+      uint8_t run_length = ((run_info - 1) & 0x7F) + 1;
+      run_end = run_start + run_length;
+      run_end = min(run_end, p.source.x2);
+      if ((run_info & 0x80) == 0) {
+        // copy run
+        termel_t const __far *run_data = d.unpack_array<termel_t>(run_length);
+        if (run_end > p.source.x1) {
+          if (run_start < p.source.x1) {
+            run_data += p.source.x1 - run_start;
+            run_start = p.source.x1;
+          }
+          op.transfer_line(dest_p + run_start - p.source.x1, run_data,
+                           run_end - run_start);
+        }
+      } else {
+        // fill run
+        termel_t run_tm = d.unpack<termel_t>();
+        if (run_end > p.source.x1) {
+          if (run_start < p.source.x1) {
+            run_start = p.source.x1;
+          }
+          if (run_tm != tbm_skip_tm) {
+            op.fill_line(dest_p + run_start - p.source.x1, run_tm,
+                         run_end - run_start);
+          }
+        }
+      }
+      assert(run_end > 0);
+    }
+    dest_p += dest_stride;
+  }
+}
+
+template <class TLineOp>
+void draw_mask_xbin_tbm(graphics *g, aux_graphics::clip_params const &p,
+                        tbm const &t, TLineOp op) {
+  unpacker d(t.data_unpacker());
+  segsize_t const __far *lines = d.unpack_array<segsize_t>(p.source.y1);
+  termel_t __far *dest_p =
+      g->b()->data() + p.dest.y * g->b()->width() + p.dest.x;
+  segsize_t dest_stride = g->b()->width();
+  for (coord_t i = p.source.y1; i < p.source.y2; ++i) {
+    d.seek_to(lines[i]);
+    coord_t run_end = -1; // should be set in loop
+    for (coord_t run_start = 0; run_start < p.source.x2; run_start = run_end) {
+      uint8_t run_info = d.unpack<uint8_t>();
+      uint8_t run_length = ((run_info - 1) & 0x7F) + 1;
+      run_end = run_start + run_length;
+      run_end = min(run_end, p.source.x2);
+      switch (run_info & 0xC0) {
+      case 0x00: {
+        // uncompressed run
+        termel_t const __far *run_termels =
+            d.unpack_array<termel_t>(run_length);
+        if (run_end > p.source.x1) {
+          if (run_start < p.source.x1) {
+            run_termels += p.source.x1 - run_start;
+            run_start = p.source.x1;
+          }
+          op.transfer_line(dest_p + run_start - p.source.x1, run_termels,
+                           run_end - run_start);
+        }
+      } break;
+      case 0x40: {
+        // char fill run
+        char run_c = d.unpack<char>();
+        attribute_t const __far *run_attrs =
+            d.unpack_array<attribute_t>(run_length);
+        if (run_end > p.source.x1) {
+          if (run_start < p.source.x1) {
+            run_attrs += p.source.x1 - run_start;
+            run_start = p.source.x1;
+          }
+          op.char_fill_attr_transfer_line(dest_p + run_start - p.source.x1,
+                                          run_c, run_attrs,
+                                          run_end - run_start);
+        }
+      } break;
+      case 0x80: {
+        // attr fill run
+        attribute_t run_attr = d.unpack<attribute_t>();
+        char const __far *run_cs = d.unpack_array<char>(run_length);
+        if (run_end > p.source.x1) {
+          if (run_start < p.source.x1) {
+            run_cs += p.source.x1 - run_start;
+            run_start = p.source.x1;
+          }
+          op.char_transfer_attr_fill_line(dest_p + run_start - p.source.x1,
+                                          run_cs, run_attr,
+                                          run_end - run_start);
+        }
+      } break;
+      case 0xC0: {
+        // termel fill run
+        termel_t run_tm = d.unpack<termel_t>();
+        if (run_end > p.source.x1) {
+          if (run_start < p.source.x1) {
+            run_start = p.source.x1;
+          }
+          if (run_tm != tbm_skip_tm) {
+            op.fill_line(dest_p + run_start - p.source.x1, run_tm,
+                         run_end - run_start);
+          }
+        }
+      } break;
+      }
+      assert(run_end > 0);
     }
     dest_p += dest_stride;
   }

@@ -24,6 +24,7 @@ logger = logging.getLogger(__appname__)
 
 
 class ImageEnc(StrEnum):
+    DEFAULT = ""
     AUTO = "auto"
     FLAT = "flat"
     RLE = "rle"
@@ -61,7 +62,7 @@ MAX_INPUT_SIZE = 1 << 20
 class Args:
     verbose: bool = False
     normalize: bool = False
-    output_subtype: str = ImageEnc.AUTO
+    output_subtype: str = ImageEnc.DEFAULT
     input_format: str = InputType.DETECT
     input_width: int = None
     key: str = None
@@ -411,6 +412,11 @@ def write_tbm(args: Args, input_path: str, img: Image) -> bool | None:
         skip = 0
     ones = np.ones(img.mask.shape, dtype=np.bool_)
     img.data = equiv.reps[img.data] * img.mask + (ones * skip) * (ones & ~img.mask)
+    if args.output_subtype == ImageEnc.DEFAULT:
+        if img.mask.all():
+            fmt, encoded = tbm_encode_xbin(img)
+        else:
+            fmt, encoded = tbm_encode_mask_xbin(img)
     if args.output_subtype == ImageEnc.AUTO:
         logger.info("Autodetecting smallest encoding")
         fmt, encoded = tbm_encode_smallest(img)
@@ -441,8 +447,8 @@ def write_tbm(args: Args, input_path: str, img: Image) -> bool | None:
         f.write(b"TBMa")
         f.write(
             struct.pack(
-                "<LBBH",
-                len(encoded) + 4,
+                "<LHHH",
+                len(encoded) + 6,
                 img.data.shape[1],
                 img.data.shape[0],
                 img.flags | fmt,
