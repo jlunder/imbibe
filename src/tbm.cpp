@@ -12,7 +12,7 @@
 
 namespace tbm_aux {
 
-static const size_t s_tbm_area_max = 1u << 14;
+static const size_t s_tbm_area_max = 1u << 15;
 
 bool validate(unpacker const &tbm_data);
 bool validate_data_rle(tbm_header const __far &tbm_h, unpacker *tbm);
@@ -67,13 +67,6 @@ bool tbm_aux::validate(unpacker const &tbm_data) {
                tbm.remain(), tbm_h.width, tbm_h.height, tbm.base());
       return false;
     }
-  } else if ((tbm_h.flags & tbm_flags::flags_format) == tbm_flags::fmt_rle) {
-    return validate_data_rle(tbm_h, &tbm);
-  } else if ((tbm_h.flags & tbm_flags::flags_format) ==
-             tbm_flags::fmt_mask_rle) {
-    return validate_data_rle(tbm_h, &tbm);
-  } else if ((tbm_h.flags & tbm_flags::flags_format) == tbm_flags::fmt_xbin) {
-    return validate_data_xbin(tbm_h, &tbm);
   } else if ((tbm_h.flags & tbm_flags::flags_format) ==
              tbm_flags::fmt_mask_xbin) {
     return validate_data_xbin(tbm_h, &tbm);
@@ -82,63 +75,6 @@ bool tbm_aux::validate(unpacker const &tbm_data) {
   logf_tbm("TBM format %u not supported, unpacking %" PRpF "\n",
            tbm_h.flags & tbm_flags::flags_format, tbm.base());
   return false;
-}
-
-bool tbm_aux::validate_data_rle(tbm_header const __far &tbm_h, unpacker *tbm) {
-  if (!tbm->fits_array<uint16_t>(tbm_h.height)) {
-    logf_tbm("TBM line index truncated, unpacking %" PRpF "\n", tbm->base());
-    return false;
-  }
-  segsize_t lines_origin = tbm->pos();
-  uint16_t const __far *lines = tbm->unpack_array<uint16_t>(tbm_h.height);
-  for (uint16_t i = 0; i < tbm_h.height; ++i) {
-    if (lines[i] >= (tbm->size() - lines_origin)) {
-      logf_tbm("TBM line %u outside data (at %u), unpacking %" PRpF "\n", i,
-               lines[i], tbm->base());
-      return false;
-    }
-    tbm->seek_to(lines[i] + lines_origin);
-    coord_t x = 0;
-    while (x < (coord_t)tbm_h.width) {
-      if (!tbm->fits<uint8_t>()) {
-        logf_tbm("TBM line %u run (at %u) truncated, unpacking %" PRpF "\n", i,
-                 lines[i], tbm->base());
-        return false;
-      }
-      uint8_t run_info = tbm->unpack<uint8_t>();
-      uint8_t run_length = (run_info & 0x7F) + 1;
-      if ((run_length > tbm_h.width) || (x > tbm_h.width - run_length)) {
-        logf_tbm("TBM line %u, col %u (at %u+%u) leaves image, unpacking %" PRpF
-                 "\n",
-                 i, (unsigned)x, lines[i],
-                 tbm->pos() - (lines[i] + lines_origin), tbm->base());
-        return false;
-      }
-      if ((run_info & 0x80) == 0) {
-        // copy run
-        if (!tbm->fits_array<termel_t>(run_length)) {
-          logf_tbm("TBM line %u, col %u (at %u+%u) copy run truncated, "
-                   "unpacking %" PRpF "\n",
-                   i, (unsigned)x, lines[i],
-                   tbm->pos() - (lines[i] + lines_origin), tbm->base());
-          return false;
-        }
-        tbm->skip_array<termel_t>(run_length);
-      } else {
-        // fill run
-        if (!tbm->fits<termel_t>()) {
-          logf_tbm("TBM line %u, col %u (at %u+%u) fill run truncated, "
-                   "unpacking %" PRpF "\n",
-                   i, (unsigned)x, lines[i],
-                   tbm->pos() - (lines[i] + lines_origin), tbm->base());
-          return false;
-        }
-        tbm->skip<termel_t>();
-      }
-      x += run_length;
-    }
-  }
-  return true;
 }
 
 bool tbm_aux::validate_data_xbin(tbm_header const __far &tbm_h, unpacker *tbm) {
