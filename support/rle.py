@@ -1,12 +1,11 @@
 from dataclasses import dataclass, field
 from enum import IntEnum, auto
 import logging
-from itertools import chain
 import numpy as np
-import struct
 from typing import Iterator
 
 from ansi import *
+from equivs import *
 from sauce import *
 
 import __main__
@@ -26,72 +25,6 @@ class RunType(IntEnum):
     CHAR_REPEAT = auto()
     ATTRIBUTE_REPEAT = auto()
     TERMEL_REPEAT = auto()
-
-
-@dataclass(frozen=True)
-class Equivalence:
-    # canonical representatives for the equivalence class of each termel
-    reps: np.ndarray
-    skip_val: int | None = None
-    # for each equivalence, all the termels belonging to it
-    compatibility: dict[int, set[int]] = field(default_factory=dict)
-
-    def __post_init__(self):
-        assert len(self.reps) == 1 << 16
-        for tm, rep in enumerate(self.reps):
-            # a poorly selected skip_val could leave some class empty
-            if tm != self.skip_val:
-                compat_termels = self.compatibility.setdefault(rep, set())
-                compat_termels.add(tm)
-
-    def normalize(self, tm: int) -> int:
-        assert tm is not None
-        return self.reps[tm]
-
-    def _compatible(self, tms: list[int], bitmask: int) -> list[int] | None:
-        if len(tms) == 0:
-            return []
-        tm_reps = self.reps[tms]
-        if len(tms) == 1:
-            return tm_reps
-        compatible = set((ctm & bitmask for ctm in self.compatibility[tm_reps[0]]))
-        for rep in tm_reps[1:]:
-            compatible.intersection_update(
-                (ctm & bitmask for ctm in self.compatibility[rep])
-            )
-            if len(compatible) == 0:
-                return None
-        # if there are multiple, any is fine
-        chosen = next(iter(compatible)) & bitmask
-        if bitmask == 0xFFFF:
-            # if we're checking literal termels, they will all be the same
-            # we can get the representative for the chosen termel -- this will
-            # avoid choosing the skip termel
-            chosen = self.reps[chosen]
-            assert chosen != self.skip_val
-            return [chosen] * len(tms)
-        res = []
-        for rep in tm_reps:
-            for tm in self.compatibility[rep]:
-                if tm & bitmask == chosen:
-                    assert tm != self.skip_val
-                    res.append(tm)
-                    break
-            else:
-                assert not "compatible chars but no actual termels for them?"
-                return None
-        assert len(res) == len(tms)
-        assert all((r == tm for r, tm in zip(self.reps[res], tm_reps)))
-        return res
-
-    def compatible_chars(self, tms: list[int]) -> list[int] | None:
-        return self._compatible(tms, 0x00FF)
-
-    def compatible_attrs(self, tms: list[int]) -> list[int] | None:
-        return self._compatible(tms, 0xFF00)
-
-    def compatible_termels(self, tms: list[int]) -> list[int] | None:
-        return self._compatible(tms, 0xFFFF)
 
 
 @dataclass(frozen=True)
@@ -456,83 +389,6 @@ class XbinEncoding(RunEncoding):
             return [self.termel_from_bytes(encoded[1], encoded[2])] * self.decoded_len(
                 encoded
             )
-
-
-def make_cp437_equivalence(font_w8: bool, ice_color: bool, skip: bool) -> list[int]:
-    blank = set([0x00, 0x20, 0xFF])
-    blank_c = 0x20
-    inverse_blank = set([0xDB])
-    inverse = {0xDE: 0xDD, 0xDF: 0xDC}
-    # 8-pixel wide font has some additional equivalences
-    if font_w8:
-        inverse |= {0x08: 0x07, 0x0A: 0x09, 0xB2: 0xB0}
-
-    def normalize_tm(termel: int) -> int:
-        c = termel & 0xFF
-        fg = (termel >> 8) & 0xF
-        if ice_color:
-            bg = (termel >> 12) & 0xF
-            blink = 0
-            can_invert = True
-        else:
-            bg = (termel >> 12) & 0x7
-            blink = (termel >> 15) & 0x1
-            can_invert = ((fg & 0x8) == 0) and ((bg & 0x8) == 0)
-        if fg == bg:
-            # character not visible over background
-            c = blank_c
-            fg = 0
-            blink = 0
-        elif c in blank:
-            # foreground not used by this character
-            c = blank_c
-            fg = 0
-            blink = 0
-        elif not blink:
-            if c in inverse:
-                if can_invert:
-                    c = inverse[c]
-                    fg, bg = bg, fg
-            elif c in inverse_blank:
-                if can_invert:
-                    c = blank_c
-                    fg, bg = 0, fg
-                else:
-                    # background entirely covered by this character
-                    bg = 0
-        return c | (fg << 8) | (bg << 12) | (blink << 15)
-
-    # all this jazz with tm_equivs and equivs is actually just checks!
-    # norm_equivs maps each termel to an equivalence class
-    tm_equivs: list[set[int]] = [None] * (1 << 16)
-    for tm in range(len(tm_equivs)):
-        # the normalized termel should be the unique representative
-        rep = normalize_tm(tm)
-        assert rep == normalize_tm(rep)
-        # make a new container for the equivalence if there isn't one
-        if tm_equivs[rep] == None:
-            tm_equivs[rep] = set()
-        # if this isn't the equivalence class representative already, map the
-        # equivalence class from this termel
-        if rep != tm:
-            tm_equivs[tm] = tm_equivs[rep]
-        # add this termel to the equivalence class
-        tm_equivs[tm].add(tm)
-    # equivs is just all the equivalence classes
-    equivs: set[tuple[int]] = set(map(tuple, tm_equivs))
-    for e in equivs:
-        assert e is not None
-        assert len(e) > 0
-        rep = normalize_tm(next(iter(e)))
-        assert rep in e
-        # make double sure everything normalizes to the same representative
-        for tm in e:
-            assert normalize_tm(tm) == rep
-
-    # this is the real business -- just map things straight up
-    return Equivalence(
-        np.array([normalize_tm(tm) for tm in range(1 << 16)]), 0x0000 if skip else None
-    )
 
 
 equiv_precise = Equivalence(np.array(range(1 << 16)))

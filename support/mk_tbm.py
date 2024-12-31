@@ -413,10 +413,8 @@ def write_tbm(args: Args, input_path: str, img: Image) -> bool | None:
     ones = np.ones(img.mask.shape, dtype=np.bool_)
     img.data = equiv.reps[img.data] * img.mask + (ones * skip) * (ones & ~img.mask)
     if args.output_subtype == ImageEnc.DEFAULT:
-        if img.mask.all():
-            fmt, encoded = tbm_encode_xbin(img)
-        else:
-            fmt, encoded = tbm_encode_mask_xbin(img)
+        logger.info("Encoding XBIN RLE masked TBM (default)")
+        fmt, encoded = tbm_encode_mask_xbin(img)
     if args.output_subtype == ImageEnc.AUTO:
         logger.info("Autodetecting smallest encoding")
         fmt, encoded = tbm_encode_smallest(img)
