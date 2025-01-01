@@ -183,11 +183,11 @@ public:
     for (segsize_t j = 0; j < count; ++j) {
       termel_t dest_te = dest[j];
       uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
-      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)] & 0x7;
       uint8_t dest_brt = s_brightness[dest_fg] + s_brightness[dest_bg];
       termel_t src_te = src[j];
       uint8_t src_fg = m_fade_src_lut[termel::foreground(src_te)];
-      uint8_t src_bg = m_fade_src_lut[termel::background(src_te)];
+      uint8_t src_bg = m_fade_src_lut[termel::background(src_te)] & 0x7;
       uint8_t src_brt = s_brightness[src_fg] + s_brightness[src_bg];
       dest[j] =
           termel::with_attribute(((dest_brt > src_brt) ? dest_te : src_te),
@@ -197,12 +197,12 @@ public:
 
   void fill_line(termel_t __far *dest, termel_t src, segsize_t count) const {
     uint8_t src_fg = m_fade_src_lut[termel::foreground(src)];
-    uint8_t src_bg = m_fade_src_lut[termel::background(src)];
+    uint8_t src_bg = m_fade_src_lut[termel::background(src)] & 0x7;
     uint8_t src_brt = s_brightness[src_fg] + s_brightness[src_bg];
     for (segsize_t j = 0; j < count; ++j) {
       termel_t dest_te = dest[j];
       uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
-      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)] & 0x7;
       uint8_t dest_brt = s_brightness[dest_fg] + s_brightness[dest_bg];
       dest[j] = termel::with_attribute(((dest_brt > src_brt) ? dest_te : src),
                                        dest_fg | src_fg, dest_bg | src_bg);
@@ -215,11 +215,11 @@ public:
     for (segsize_t j = 0; j < count; ++j) {
       termel_t dest_te = dest[j];
       uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
-      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)] & 0x7;
       uint8_t dest_brt = s_brightness[dest_fg] + s_brightness[dest_bg];
       termel_t src_attr = src_attrs[j];
       uint8_t src_fg = m_fade_src_lut[termel::foreground(src_attr)];
-      uint8_t src_bg = m_fade_src_lut[termel::background(src_attr)];
+      uint8_t src_bg = m_fade_src_lut[termel::background(src_attr)] & 0x7;
       uint8_t src_brt = s_brightness[src_fg] + s_brightness[src_bg];
       dest[j] =
           termel::from(((dest_brt > src_brt) ? termel::ch(dest_te) : src_c),
@@ -232,12 +232,12 @@ public:
                                     attribute_t src_attr,
                                     segsize_t count) const {
     uint8_t src_fg = m_fade_src_lut[attribute::foreground(src_attr)];
-    uint8_t src_bg = m_fade_src_lut[attribute::background(src_attr)];
+    uint8_t src_bg = m_fade_src_lut[attribute::background(src_attr)] & 0x7;
     uint8_t src_brt = s_brightness[src_fg] + s_brightness[src_bg];
     for (segsize_t j = 0; j < count; ++j) {
       termel_t dest_te = dest[j];
       uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
-      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)] & 0x7;
       uint8_t dest_brt = s_brightness[dest_fg] + s_brightness[dest_bg];
       dest[j] =
           termel::from(((dest_brt > src_brt) ? termel::ch(dest_te) : src_cs[j]),
@@ -263,9 +263,9 @@ public:
     for (segsize_t j = 0; j < count; ++j) {
       termel_t dest_te = dest[j];
       uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
-      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)] & 0x7;
       uint8_t src_fg = m_fade_src_lut[termel::foreground(src[j])];
-      uint8_t src_bg = m_fade_src_lut[termel::background(src[j])];
+      uint8_t src_bg = m_fade_src_lut[termel::background(src[j])] & 0x7;
       dest[j] =
           termel::with_attribute(dest_te, dest_fg | src_fg, dest_bg | src_bg);
     }
@@ -273,11 +273,11 @@ public:
 
   void fill_line(termel_t __far *dest, termel_t src, segsize_t count) const {
     uint8_t src_fg = m_fade_src_lut[termel::foreground(src)];
-    uint8_t src_bg = m_fade_src_lut[termel::background(src)];
+    uint8_t src_bg = m_fade_src_lut[termel::background(src)] & 0x7;
     for (segsize_t j = 0; j < count; ++j) {
       termel_t dest_te = dest[j];
       uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
-      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)] & 0x7;
       dest[j] =
           termel::with_attribute(dest_te, dest_fg | src_fg, dest_bg | src_bg);
     }
@@ -290,9 +290,10 @@ public:
     for (segsize_t j = 0; j < count; ++j) {
       termel_t dest_te = dest[j];
       uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
-      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)] & 0x7;
       uint8_t src_fg = m_fade_src_lut[attribute::foreground(src_attrs[j])];
-      uint8_t src_bg = m_fade_src_lut[attribute::background(src_attrs[j])];
+      uint8_t src_bg =
+          m_fade_src_lut[attribute::background(src_attrs[j])] & 0x7;
       dest[j] =
           termel::with_attribute(dest_te, dest_fg | src_fg, dest_bg | src_bg);
     }
@@ -304,11 +305,11 @@ public:
                                     segsize_t count) const {
     (void)src_cs;
     uint8_t src_fg = m_fade_src_lut[attribute::foreground(src_attr)];
-    uint8_t src_bg = m_fade_src_lut[attribute::background(src_attr)];
+    uint8_t src_bg = m_fade_src_lut[attribute::background(src_attr)] & 0x7;
     for (segsize_t j = 0; j < count; ++j) {
       termel_t dest_te = dest[j];
       uint8_t dest_fg = m_fade_dest_lut[termel::foreground(dest_te)];
-      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)];
+      uint8_t dest_bg = m_fade_dest_lut[termel::background(dest_te)] & 0x7;
       dest[j] =
           termel::with_attribute(dest_te, dest_fg | src_fg, dest_bg | src_bg);
     }
