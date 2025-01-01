@@ -145,6 +145,11 @@ void text_window::setup(bool capture_screen) {
   }
   aux_text_window::set_video_mode(aux_text_window::s_text_mode_color_80_25);
   aux_text_window::set_cursor_style(aux_text_window::cursor_invisible, 0, 7);
+  if (capture_screen) {
+    // Minimize display gaps
+    present_copy(m_capture.data(), m_capture.width(), m_capture.height(),
+                 rect(0, 0, m_capture.width(), m_capture.height()));
+  }
 }
 
 void text_window::teardown() { aux_text_window::set_video_mode(3); }

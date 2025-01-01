@@ -3,10 +3,16 @@
 
 #include "base.h"
 
-#define logf_any(...) cprintf(__VA_ARGS__)
 #define disable_logf(...)                                                      \
   do {                                                                         \
   } while (false)
+
+#if !BUILD_DEBUG && BUILD_MSDOS
+#define logf_any(...) disable_logf()
+#else
+#define logf_any(...) cprintf(__VA_ARGS__)
+#endif
+
 #define logf_sim(...) logf_any("SIM: " __VA_ARGS__)
 
 #define abortf(...)                                                            \

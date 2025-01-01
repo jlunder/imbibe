@@ -106,18 +106,18 @@ define MAKE_TBM_FROM =
 	support/mk_tbm.py -o $@ $<
 endef
 
-testdata/%.tbm: data/%.bin support/mk_tbm.py Makefile
+testdata/%.tbm: data/%.bin support/*.py Makefile
 	$(call MAKE_TBM_FROM)
-testdata/%.tbm: data/%.ans support/mk_tbm.py Makefile
+testdata/%.tbm: data/%.ans support/*.py Makefile
 	$(call MAKE_TBM_FROM)
-testdata/%.tbm: data/%.ANS support/mk_tbm.py Makefile
+testdata/%.tbm: data/%.ANS support/*.py Makefile
 	$(call MAKE_TBM_FROM)
-testdata/%.tbm: data/%.txt support/mk_tbm.py Makefile
+testdata/%.tbm: data/%.txt support/*.py Makefile
 	$(call MAKE_TBM_FROM)
-testdata/%.tbm: data/%.TXT support/mk_tbm.py Makefile
+testdata/%.tbm: data/%.TXT support/*.py Makefile
 	$(call MAKE_TBM_FROM)
 
-testdata/%.cfg: data/%.json support/mk_cfg.py support/ansi.py Makefile
+testdata/%.cfg: data/%.json support/*.py Makefile
 	mkdir -p $(dir $@)
 	support/mk_cfg.py -v -r data -o $@ $<
 

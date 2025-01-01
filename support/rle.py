@@ -251,15 +251,19 @@ class RleEncoding(RunEncoding):
     def try_encode(self, termels: list[int | None]) -> bytes | None:
         if len(termels) - 1 >= 0b10000000:
             return None
+        # Are there skips in this block?
         if any((tm is None for tm in termels)):
             assert self.skip_tm is not None
+            # We can only encode a contiguous skip block
             if not all((tm is None for tm in termels)):
                 return None
+            # Huzzah it is indeed a skip
             return bytes((0b10000000 | (len(termels) - 1),)) + self.bytes_from_termel(
                 None
             )
         compat = self.equiv.compatible_termels(termels)
         if compat is not None:
+            # There should only be one distinct termel in compat
             return bytes((0b10000000 | (len(termels) - 1),)) + self.bytes_from_termel(
                 compat[0]
             )
@@ -334,19 +338,23 @@ class XbinEncoding(RunEncoding):
     def try_encode(self, termels: list[int | None]) -> bytes | None:
         if len(termels) - 1 >= 0b01000000:
             return None
+        # Are there skips in this block?
         if any((tm is None for tm in termels)):
             assert self.skip_tm is not None
+            # We can only encode a contiguous skip block
             if not all((tm is None for tm in termels)):
                 return None
+            # Huzzah it is indeed a skip
             return bytes((0b11000000 | (len(termels) - 1),)) + self.bytes_from_termel(
                 None
             )
         if len(termels) > 1:
             compat = self.equiv.compatible_termels(termels)
             if compat is not None:
-                return bytes((0b11000000 | (len(termels) - 1),)) + self.bytes_from_termel(
-                    compat[0]
-                )
+                # There should only be one distinct termel in compat
+                return bytes(
+                    (0b11000000 | (len(termels) - 1),)
+                ) + self.bytes_from_termel(compat[0])
             compat = self.equiv.compatible_attrs(termels)
             if compat is not None:
                 return bytes(
@@ -354,9 +362,9 @@ class XbinEncoding(RunEncoding):
                 ) + bytes((tm & 0xFF for tm in compat))
             compat = self.equiv.compatible_chars(termels)
             if compat is not None:
-                return bytes((0b01000000 | (len(termels) - 1), compat[0] & 0xFF)) + bytes(
-                    ((tm >> 8) & 0xFF for tm in compat)
-                )
+                return bytes(
+                    (0b01000000 | (len(termels) - 1), compat[0] & 0xFF)
+                ) + bytes(((tm >> 8) & 0xFF for tm in compat))
         # else...
         res = bytes((0b00000000 | (len(termels) - 1),))
         for tm in termels:
