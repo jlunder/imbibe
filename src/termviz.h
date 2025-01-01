@@ -309,15 +309,15 @@ public:
 class termel {
 public:
   static termel_t from(char n_ch, attribute_t n_attr) {
-    return n_ch | ((termel_t)n_attr << 8);
+    return (uint8_t)n_ch | ((termel_t)n_attr << 8);
   }
   static termel_t from(char n_ch, color_t n_fg, color_t n_bg) {
-    return n_ch | ((termel_t)attribute::from(n_fg, n_bg) << 8);
+    return (uint8_t)n_ch | ((termel_t)attribute::from(n_fg, n_bg) << 8);
   }
   static termel_t from(char n_ch, color_t n_fg, color_t n_bg, bool n_blink) {
-    return n_ch | ((termel_t)attribute::from(n_fg, n_bg, n_blink) << 8);
+    return (uint8_t)n_ch | ((termel_t)attribute::from(n_fg, n_bg, n_blink) << 8);
   }
-  static termel_t from_ch(char n_ch) { return (termel_t)n_ch; }
+  static termel_t from_ch(char n_ch) { return (uint8_t)n_ch; }
   static termel_t from_attribute(attribute_t n_attr) {
     return (termel_t)n_attr << 8;
   }
@@ -328,7 +328,7 @@ public:
     return (termel_t)attribute::from(n_fg, n_bg, n_blink) << 8;
   }
   static termel_t with_ch(termel_t te, char n_ch) {
-    return (te & 0xFF00) | (termel_t)n_ch;
+    return (te & 0xFF00) | (uint8_t)n_ch;
   }
   static termel_t with_attribute(termel_t te, color_t n_fg, color_t n_bg) {
     return (te & 0x00FF) | from_attribute(n_fg, n_bg);
