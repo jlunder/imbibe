@@ -17,7 +17,7 @@ static const segsize_t s_hash_capacity = 128;
 static const segsize_t s_index_initial_capacity = 8;
 static const segsize_t s_empty_index = UINT16_MAX;
 
-typedef segsize_t hash_t;
+typedef uint16_t hash_t;
 
 struct hash_entry {
   hash_t hash;
@@ -59,11 +59,11 @@ void __far *data_from_reclaim_header(reclaim_header __far *header) {
 
 } // namespace resource_manager
 
-// #if !BUILD_POSIX
-#if 0
-
-extern hash_t asm_fletcher16_str(char const __far * s);
 #if BUILD_MSDOS_WATCOMC
+
+extern resource_manager::hash_t asm_fletcher16_str(char const __far *s);
+
+/*
 #pragma aux asm_fletcher16_str =                                               \
     "   dec     di              "                                              \
     "   xor     ax, ax          "                                              \
@@ -80,21 +80,106 @@ extern hash_t asm_fletcher16_str(char const __far * s);
     "@roll_l:                   "                                              \
     "   inc     al              "                                              \
     "@noroll_l:                 "                                              \
+    "   add     ah, al          "                                              \
     "   jc      @roll_h         "                                              \
-    "   cmp     al, 255         "                                              \
+    "   cmp     ah, 255         "                                              \
     "   jne     @loop           "                                              \
     "@roll_h:                   "                                              \
-    "   inc     al              "                                              \
+    "   inc     ah              "                                              \
     "   jmp     @loop           "                                              \
-    "@done:                     " modify[ax bl di] parm[es di] value[ax]
-#else
-// TODO
-#endif
+    "@done:                     " modify[ax bx di] parm[es di] value[ax]
+*/
+
+// clang-format off
+#pragma aux asm_fletcher16_str = \
+    /*  ; BX is the lower counter                            */ \
+    "   xor     bx, bx                     "                    \
+    /*  ; DX is the upper (dual) counter                     */ \
+    "   xor     dx, dx                     "                    \
+    /*  ; CX is used for unpacking and test (CH always 0)    */ \
+    "   xor     cx, cx                     "                    \
+    "   cld                                "                    \
+    /*  ; check alignment of pointer in SI                   */ \
+    "   test    si, 0x0001                 "                    \
+    "   jz      @loop1                     "                    \
+    /*  ; SI has LSB set: align reads to word boundary by    */ \
+    /*  ; prerolling and starting the loop in the middle     */ \
+    "   lodsb                              "                    \
+    "   mov     ah, al                     "                    \
+    "   jmp     @loop2                     "                    \
+    "@loop1:                               "                    \
+    /*  ; read 2 bytes -- this may go past end of string     */ \
+    "   lodsw                              " /*  5           */ \
+    "   mov     cl, al                     " /*  2           */ \
+    /*  ; check first for NUL                                */ \
+    "   jcxz    @done                      " /*  4 (jump +4) */ \
+    /*  ; sum in the first byte                              */ \
+    "   add     bx, cx                     " /*  2           */ \
+    "   add     dx, bx                     " /*  2           */ \
+    /*  ; check overflow in the dual counter                 */ \
+    "   jc      @adj1                      " /*  3 (jump +4) */ \
+    "@loop2:                                                  " \
+    "   mov     cl, ah                     " /*  2           */ \
+    /*  ; check second for NUL                               */ \
+    "   jcxz    @done                      " /*  4 (jump +4) */ \
+    /*  ; sum in the second byte                             */ \
+    "   add     bx, cx                     " /*  2           */ \
+    "   add     dx, bx                     " /*  2           */ \
+    /*  ; check overflow in the dual counter                 */ \
+    "   jnc     @loop1                     " /*  7 (njmp -4) */ \
+    "@adj2:                                "                    \
+    /*  ; it takes 3x ADC to fully add BH with carry to BL   */ \
+    /*  ; -- the limit case is BL=0xFF, BH=0xFF, CF set      */ \
+    "   adc     dl, dh                     " /*  2           */ \
+    "   adc     dl, ch                     " /*  2           */ \
+    "   adc     dl, ch                     " /*  2           */ \
+    /*  ; clear DH once it's fully added in; note DX could   */ \
+    /*  ; still be 255, so the modulo isn't necessarily done */ \
+    "   xor     dh, dh                     " /*  2           */ \
+    /*  ; do similar for BX, but because BX < ~sqrt(DX), it  */ \
+    /*  ; has definitely not overflowed                      */ \
+    "   add     bl, bh                     " /*  2           */ \
+    "   adc     bl, ch                     " /*  2           */ \
+    "   xor     bh, bh                     " /*  2           */ \
+    "   jmp     @loop1                     " /*  7           */ \
+    "                                      "                    \
+    "@adj1:                                "                    \
+    /*  ; same as @adj2 above                                */ \
+    "   adc     dl, dh                     " /*  2           */ \
+    "   adc     dl, ch                     " /*  2           */ \
+    "   adc     dl, ch                     " /*  2           */ \
+    "   xor     dh, dh                     " /*  2           */ \
+    "   add     bl, bh                     " /*  2           */ \
+    "   adc     bl, ch                     " /*  2           */ \
+    "   xor     bh, bh                     " /*  2           */ \
+    "   jmp     @loop2                     " /*  7           */ \
+    "                                      "                    \
+    "@done:                                "                    \
+    /*  ; finalize the counters to exactly mod 255           */ \
+    "   add     bl, bh                     " /*  2           */ \
+    "   adc     bl, ch                     " /*  2           */ \
+    /*  ; this ADD/ADC/DEC normalizes 255 -> 0 without jumps */ \
+    "   add     bl, 1                      " /*  3           */ \
+    "   adc     bl, ch                     " /*  2           */ \
+    "   dec     bl                         " /*  2           */ \
+    "                                      "                    \
+    /*  ; same as above, for the upper counter               */ \
+    "   add     dl, dh                     " /*  2           */ \
+    "   adc     dl, ch                     " /*  2           */ \
+    "   add     dl, 1                      " /*  3           */ \
+    "   adc     dl, ch                     " /*  2           */ \
+    "   dec     dl                         " /*  2           */ \
+    "                                      "                    \
+    /*  ; consolidate the result into AX                     */ \
+    "   mov     al, bl                     " /*  2           */ \
+    "   mov     ah, dl                     " /*  2           */ \
+    modify [ax bx cx dx si] parm[ds si] value[ax]
+// clang-format on
 
 #endif
 
 resource_manager::hash_t resource_manager::fletcher16_str(char const __far *s) {
-#if 1 // BUILD_DEBUG || BUILD_POSIX
+#if BUILD_DEBUG || !BUILD_MSDOS_WATCOMC
   uint16_t s1 = 0;
   uint16_t s2 = 0;
   for (char const __far *p = s; *p; ++p) {
@@ -109,17 +194,21 @@ resource_manager::hash_t resource_manager::fletcher16_str(char const __far *s) {
       assert(s2 < 255);
     }
   }
+#endif
+#if BUILD_MSDOS_WATCOMC
+  hash_t result = asm_fletcher16_str(s);
+#if BUILD_DEBUG
+  if (result != ((s2 << 8) | s1)) {
+    logf_resource_manager(
+        "FLETCHER16 ASM for string \"%s\", expected %04X, got %04X", s,
+        (unsigned)((s2 << 8) | s1), (unsigned)result);
+  }
+  assert(result == ((s2 << 8) | s1));
+#endif
+  return result;
+#else
   return (s2 << 8) | s1;
 #endif
-  // #if BUILD_MSDOS
-  //   uint16_t result = asm_fletcher16_str(s);
-  //   assert(result == ((s2 << 8) | s1));
-  //   return result;
-  // #elif BUILD_POSIX
-  //   return (s2 << 8) | s1;
-  // #else
-  // #error New platform support needed?
-  // #endif
 }
 
 void resource_manager::setup() {
@@ -301,8 +390,8 @@ void __far *resource_manager::load_data_from_file(imstring const &name,
     }
     temp_data = data_from_reclaim_header(header);
     temp_size = (segsize_t)size;
-    logf_resource_manager("load data %" PRpF " -> header %" PRpF "\n", temp_data,
-                          header);
+    logf_resource_manager("load data %" PRpF " -> header %" PRpF "\n",
+                          temp_data, header);
   }
 
   {
@@ -330,7 +419,8 @@ void __far *resource_manager::load_data_from_file(imstring const &name,
   {
     err = _dos_close(handle);
     if (err != 0) {
-      logf_resource_manager("ignoring error %u during close, file '%" PRsF "'\n",
+      logf_resource_manager("ignoring error %u during close, file '%" PRsF
+                            "'\n",
                             err, name.c_str());
     }
   }
