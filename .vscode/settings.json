@@ -17,7 +17,9 @@
         "random": "cpp",
         "algorithm": "cpp",
         "chrono": "cpp",
-        "streambuf": "cpp"
+        "streambuf": "cpp",
+        "compare": "cpp",
+        "cstdint": "cpp"
     },
     "makefile.configureOnOpen": true
 }

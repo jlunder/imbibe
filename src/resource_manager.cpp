@@ -3,6 +3,7 @@
 #include "resource_manager.h"
 
 #include "builtin_data.h"
+#include "fletcher16.h"
 #include "inplace.h"
 #include "map.h"
 #include "tbm.h"
@@ -17,7 +18,33 @@ static const segsize_t s_hash_capacity = 128;
 static const segsize_t s_index_initial_capacity = 8;
 static const segsize_t s_empty_index = UINT16_MAX;
 
-typedef uint16_t hash_t;
+struct mar_header {
+  uint32_t header_check_value;
+  uint32_t hash_check_value;
+  uint32_t hash_offset;
+  uint32_t hash_capacity;
+  uint32_t dir_check_value;
+  uint32_t dir_offset;
+  uint32_t dir_size;
+};
+
+struct mar_hash_entry {
+  uint16_t name_hash;
+  uint16_t dir_index;
+};
+
+struct mar_dir_entry {
+  uint32_t name_check_value;
+  uint32_t name_offset;
+  uint32_t name_size;
+  uint32_t file_check_value;
+  uint32_t file_offset;
+  uint32_t file_size;
+  uint32_t reserved0;
+  uint32_t reserved1;
+};
+
+typedef segsize_t hash_t;
 
 struct hash_entry {
   hash_t hash;
@@ -42,7 +69,6 @@ vector<hash_entry> s_name_hash;
 vector<index_entry> s_index;
 segsize_t s_first_free_index;
 
-hash_t fletcher16_str(char const __far *s);
 segsize_t find_or_load_data(imstring const &name, immutable *out_data);
 segsize_t load_data_at_hash(imstring const &name, hash_t hash, segsize_t hint,
                             immutable *out_data);
@@ -58,158 +84,6 @@ void __far *data_from_reclaim_header(reclaim_header __far *header) {
 }
 
 } // namespace resource_manager
-
-#if BUILD_MSDOS_WATCOMC
-
-extern resource_manager::hash_t asm_fletcher16_str(char const __far *s);
-
-/*
-#pragma aux asm_fletcher16_str =                                               \
-    "   dec     di              "                                              \
-    "   xor     ax, ax          "                                              \
-    "   xor     bx, bx          "                                              \
-    "@loop:                     "                                              \
-    "   inc     di              "                                              \
-    "   mov     bl, es:[di]     "                                              \
-    "   or      bx, bx          "                                              \
-    "   je      @done           "                                              \
-    "   add     al, bl          "                                              \
-    "   jc      @roll_l         "                                              \
-    "   cmp     al, 255         "                                              \
-    "   jne     @noroll_l       "                                              \
-    "@roll_l:                   "                                              \
-    "   inc     al              "                                              \
-    "@noroll_l:                 "                                              \
-    "   add     ah, al          "                                              \
-    "   jc      @roll_h         "                                              \
-    "   cmp     ah, 255         "                                              \
-    "   jne     @loop           "                                              \
-    "@roll_h:                   "                                              \
-    "   inc     ah              "                                              \
-    "   jmp     @loop           "                                              \
-    "@done:                     " modify[ax bx di] parm[es di] value[ax]
-*/
-
-// clang-format off
-#pragma aux asm_fletcher16_str = \
-    /*  ; BX is the lower counter                            */ \
-    "   xor     bx, bx                     "                    \
-    /*  ; DX is the upper (dual) counter                     */ \
-    "   xor     dx, dx                     "                    \
-    /*  ; CX is used for unpacking and test (CH always 0)    */ \
-    "   xor     cx, cx                     "                    \
-    "   cld                                "                    \
-    /*  ; check alignment of pointer in SI                   */ \
-    "   test    si, 0x0001                 "                    \
-    "   jz      @loop1                     "                    \
-    /*  ; SI has LSB set: align reads to word boundary by    */ \
-    /*  ; prerolling and starting the loop in the middle     */ \
-    "   lodsb                              "                    \
-    "   mov     ah, al                     "                    \
-    "   jmp     @loop2                     "                    \
-    "@loop1:                               "                    \
-    /*  ; read 2 bytes -- this may go past end of string     */ \
-    "   lodsw                              " /*  5           */ \
-    "   mov     cl, al                     " /*  2           */ \
-    /*  ; check first for NUL                                */ \
-    "   jcxz    @done                      " /*  4 (jump +4) */ \
-    /*  ; sum in the first byte                              */ \
-    "   add     bx, cx                     " /*  2           */ \
-    "   add     dx, bx                     " /*  2           */ \
-    /*  ; check overflow in the dual counter                 */ \
-    "   jc      @adj1                      " /*  3 (jump +4) */ \
-    "@loop2:                                                  " \
-    "   mov     cl, ah                     " /*  2           */ \
-    /*  ; check second for NUL                               */ \
-    "   jcxz    @done                      " /*  4 (jump +4) */ \
-    /*  ; sum in the second byte                             */ \
-    "   add     bx, cx                     " /*  2           */ \
-    "   add     dx, bx                     " /*  2           */ \
-    /*  ; check overflow in the dual counter                 */ \
-    "   jnc     @loop1                     " /*  7 (njmp -4) */ \
-    "@adj2:                                "                    \
-    /*  ; it takes 3x ADC to fully add BH with carry to BL   */ \
-    /*  ; -- the limit case is BL=0xFF, BH=0xFF, CF set      */ \
-    "   adc     dl, dh                     " /*  2           */ \
-    "   adc     dl, ch                     " /*  2           */ \
-    "   adc     dl, ch                     " /*  2           */ \
-    /*  ; clear DH once it's fully added in; note DX could   */ \
-    /*  ; still be 255, so the modulo isn't necessarily done */ \
-    "   xor     dh, dh                     " /*  2           */ \
-    /*  ; do similar for BX, but because BX < ~sqrt(DX), it  */ \
-    /*  ; has definitely not overflowed                      */ \
-    "   add     bl, bh                     " /*  2           */ \
-    "   adc     bl, ch                     " /*  2           */ \
-    "   xor     bh, bh                     " /*  2           */ \
-    "   jmp     @loop1                     " /*  7           */ \
-    "                                      "                    \
-    "@adj1:                                "                    \
-    /*  ; same as @adj2 above                                */ \
-    "   adc     dl, dh                     " /*  2           */ \
-    "   adc     dl, ch                     " /*  2           */ \
-    "   adc     dl, ch                     " /*  2           */ \
-    "   xor     dh, dh                     " /*  2           */ \
-    "   add     bl, bh                     " /*  2           */ \
-    "   adc     bl, ch                     " /*  2           */ \
-    "   xor     bh, bh                     " /*  2           */ \
-    "   jmp     @loop2                     " /*  7           */ \
-    "                                      "                    \
-    "@done:                                "                    \
-    /*  ; finalize the counters to exactly mod 255           */ \
-    "   add     bl, bh                     " /*  2           */ \
-    "   adc     bl, ch                     " /*  2           */ \
-    /*  ; this ADD/ADC/DEC normalizes 255 -> 0 without jumps */ \
-    "   add     bl, 1                      " /*  3           */ \
-    "   adc     bl, ch                     " /*  2           */ \
-    "   dec     bl                         " /*  2           */ \
-    "                                      "                    \
-    /*  ; same as above, for the upper counter               */ \
-    "   add     dl, dh                     " /*  2           */ \
-    "   adc     dl, ch                     " /*  2           */ \
-    "   add     dl, 1                      " /*  3           */ \
-    "   adc     dl, ch                     " /*  2           */ \
-    "   dec     dl                         " /*  2           */ \
-    "                                      "                    \
-    /*  ; consolidate the result into AX                     */ \
-    "   mov     al, bl                     " /*  2           */ \
-    "   mov     ah, dl                     " /*  2           */ \
-    modify [ax bx cx dx si] parm[ds si] value[ax]
-// clang-format on
-
-#endif
-
-resource_manager::hash_t resource_manager::fletcher16_str(char const __far *s) {
-#if BUILD_DEBUG || !BUILD_MSDOS_WATCOMC
-  uint16_t s1 = 0;
-  uint16_t s2 = 0;
-  for (char const __far *p = s; *p; ++p) {
-    s1 += (uint8_t)*p;
-    if (s1 >= 255) {
-      s1 -= 255;
-      assert(s1 < 255);
-    }
-    s2 += s1;
-    if (s2 >= 255) {
-      s2 -= 255;
-      assert(s2 < 255);
-    }
-  }
-#endif
-#if BUILD_MSDOS_WATCOMC
-  hash_t result = asm_fletcher16_str(s);
-#if BUILD_DEBUG
-  if (result != ((s2 << 8) | s1)) {
-    logf_resource_manager(
-        "FLETCHER16 ASM for string \"%s\", expected %04X, got %04X", s,
-        (unsigned)((s2 << 8) | s1), (unsigned)result);
-  }
-  assert(result == ((s2 << 8) | s1));
-#endif
-  return result;
-#else
-  return (s2 << 8) | s1;
-#endif
-}
 
 void resource_manager::setup() {
   hash_entry blank;
