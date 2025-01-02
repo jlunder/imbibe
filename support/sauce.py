@@ -235,4 +235,4 @@ def make_sauce(file_size: int, dtype: int, ftype: int, flags: int) -> bytes:
         b"",
     )
     assert len(sauce) == 128
-    return b"0x1A" + sauce
+    return b"\x1A" + sauce
