@@ -21,13 +21,13 @@ bitmap::bitmap(coord_t n_width, coord_t n_height, termel_t const __far *n_data)
 
 bitmap::~bitmap() {
   if (!immutable()) {
-    arena::c_free(m_data);
+    _ffree(m_data);
   }
 }
 
 bitmap &bitmap::assign(coord_t n_width, coord_t n_height) {
   if (!immutable()) {
-    arena::c_free(m_data);
+    _ffree(m_data);
   }
 
   assert(n_width >= 0);
@@ -39,7 +39,7 @@ bitmap &bitmap::assign(coord_t n_width, coord_t n_height) {
   m_width = n_width;
   m_height = n_height;
   m_data = reinterpret_cast<termel_t __far *>(
-      ::arena::c_alloc(n_width * n_height * sizeof(termel_t)));
+      _fmalloc(n_width * n_height * sizeof(termel_t)));
   assert(m_data);
   assert(!immutable());
 
@@ -59,7 +59,7 @@ bitmap &bitmap::assign(coord_t n_width, coord_t n_height, termel_t fill_brush) {
 bitmap &bitmap::assign(coord_t n_width, coord_t n_height,
                        termel_t const __far *n_data) {
   if (!immutable()) {
-    arena::c_free(m_data);
+    _ffree(m_data);
   }
 
   assert(n_width >= 0);
@@ -75,7 +75,7 @@ bitmap &bitmap::assign(coord_t n_width, coord_t n_height,
 
 bitmap &bitmap::assign(bitmap const &n_bitmap) {
   if (!immutable()) {
-    arena::c_free(m_data);
+    _ffree(m_data);
   }
 
   m_width = n_bitmap.m_width;
@@ -86,8 +86,8 @@ bitmap &bitmap::assign(bitmap const &n_bitmap) {
     m_data = n_bitmap.m_data;
     assert(immutable());
   } else {
-    m_data =
-        reinterpret_cast<termel_t __far *>(arena::c_alloc(m_width * m_height * sizeof(termel_t)));
+    m_data = reinterpret_cast<termel_t __far *>(
+        _fmalloc(m_width * m_height * sizeof(termel_t)));
     assert(m_data);
     _fmemcpy(m_data, n_bitmap.m_data, m_width * m_height * sizeof(termel_t));
     assert(!immutable());

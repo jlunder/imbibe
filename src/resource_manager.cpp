@@ -18,30 +18,78 @@ static const segsize_t s_hash_capacity = 128;
 static const segsize_t s_index_initial_capacity = 8;
 static const segsize_t s_empty_index = UINT16_MAX;
 
-struct mar_header {
-  uint32_t header_check_value;
-  uint32_t hash_check_value;
+// 64 bytes
+struct tyar_header {
+  // This is just a constant string, but it's somewhat carefully selected.
+  // The magic value can't realistically be protected by the header check value
+  // because we don't know how long the header is until we've checked the magic
+  // to figure out the file version -- so we have a chicken-and-egg problem. To
+  // illustrate the magnitude of the problem, the difference between "TYAR0"
+  // and "TYAR1" is a single bit flip, not so unlikely at all if we presuppose
+  // some data corruption!
+
+  // One way to get around this is to ensure that any valid magic value will be
+  // at least some Hamming distance from the ones we're looking for, and that's
+  // our plan.
+
+  // So, although to the library user these are just constants, if any future
+  // magic value is defined, please ensure that the last 4 bytes are a CRC32 of
+  // the first 8, using this very specific CRC:
+  //  - polynomial 0x1B49C1C96 (most calculators will want just 0xB49C1C96);
+  //  - initial seed 0xFFFFFFFF
+  //  - final check value inverted i.e. XOR with 0xFFFFFFFF
+  //  - bits are processed and output LSB-to-MSB i.e. right-shift/"reflected"
+  // This should match iSCSI CRC32 processing but with a different polynomial,
+  // which was selected to optimize HD for the 64 bits we're checking. The CRC
+  // is written into the string constant little-endian, and it's wise to
+  // confirm before generating a new constant that you can regenerate what was
+  // used for the old one -- this is a lot of effort for a constant, but one
+  // bad one ruins the HD performance for the whole scheme all!
+
+  // 'TYAR0\x1A\x00\x00\xD2\x6E\xD5\xCD'
+  char header_magic[12];
+  uint32_t header_check_value; // 0 for now
+  uint32_t archive_size;
+
+  // 'Ttc0'
+  char toc_magic[4];
+  uint32_t toc_offset;
+  uint32_t toc_size;
+  uint32_t toc_check_value; // 0 for now
+  // 'Thf0'
+  char hash_magic[4];
   uint32_t hash_offset;
-  uint32_t hash_capacity;
-  uint32_t dir_check_value;
-  uint32_t dir_offset;
-  uint32_t dir_size;
+  uint32_t hash_size;
+  uint32_t hash_check_value; // 0 for now
 };
 
-struct mar_hash_entry {
-  uint16_t name_hash;
-  uint16_t dir_index;
+// 8 bytes
+struct tyar_hash_header {
+  // 'fh' for Fletcher-16, hopscotch
+  uint16_t hash_type;
+  uint16_t bin_count;
+  uint16_t neighbor_count;
+  uint16_t reserved_0;
 };
 
-struct mar_dir_entry {
-  uint32_t name_check_value;
+// 4 bytes
+struct tyar_hash_entry_fletcher16 {
+  uint16_t name_hash; // Fletcher-16, 0 seed
+  uint16_t toc_index; // 0xFFFF for an unoccupied entry
+};
+
+// 32 bytes
+struct tyar_toc_entry {
+  // 'Tfn0'
+  char name_magic[4];
   uint32_t name_offset;
   uint32_t name_size;
-  uint32_t file_check_value;
+  uint32_t name_check_value;
+  // 'Tfd0'
+  char file_magic[4];
   uint32_t file_offset;
   uint32_t file_size;
-  uint32_t reserved0;
-  uint32_t reserved1;
+  uint32_t file_check_value;
 };
 
 typedef segsize_t hash_t;
@@ -258,7 +306,7 @@ void __far *resource_manager::load_data_from_file(imstring const &name,
       goto fail_return;
     }
     reclaim_header __far *header = reinterpret_cast<reclaim_header __far *>(
-        arena::c_alloc((segsize_t)(sizeof(reclaim_header) + size)));
+        _fmalloc((segsize_t)(sizeof(reclaim_header) + size)));
     if (header == NULL) {
       goto fail_return;
     }
@@ -304,7 +352,7 @@ void __far *resource_manager::load_data_from_file(imstring const &name,
 
 fail_return:
   if (temp_data) {
-    arena::c_free(temp_data);
+    _ffree(temp_data);
   }
   *out_size = 0;
   if (handle != -1) {
@@ -328,7 +376,7 @@ void resource_manager::reclaim_loaded_data(void __far *data) {
   header->index = s_empty_index;
 #endif
 
-  arena::c_free(header);
+  _ffree(header);
 
   assert(entry.data);
   entry.data = NULL;
@@ -338,86 +386,3 @@ void resource_manager::reclaim_loaded_data(void __far *data) {
   // entry.next_free = s_first_free_index;
   // s_first_free_index = index;
 }
-
-#if 0
-
-namespace resource_manager {
-
-typedef map<imstring, im_ptr<tbm> > loaded_resources_map;
-
-loaded_resources_map s_loaded_resources;
-
-extern im_ptr<tbm> fetch_tbm(imstring const &name);
-extern void reclaim_loaded_data(void __far *data);
-
-} // namespace resource_manager
-
-im_ptr<tbm> resource_manager::fetch_tbm(imstring const &name) {
-  logf_resource_manager("resource_manager::fetch_tbm\n");
-  assert(name.length() <= RESOURCE_NAME_LEN_MAX);
-  loaded_resources_map::iterator i = s_loaded_resources.find(name);
-  if (i == s_loaded_resources.end()) {
-    logf_resource_manager("  i == s_loaded_resources.end()\n");
-    segsize_t index = find_or_load_data(name);
-    index_entry &entry = s_index[index];
-    assert(entry.data);
-    if (!entry.resource) {
-      logf_resource_manager("  !entry.resource\n");
-      reclaim_header __far *header =
-          reinterpret_cast<reclaim_header __far *>(::_fmalloc(sizeof(reclaim_header) + sizeof(bitmap)));
-      logf_resource_manager("  header = %" PRpF ", .name = %" PRsF ", .index = %u\n", header,
-                            name.c_str(), (unsigned)index);
-      header->name = name.c_str();
-      header->index = index;
-      entry.resource = header + 1;
-      logf_resource_manager("  entry.resource = %" PRpF "\n", header);
-      new (entry.resource) bitmap;
-      logf_resource_manager("  converting data at %" PRpF " (%u bytes)\n", entry.data,
-                            (unsigned)entry.size);
-      tbm::to_bitmap(unpacker(entry.data, entry.size),
-                     *reinterpret_cast<bitmap *>(entry.resource));
-      logf_resource_manager("  conversion complete: %d x %d\n",
-                            (int)(reinterpret_cast<bitmap *>(entry.resource))->width(),
-                            (int)(reinterpret_cast<bitmap *>(entry.resource))->height());
-      assert(entry.resource);
-    }
-    i = s_loaded_resources.insert(loaded_resources_map::value_type(
-        name, im_ptr<bitmap>(reclaim_loaded_data, reinterpret_cast<bitmap *>(entry.resource))));
-    assert(i != s_loaded_resources.end());
-  }
-  return i->ref;
-}
-
-void resource_manager::reclaim_loaded_data(void __far *data) {
-  reclaim_header __far *header = (reinterpret_cast<reclaim_header __far *>(data)) - 1;
-  assert(header->index < s_index.size());
-
-  char const *name = header->name;
-  assert(name);
-  segsize_t index = header->index;
-  index_entry &entry = s_index[index];
-  logf_resource_manager(
-      "reclaim_loaded_data %" PRpF ": header=%" PRpF ", entry.resource=%" PRpF ", .name=%" PRsF "\n", data,
-      header, entry.resource, entry.name.c_str());
-  assert(reinterpret_cast<void *>(entry.resource) == data);
-  assert(entry.name == imstring(name));
-
-  (reinterpret_cast<bitmap *>(header + 1))->~bitmap();
-
-#if BUILD_DEBUG
-  header->index = s_empty_index;
-  header->name = NULL;
-#endif
-
-  ::ffree(header);
-  ::ffree(reinterpret_cast<void __far *>(entry.data));
-
-  entry.resource = NULL;
-  entry.data = NULL;
-  entry.name = NULL;
-
-  entry.next_free = s_first_free_index;
-  s_first_free_index = index;
-}
-
-#endif
