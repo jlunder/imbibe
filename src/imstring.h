@@ -29,9 +29,7 @@ class imstring {
 public:
   imstring() : m_str(NULL) {}
   explicit imstring(char const __far *n_str) : m_str(n_str) {
-    if (aux_imstring::is_dynamic(m_str)) {
-      ref_dynamic(m_str);
-    }
+    assert(!aux_imstring::is_dynamic(m_str));
   }
   imstring(imstring const &other) {
     m_str = other.m_str;

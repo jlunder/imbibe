@@ -88,13 +88,16 @@ all: imbibe simbibe glimbibe
 clean:
 	rm -rf build
 
-simbibe: $(IMBIBE_SIM_OBJS) $(IMBIBE_RESOURCES)
+imbibe.tya: $(IMBIBE_RESOURCES)
+	support/mk_tyar.py -o $@ testdata 
+
+simbibe: $(IMBIBE_SIM_OBJS) imbibe.tya
 	g++  $(IMBIBE_SIM_OBJS) -g -o $@
 
-glimbibe: $(IMBIBE_SDL_GL_OBJS) $(IMBIBE_RESOURCES)
+glimbibe: $(IMBIBE_SDL_GL_OBJS) imbibe.tya
 	g++  $(IMBIBE_SDL_GL_OBJS) -g $(shell pkg-config --libs sdl2) -lGL -o $@
 
-imbibe: $(OBJ_DIR)imbibe.exe $(IMBIBE_SDL_GL_OBJS)
+imbibe: $(OBJ_DIR)imbibe.exe $(IMBIBE_SDL_GL_OBJS) imbibe.tya
 	cd workspace && \
 	  $(DOSBOX) \
 	    -c "S:" \

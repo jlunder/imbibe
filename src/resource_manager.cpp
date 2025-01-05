@@ -9,88 +9,212 @@
 #include "tbm.h"
 #include "unpacker.h"
 
-#define logf_resource_manager(...)                                             \
-  disable_logf("RESOURCE_MANAGER: " __VA_ARGS__)
+#define logf_resource_manager(...) logf_any("RESOURCE_MANAGER: " __VA_ARGS__)
 
-namespace resource_manager {
+#define BUILD_TYAR_LOADER 1
 
-static const segsize_t s_hash_capacity = 128;
-static const segsize_t s_index_initial_capacity = 8;
-static const segsize_t s_empty_index = UINT16_MAX;
+#if BUILD_TYAR_LOADER
+
+namespace tyar {
+
+// This is just a constant string, but it's somewhat carefully selected.
+// The magic value can't realistically be protected by the header check value
+// because we don't know how long the header is until we've checked the magic
+// to figure out the file format -- so we have a chicken-and-egg problem. To
+// illustrate the magnitude of the problem, the difference between "TYAR0"
+// and "TYAR1" is a single bit flip, not so unlikely at all if we presuppose
+// some data corruption! We could get around this by CRC'ing the whole file
+// with a check value tacked on at the end, but of course then you have to
+// read the entire file before you can process ANY of it, which is s-l-o-w on
+// old min spec computers. We would like to be able to check stuff just-in-
+// time right before we process it.
+
+// One way to get around this is to ensure that any valid magic value will be
+// at least some Hamming distance from the ones we're looking for, and that's
+// the plan here.
+
+// So, although to the module user these are just constants, if any future
+// magic value is defined, please ensure it's at least HD 20 from any
+// previously defined constants.
+static uint8_t const header_magic_v0[12] = {'T',  'Y',  'A',  'R',  '0',  0x1A,
+                                            0x00, 0x00, 0xD2, 0x6E, 0xD5, 0xCD};
+
+static uint8_t const archive_header_toc_magic_v0[4] = {'T', 't', 'c', '0'};
+static uint8_t const archive_header_hash_magic_v0[4] = {'T', 'h', 't', '0'};
+
+static uint16_t const hash_type_fletcher16_hopscotch = 'f' + ('h' << 8);
+
+static uint8_t const toc_entry_name_magic_v0[4] = {'T', 'f', 'n', '0'};
+static uint8_t const toc_entry_file_magic_v0[4] = {'T', 'f', 'd', '0'};
 
 // 64 bytes
-struct tyar_header {
-  // This is just a constant string, but it's somewhat carefully selected.
-  // The magic value can't realistically be protected by the header check value
-  // because we don't know how long the header is until we've checked the magic
-  // to figure out the file version -- so we have a chicken-and-egg problem. To
-  // illustrate the magnitude of the problem, the difference between "TYAR0"
-  // and "TYAR1" is a single bit flip, not so unlikely at all if we presuppose
-  // some data corruption!
-
-  // One way to get around this is to ensure that any valid magic value will be
-  // at least some Hamming distance from the ones we're looking for, and that's
-  // our plan.
-
-  // So, although to the library user these are just constants, if any future
-  // magic value is defined, please ensure that the last 4 bytes are a CRC32 of
-  // the first 8, using this very specific CRC:
-  //  - polynomial 0x1B49C1C96 (most calculators will want just 0xB49C1C96);
-  //  - initial seed 0xFFFFFFFF
-  //  - final check value inverted i.e. XOR with 0xFFFFFFFF
-  //  - bits are processed and output LSB-to-MSB i.e. right-shift/"reflected"
-  // This should match iSCSI CRC32 processing but with a different polynomial,
-  // which was selected to optimize HD for the 64 bits we're checking. The CRC
-  // is written into the string constant little-endian, and it's wise to
-  // confirm before generating a new constant that you can regenerate what was
-  // used for the old one -- this is a lot of effort for a constant, but one
-  // bad one ruins the HD performance for the whole scheme all!
-
+struct archive_header {
   // 'TYAR0\x1A\x00\x00\xD2\x6E\xD5\xCD'
-  char header_magic[12];
+  uint8_t header_magic[12];
   uint32_t header_check_value; // 0 for now
   uint32_t archive_size;
 
   // 'Ttc0'
-  char toc_magic[4];
+  uint8_t toc_magic[4];
   uint32_t toc_offset;
   uint32_t toc_size;
   uint32_t toc_check_value; // 0 for now
-  // 'Thf0'
-  char hash_magic[4];
+  // 'Tht0'
+  uint8_t hash_magic[4];
   uint32_t hash_offset;
   uint32_t hash_size;
   uint32_t hash_check_value; // 0 for now
 };
 
 // 8 bytes
-struct tyar_hash_header {
-  // 'fh' for Fletcher-16, hopscotch
+struct hash_header {
+  // 'fh' for Fletcher-16, hopscotch hashing
   uint16_t hash_type;
+  // Should always be a power of 2
   uint16_t bin_count;
+  // The neighbor_count is how far we might have to search for any given hash
+  // value. Farther than that, we can give up knowing it's not in the table.
+  // This is a property guaranteed by hopscotch hashing; for reads, it's
+  // otherwise just like a linear open table.
   uint16_t neighbor_count;
   uint16_t reserved_0;
 };
 
 // 4 bytes
-struct tyar_hash_entry_fletcher16 {
+struct hash_entry_fletcher16 {
   uint16_t name_hash; // Fletcher-16, 0 seed
   uint16_t toc_index; // 0xFFFF for an unoccupied entry
 };
 
 // 32 bytes
-struct tyar_toc_entry {
+struct toc_entry {
   // 'Tfn0'
-  char name_magic[4];
+  uint8_t name_magic[4];
   uint32_t name_offset;
   uint32_t name_size;
   uint32_t name_check_value;
   // 'Tfd0'
-  char file_magic[4];
+  uint8_t file_magic[4];
   uint32_t file_offset;
   uint32_t file_size;
   uint32_t file_check_value;
 };
+
+} // namespace tyar
+
+namespace resource_manager {
+
+static __segment archive_data_seg = 0;
+static uint32_t archive_size = 0;
+static tyar::hash_entry_fletcher16 __far *archive_hash;
+static tyar::toc_entry __far *archive_toc;
+
+} // namespace resource_manager
+
+void resource_manager::setup(imstring const &archive_name) {
+  char const __far *path = "data.tya";
+  if (!archive_name.null()) {
+    path = archive_name.c_str();
+  }
+
+  int handle = -1;
+  unsigned err;
+
+#if BUILD_DEBUG
+  char const *op = "opening archive";
+#endif
+  archive_data_seg = 0;
+
+  unsigned long size = UINT32_MAX;
+  err = _dos_open(path, O_RDONLY, &handle);
+  if (err == 0) {
+#if BUILD_DEBUG
+    op = "getting archive file size";
+#endif
+    err = _dos_lseek(handle, 0, SEEK_END, &size);
+    if (err == 0) {
+      archive_size = size;
+      err = _dos_lseek(handle, 0, SEEK_SET, &size);
+    }
+  }
+  if (err == 0) {
+#if BUILD_DEBUG
+    op = "allocating archive data";
+#endif
+    if (archive_size / 16 > UINT16_MAX) {
+      err = -1;
+    } else {
+      err = _dos_allocmem(archive_size / 16, &archive_data_seg);
+    }
+  }
+  if (err == 0) {
+#if BUILD_DEBUG
+    op = "reading archive";
+#endif
+    uint32_t read_total = 0;
+    while ((err == 0) && (read_total < archive_size)) {
+      unsigned read_actual = 0;
+      err = _dos_read(handle, MK_FP_O32(archive_data_seg, read_total),
+                      min<uint32_t>(archive_size - read_total, 32768u),
+                      &read_actual);
+      if (err == 0) {
+        read_total += read_actual;
+      }
+    }
+  }
+  if (err == 0) {
+    err = _dos_close(handle);
+    if (err != 0) {
+      logf_resource_manager(
+          "ignoring error %u during close, archive '%" PRsF "'\n", err, path);
+    }
+  } else {
+    if (handle != -1) {
+      _dos_close(handle);
+    }
+#if BUILD_DEBUG
+    abortf("error during %s (%u), archive '%" PRsF "'\n", op, err, path);
+#else
+    abortf("unable to read archive '%" PRsF "'\n", op, err, path);
+#endif
+  }
+}
+
+void resource_manager::teardown() {
+  if (archive_data_seg) {
+    _dos_freemem(archive_data_seg);
+    archive_size = 0;
+    archive_hash = NULL;
+    archive_toc = NULL;
+  }
+}
+
+void resource_manager::teardown_exiting() {
+#if BUILD_DEBUG
+  teardown();
+#else
+  // not actually sure it's okay to leak DOS-allocated resources here
+  _dos_freemem(FP_SEG(archive_data));
+#endif
+}
+
+segsize_t resource_manager::fetch_data(imstring const &name,
+                                       immutable *out_data) {
+  (void)name;
+  (void)out_data;
+  assert(!"NOT IMPLEMENTED");
+  // logf_resource_manager("resource_manager::fetch_data\n");
+  // assert(name.length() <= RESOURCE_NAME_LEN_MAX);
+  // return find_or_load_data(name, out_data);
+}
+
+#else
+
+namespace resource_manager {
+
+static const segsize_t s_hash_capacity = 128;
+static const segsize_t s_index_initial_capacity = 8;
+static const segsize_t s_empty_index = UINT16_MAX;
 
 typedef segsize_t hash_t;
 
@@ -111,6 +235,8 @@ struct index_entry {
 struct reclaim_header {
   segsize_t index;
 };
+
+imstring s_folder_name;
 
 segsize_t s_hash_mask;
 vector<hash_entry> s_name_hash;
@@ -133,14 +259,18 @@ void __far *data_from_reclaim_header(reclaim_header __far *header) {
 
 } // namespace resource_manager
 
-void resource_manager::setup() {
+void resource_manager::setup(imstring const &archive_name) {
+  if (archive_name) {
+    s_folder_name = archive_name;
+  } else {
+    s_folder_name = "testdata";
+  }
+
   hash_entry blank;
   blank.hash = s_empty_index;
   blank.index = s_empty_index;
   assert(s_name_hash.empty());
   assert(s_index.empty());
-  // s_name_hash.mem(arena::c());
-  // s_index.mem(arena::c());
   s_name_hash.assign(s_hash_capacity, blank);
   s_hash_mask = s_hash_capacity - 1;
   s_first_free_index = s_empty_index;
@@ -157,14 +287,6 @@ void resource_manager::teardown_exiting() {
 #if BUILD_DEBUG
   teardown();
 #endif
-}
-
-tbm resource_manager::fetch_tbm(imstring const &name) {
-  logf_resource_manager("resource_manager::fetch_tbm\n");
-  assert(name.length() <= RESOURCE_NAME_LEN_MAX);
-  immutable data;
-  segsize_t size = find_or_load_data(name, &data);
-  return tbm(data, size);
 }
 
 segsize_t resource_manager::fetch_data(imstring const &name,
@@ -281,7 +403,8 @@ void __far *resource_manager::load_data_from_file(imstring const &name,
   char const *op = "open";
   (void)op;
 
-  snprintf(path_buf, sizeof path_buf, "testdata/%" PRsF, name.c_str());
+  snprintf(path_buf, sizeof path_buf, "%" PRsF "/%" PRsF, s_folder_name.c_str(),
+           name.c_str());
   err = _dos_open(path_buf, O_RDONLY, &handle);
   if (err != 0) {
     goto fail_return;
@@ -386,3 +509,5 @@ void resource_manager::reclaim_loaded_data(void __far *data) {
   // entry.next_free = s_first_free_index;
   // s_first_free_index = index;
 }
+
+#endif

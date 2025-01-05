@@ -108,7 +108,7 @@ void abort_handler(int sig) {
 void imbibe_main() {
   imstring::setup();
   timer::setup();
-  resource_manager::setup();
+  resource_manager::setup(imstring("imbibe.tya"));
 
 #if BUILD_MSDOS && BUILD_DEBUG
   typedef void (*sig_handler_t)(int);
@@ -166,12 +166,12 @@ void sim::step_animate(uint32_t anim_ms) {
            (unsigned long)anim_ms);
 }
 
-void sim::step_frame() {
-}
+void sim::step_frame() {}
 
 #elif BUILD_POSIX
 
 #include <atomic>
+#include <unordered_map>
 
 #if BUILD_POSIX_SIM
 #include "imbibe_sim.ii"
@@ -183,7 +183,15 @@ void sim::step_frame() {
 
 namespace sim {
 
+struct allocmem_tracking_t {
+  unsigned size;
+  void *p;
+};
+
 uint16_t dummy_screen[4000];
+
+uint32_t allocmem_avail = 384 * 1024;
+std::unordered_map<unsigned, allocmem_tracking_t> allocmem_allocations;
 
 uint32_t now_ms = 0;
 uint32_t pit_tick_counter = 0;
@@ -195,7 +203,6 @@ void advance_time_to(uint32_t to_ms);
 } // namespace sim
 
 void sim::advance_time_to(uint32_t to_ms) {
-  // We probably shouldn't be jumping ahead by more than an hour
   uint32_t delta_ms = to_ms - now_ms;
 
   if (delta_ms > (UINT32_MAX / 2)) {
@@ -203,7 +210,8 @@ void sim::advance_time_to(uint32_t to_ms) {
     assert(((~delta_ms + 1) & 0xFFFFFFFFUL) < 10000UL);
     return;
   }
-  assert(delta_ms < 36000000UL);
+  // We probably shouldn't be jumping ahead by more than an hour
+  assert(delta_ms < 3600000UL);
 
   while (now_ms != to_ms) {
     if (pit_int_handler != pit_tick_counter_int_handler) {
@@ -232,6 +240,35 @@ void _chain_intr(void (*int_handler)()) {
   assert(int_handler);
   logf_imbibe("chain_intr %p\n", int_handler);
   int_handler();
+}
+
+unsigned _dos_allocmem(unsigned size, uintptr_t __far *segment) {
+  assert(size > 0);
+  assert(segment);
+
+  if (sim::allocmem_avail < size * 16) {
+    *segment = sim::allocmem_avail / 16;
+    return -1;
+  }
+
+  void *p = malloc(size * 16 + 15);
+  uintptr_t p_seg = (reinterpret_cast<uintptr_t>(p) + 15) & ~uintptr_t(15);
+  sim::allocmem_allocations[p_seg] =
+      sim::allocmem_tracking_t{.size = size, .p = p};
+  *segment = p_seg;
+
+  return 0;
+}
+
+unsigned _dos_freemem(uintptr_t segment) {
+  if (sim::allocmem_allocations.find(segment) ==
+      sim::allocmem_allocations.end()) {
+    assert(!"_dos_freemem segment not allocated");
+    return -1;
+  }
+  sim::allocmem_avail += sim::allocmem_allocations[segment].size * 16;
+  sim::allocmem_allocations.erase(segment);
+  return 0;
 }
 
 unsigned _dos_open(char const __far *path, unsigned mode, int __far *handle) {

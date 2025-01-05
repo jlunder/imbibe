@@ -101,6 +101,12 @@
 #include <dos.h>
 #include <i86.h>
 
+#if BUILD_MSDOS_WATCOMC
+#define MK_FP_O32(s, o) MK_FP((s) + ((o) >> 4), (o))
+#else
+#error New platform support needed?
+#endif
+
 extern void failsafe_textmode();
 
 #if BUILD_MSDOS_WATCOMC
@@ -114,10 +120,13 @@ extern void failsafe_textmode();
     "   mov     bh, 0                   "                                      \
     "   int     010h                    " modify[ax bx cx dx] nomemory
 #else
-// TODO
+#error New platform support needed?
 #endif
 
 // seemingly missing from dos.h??
+// supposedly DM C implements a _dos_seek that returns where directly;
+// MS C may implement it with this interface;
+// I choose to name my version _dos_lseek to avoid the mess.
 extern unsigned _dos_lseek(int handle, long offset, int whence,
                            unsigned long __far *where);
 
@@ -156,6 +165,8 @@ extern void __sync_synchronize();
        ? reinterpret_cast<void __far *>(sim::dummy_screen)                     \
        : reinterpret_cast<void __far *>((uintptr_t)(s) + (uintptr_t)(o)))
 
+#define MK_FP_O32(s, o) MK_FP((s), (o))
+
 #define PRpF "p"
 #define PRpN "p"
 #define PRp "p"
@@ -185,6 +196,9 @@ inline void failsafe_textmode() {}
 extern void _dos_setvect(int, void (*)());
 extern void (*_dos_getvect(int))();
 extern void _chain_intr(void (*)());
+
+extern unsigned _dos_allocmem(unsigned size, uintptr_t __far *segment);
+extern unsigned _dos_freemem(uintptr_t segment);
 
 extern unsigned _dos_open(char const __far *path, unsigned mode,
                           int __far *handle);

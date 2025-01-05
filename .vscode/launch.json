@@ -69,5 +69,19 @@
                 "${file}"
             ]
         }
+        {
+            "name": "Python Debugger: mk_tyar",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/support/mk_tyar.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "-v",
+                "-o",
+                "imbibe.tya",
+                "testdata"
+            ]
+        }
     ]
 }

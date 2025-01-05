@@ -11,12 +11,17 @@
 
 namespace resource_manager {
 
-void setup();
+void setup(imstring const &archive_name = imstring());
 void teardown();
 void teardown_exiting();
 
-tbm fetch_tbm(imstring const &name);
 segsize_t fetch_data(imstring const &name, immutable *out_data);
+
+inline tbm fetch_tbm(imstring const &name) {
+  immutable data;
+  segsize_t size = fetch_data(name, &data);
+  return tbm(data, size);
+}
 
 } // namespace resource_manager
 
