@@ -204,6 +204,8 @@ extern uint16_t asm_fletcher16_str(char const __far *s);
 
 // clang-format off
 #pragma aux asm_fletcher16_str = \
+    "   push    ds                         "                    \
+    "   mov     ds, dx                     "                    \
     /*  ; BX is the lower counter                            */ \
     "   xor     bx, bx                     "                    \
     /*  ; DX is the upper (dual) counter                     */ \
@@ -285,7 +287,10 @@ extern uint16_t asm_fletcher16_str(char const __far *s);
     /*  ; consolidate the result into AX                     */ \
     "   mov     al, bl                     " /*  2           */ \
     "   mov     ah, dl                     " /*  2           */ \
-    modify [ax bx cx dx si] parm[ds si] value[ax]
+    "   pop     ds                         " /*              */ \
+    modify [bx cx] \
+    parm [dx si] \
+    value [ax]
 // clang-format on
 
 #endif

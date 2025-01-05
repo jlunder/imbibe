@@ -6,10 +6,10 @@
 #include "screen_element.h"
 #include "tbm.h"
 
-class quit_prompt_element : public screen_element {
+class quit_element : public screen_element {
 public:
-  quit_prompt_element();
-  virtual ~quit_prompt_element() {}
+  quit_element();
+  virtual ~quit_element() {}
 
   virtual void layout(coord_t window_width, coord_t window_height);
   virtual void poll();

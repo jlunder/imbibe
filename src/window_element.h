@@ -8,7 +8,7 @@
 
 class window_element : public element, public window {
 public:
-  window_element();
+  window_element() {}
   virtual ~window_element() {
 #if BUILD_DEBUG
     assert(m_lock_count == 0);

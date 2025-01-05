@@ -9,7 +9,7 @@
 #include "keyboard.h"
 #include "menu_element.h"
 #include "outro_element.h"
-#include "quit_prompt_element.h"
+#include "quit_element.h"
 #include "submenu_element.h"
 #include "text_window.h"
 #include "timer.h"
@@ -57,7 +57,7 @@ inplace<menu_element> s_menu_screen;
 inplace<submenu_element> s_submenu_screen;
 inplace<viewer_element> s_viewer_screen;
 inplace<outro_element> s_outro_screen;
-inplace<quit_prompt_element> s_quit_prompt;
+inplace<quit_element> s_quit_prompt;
 
 void poll_input();
 void animate(anim_time_t anim_ms);
@@ -466,7 +466,7 @@ void application::deactivate_menu() {
 void application::activate_submenu(imstring config) {
   assert(s_last_mode == mode_none);
   assert(!config.null_or_empty());
-  s_submenu_screen->activate(s_submenu_config);
+  s_submenu_screen->activate(config);
   s_last_mode = mode_submenu;
 }
 

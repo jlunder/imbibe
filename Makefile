@@ -1,4 +1,4 @@
-VERSION = DEBUG
+VERSION = RELEASE
 
 SIM_OBJ_DIR = build/simdebug/
 SIM_DEP_DIR = build/simdeps/
@@ -18,7 +18,7 @@ LINK_OPT = $(LINK_OPT_$(VERSION))
 
 LINK = wlink
 
-CC_OPT_RELEASE = -dNDEBUG -otaeilh -ms
+CC_OPT_RELEASE = -dNDEBUG -otaeilh -ml
 CC_OPT_DEBUG = -d2 -osaeih -ml
 CC_OPT_PROFILE = $(CC_OPT_RELEASE) -d1
 CC_OPT = $(CC_OPT_$(VERSION)) -2 -bt=dos -fpc -w5 -ze
@@ -195,6 +195,9 @@ $(OBJ_DIR)%.obj: $(SRC_DIR)%.cpp $(SIM_OBJ_DIR)%.o Makefile | $(OBJ_DIR)
 	    $(DOSBOX_BUILD) \
 	      -c "S:" \
 	      -c "$(CC) $(CC_OPT) -fo=$$TEMP_OBJ $< > $(CC_LOG)" \
+	      -c "exit" && \
+	    $(DOSBOX_BUILD) \
+	      -c "S:" \
 	      -c "wdis $$TEMP_OBJ -s -l=$(patsubst %.obj,%.lst,$@)" \
 	      -c "exit" && \
 	    cd .. && \

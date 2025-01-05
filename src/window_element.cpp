@@ -4,8 +4,6 @@
 
 #define logf_window_element(...) disable_logf("WINDOW_ELEMENT: " __VA_ARGS__)
 
-window_element::window_element() {}
-
 void window_element::paint(graphics *g) {
 #if BUILD_DEBUG
   assert(m_lock_count == 0);

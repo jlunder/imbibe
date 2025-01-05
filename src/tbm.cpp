@@ -33,6 +33,8 @@ tbm::tbm(immutable const &n_raw, segsize_t raw_size) : m_raw(n_raw) {
     assert(!valid());
     return;
   }
+#else
+  (void)raw_size;
 #endif
   assert(raw_size >= sizeof(iff_header));
   assert(
@@ -151,13 +153,6 @@ bool tbm_aux::validate_data_xbin(tbm_header const __far &tbm_h, unpacker *tbm) {
     }
   }
   return true;
-}
-
-void tbm::to_bitmap(bitmap *out_b) const {
-  tbm_header const __far &h = header();
-  out_b->assign(h.width, h.height);
-  graphics g(out_b);
-  g.draw_tbm(0, 0, *this);
 }
 
 #endif

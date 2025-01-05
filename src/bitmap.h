@@ -7,17 +7,14 @@
 
 class bitmap {
 public:
-  bitmap() : m_width(0), m_height(0x8000), m_data(NULL) {}
+  bitmap() : m_width(0), m_height(0), m_data(NULL) {}
   bitmap(bitmap const &n_bitmap);
-  bitmap(coord_t n_width, coord_t n_height);
   // In the case of preallocated data, the data is treated as immutable and
   // will not be freed!
   bitmap(coord_t n_width, coord_t n_height, termel_t const __far *n_data);
-  ~bitmap();
 
   coord_t width() const { return m_width; }
-  coord_t height() const { return m_height & 0x7FFF; }
-  bool immutable() const { return (m_height & 0x8000) != 0; }
+  coord_t height() const { return m_height; }
   termel_t at(coord_t x, coord_t y) const {
     assert(x >= 0);
     assert(x < width());
@@ -25,14 +22,10 @@ public:
     assert(y < height());
     return m_data[y * m_width + x];
   }
-  termel_t __far *data() {
-    assert(!immutable());
-    return m_data;
-  }
+  termel_t __far *data() { return m_data; }
   termel_t const __far *data() const { return m_data; }
 
   void set_at(coord_t x, coord_t y, termel_t n_t) {
-    assert(!immutable());
     assert(x >= 0);
     assert(x < width());
     assert(y >= 0);
@@ -40,8 +33,6 @@ public:
     m_data[y * m_width + x] = n_t;
   }
 
-  bitmap &assign(coord_t n_width, coord_t n_height);
-  bitmap &assign(coord_t n_width, coord_t n_height, termel_t fill_brush);
   bitmap &assign(coord_t n_width, coord_t n_height,
                  termel_t const __far *n_data);
   bitmap &assign(bitmap const &n_bitmap);

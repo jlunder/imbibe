@@ -96,7 +96,7 @@ struct toc_entry_t {
 
 namespace resource_manager {
 
-static unsigned archive_data_seg = 0;
+static unsigned archive_seg = 0;
 static uint32_t archive_size = 0;
 static tyar::toc_entry_t __far *archive_toc;
 static uint16_t archive_toc_entry_count;
@@ -123,10 +123,10 @@ void resource_manager::setup(imstring const &archive_name) {
 #if BUILD_DEBUG
   char const *op = "opening archive";
 #endif
-  archive_data_seg = 0;
+  archive_seg = 0;
 
   unsigned long size = UINT32_MAX;
-  err = _dos_open(path, O_RDONLY, &handle);
+  err = _dos_open(path, O_RDONLY, &handle); // TODO -- near/far problem?
   if (err == 0) {
 #if BUILD_DEBUG
     op = "getting archive file size";
@@ -141,12 +141,13 @@ void resource_manager::setup(imstring const &archive_name) {
 #if BUILD_DEBUG
     op = "allocating archive data";
 #endif
-    unsigned page_count = (archive_size + 15) / 16;
+    unsigned page_count = (unsigned)((archive_size + 15) / 16);
     if (archive_size / 16 > UINT16_MAX) {
       err = -1;
     } else {
-      err = _dos_allocmem(page_count, &archive_data_seg);
-      logf_resource_manager("allocated %u pages into %04X\n", page_count, archive_data_seg);
+      err = _dos_allocmem(page_count, &archive_seg);
+      logf_resource_manager("allocated %u pages into %04X\n", page_count,
+                            archive_seg);
     }
   }
   if (err == 0) {
@@ -156,7 +157,7 @@ void resource_manager::setup(imstring const &archive_name) {
     uint32_t read_total = 0;
     while ((err == 0) && (read_total < archive_size)) {
       unsigned read_actual = 0;
-      void __far *dest = MK_FP_O32(archive_data_seg, read_total);
+      void __far *dest = MK_FP_O32(archive_seg, read_total);
       uint16_t size =
           (uint16_t)min<uint32_t>(archive_size - read_total, 32768u);
       logf_resource_manager("reading %u bytes into %" PRpF "\n", size, dest);
@@ -179,20 +180,20 @@ void resource_manager::setup(imstring const &archive_name) {
 #if BUILD_DEBUG
     abortf("error during %s (%u), archive '%" PRsF "'\n", op, err, path);
 #else
-    abortf("unable to read archive '%" PRsF "'\n", op, err, path);
+    abortf("unable to read archive '%" PRsF "'\n", path);
 #endif
   }
   if (err == 0) {
     if (!validate_archive()) {
-      _dos_freemem(archive_data_seg);
-      archive_data_seg = 0;
+      _dos_freemem(archive_seg);
+      archive_seg = 0;
       abortf("archive '%" PRsF "' not valid\n", path);
     }
   }
 }
 
 bool resource_manager::validate_archive() {
-  assert(archive_data_seg);
+  assert(archive_seg);
 
   if (archive_size < sizeof(tyar::archive_header_t)) {
     assert(!"archive: smaller than TYAR header");
@@ -200,8 +201,7 @@ bool resource_manager::validate_archive() {
   }
 
   tyar::archive_header_t __far *archive_header =
-      reinterpret_cast<tyar::archive_header_t __far *>(
-          MK_FP(archive_data_seg, 0));
+      reinterpret_cast<tyar::archive_header_t __far *>(MK_FP(archive_seg, 0));
   if (_fmemcmp(archive_header->header_magic, tyar::header_magic_v0,
                sizeof tyar::header_magic_v0) != 0) {
     assert(!"archive: bad header magic");
@@ -237,11 +237,11 @@ bool resource_manager::validate_archive() {
   archive_toc_entry_count = archive_header->toc_entry_count;
   archive_toc_offset = archive_header->toc_offset;
   archive_toc = reinterpret_cast<tyar::toc_entry_t __far *>(
-      MK_FP_O32(archive_data_seg, archive_header->toc_offset));
+      MK_FP_O32(archive_seg, archive_header->toc_offset));
   archive_hash_bin_count = archive_header->hash_bin_count;
   archive_hash_neighbor_count = archive_header->hash_neighbor_count;
   archive_hash = reinterpret_cast<tyar::hash_entry_fletcher16_t __far *>(
-      MK_FP_O32(archive_data_seg, archive_header->hash_bins_offset));
+      MK_FP_O32(archive_seg, archive_header->hash_bins_offset));
   archive_data_offset = archive_header->data_offset;
   archive_data_size = archive_header->data_size;
 
@@ -249,9 +249,9 @@ bool resource_manager::validate_archive() {
 }
 
 void resource_manager::teardown() {
-  if (archive_data_seg) {
-    _dos_freemem(archive_data_seg);
-    archive_data_seg = 0;
+  if (archive_seg) {
+    _dos_freemem(archive_seg);
+    archive_seg = 0;
     archive_size = 0;
     archive_hash = NULL;
     archive_toc = NULL;
@@ -263,7 +263,7 @@ void resource_manager::teardown_exiting() {
   teardown();
 #else
   // not actually sure it's okay to leak DOS-allocated resources here
-  _dos_freemem(FP_SEG(archive_data));
+  _dos_freemem(archive_seg);
 #endif
 }
 
@@ -281,18 +281,17 @@ segsize_t resource_manager::fetch_data(imstring const &name,
       tyar::toc_entry_t const __far *entry =
           &archive_toc[archive_hash[bin].toc_index];
       char const __far *toc_name = reinterpret_cast<char const __far *>(
-          MK_FP_O32(archive_data_seg, archive_toc_offset + entry->name_offset));
+          MK_FP_O32(archive_seg, archive_toc_offset + entry->name_offset));
       assert((entry + 1)->name_offset > entry->name_offset);
       assert((entry + 1)->name_offset - entry->name_offset > entry->name_size);
       if (_fstrcmp(name.c_str(), toc_name) == 0) {
         assert(entry->file_offset < archive_data_size);
         assert(archive_data_size - entry->file_offset > entry->file_size);
         assert(entry->file_size <= SEGSIZE_INVALID);
-        *out_data =
-            immutable(immutable::prealloc,
-                      MK_FP_O32(archive_data_seg,
-                                archive_data_offset + entry->file_offset));
-        return entry->file_size;
+        *out_data = immutable(
+            immutable::prealloc,
+            MK_FP_O32(archive_seg, archive_data_offset + entry->file_offset));
+        return (segsize_t)entry->file_size;
       }
     }
   }

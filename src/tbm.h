@@ -45,8 +45,6 @@ public:
 
   bool valid() const { return m_raw; }
 
-  void to_bitmap(bitmap *out_b) const;
-
   tbm_header const __far &header() const {
     assert(valid());
     return *reinterpret_cast<tbm_header const __far *>(

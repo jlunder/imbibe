@@ -20,6 +20,9 @@ static uint8_t const s_text_mode_color_80_25 = 3;
 static termel_t __far *const s_screen_buffer =
     reinterpret_cast<termel_t __far *>(MK_FP(0xB800, 0));
 
+static termel_t __based(__segname("screen_save_DATA")) s_screen_save[80 * 25];
+static termel_t __based(__segname("backbuffer_DATA")) s_backbuffer[80 * 25];
+
 enum {
   cursor_visible = 0x00,
   cursor_invisible = 0x20,
@@ -86,17 +89,18 @@ inline void aux_text_window::read_screen_buffer(bitmap *out_b) {
                    details.cols, details.page);
   if (details.mode == 2 || details.mode == 3) {
     out_b->assign(aux_text_window::s_screen_width,
-                  aux_text_window::s_screen_height);
+                  aux_text_window::s_screen_height, s_screen_save);
     segsize_t offset = details.page * 4096 / sizeof(termel_t);
     segsize_t size = out_b->width() * out_b->height();
     logf_text_window("computed page offset: %u\n", offset);
     _fmemcpy(out_b->data(), aux_text_window::s_screen_buffer + offset,
              size * sizeof(termel_t));
   } else {
-    termel_t __far *data = out_b->data();
     out_b->assign(aux_text_window::s_screen_width,
-                  aux_text_window::s_screen_height,
-                  termel::from(' ', color::white, color::black));
+                  aux_text_window::s_screen_height, s_screen_save);
+    for (segsize_t i = 0; i < LENGTHOF(s_screen_save); ++i) {
+      s_screen_save[i] = termel::from(' ', color::white, color::black);
+    }
   }
 }
 
@@ -118,8 +122,10 @@ inline void aux_text_window::set_cursor_style(uint8_t visible,
 
 inline void aux_text_window::read_screen_buffer(bitmap *out_b) {
   out_b->assign(aux_text_window::s_screen_width,
-                aux_text_window::s_screen_height,
-                termel::from(' ', color::white, color::black));
+                aux_text_window::s_screen_height, s_screen_save);
+  for (segsize_t i = 0; i < LENGTHOF(s_screen_save); ++i) {
+    s_screen_save[i] = termel::from(' ', color::white, color::black);
+  }
 }
 
 inline void aux_text_window::set_video_mode(uint8_t mode) { assert(mode == 3); }
@@ -136,7 +142,8 @@ inline void aux_text_window::set_cursor_style(uint8_t visible,
 
 text_window::text_window()
     : window(), m_element(NULL), m_backbuffer(aux_text_window::s_screen_width,
-                                              aux_text_window::s_screen_height),
+                                              aux_text_window::s_screen_height,
+                                              aux_text_window::s_backbuffer),
       m_capture(), m_lock_count(0), m_need_repaint(false), m_dirty(false) {}
 
 void text_window::setup(bool capture_screen) {
@@ -263,6 +270,7 @@ void text_window::locked_repaint(rect const &r) {
 
 void text_window::present_copy(termel_t const __far *backbuffer, coord_t width,
                                coord_t height, rect const &r) {
+  (void)height;
   assert(r.reasonable());
   assert(r.x1 >= 0);
   assert(r.y1 >= 0);

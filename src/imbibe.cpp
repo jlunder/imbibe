@@ -162,6 +162,7 @@ void sim::step_poll() {
 }
 
 void sim::step_animate(uint32_t anim_ms) {
+  (void)anim_ms;
   logf_sim("('animate',{'t':%lu,'anim_ms'=%lu})\n", (unsigned long)timer::now(),
            (unsigned long)anim_ms);
 }
