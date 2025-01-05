@@ -202,6 +202,20 @@ void advance_time_to(uint32_t to_ms);
 
 } // namespace sim
 
+uintptr_t sim::map_segment(uintptr_t seg) {
+  if (!seg) {
+    return 0;
+  }
+  if (seg == 0xB800) {
+    return (uintptr_t)dummy_screen;
+  }
+  auto a = allocmem_allocations.find(seg);
+  if (a != allocmem_allocations.end()) {
+    return (uintptr_t)a->second.p;
+  }
+  return seg;
+}
+
 void sim::advance_time_to(uint32_t to_ms) {
   uint32_t delta_ms = to_ms - now_ms;
 
@@ -242,7 +256,7 @@ void _chain_intr(void (*int_handler)()) {
   int_handler();
 }
 
-unsigned _dos_allocmem(unsigned size, uintptr_t __far *segment) {
+unsigned _dos_allocmem(unsigned size, unsigned __far *segment) {
   assert(size > 0);
   assert(segment);
 
@@ -260,7 +274,7 @@ unsigned _dos_allocmem(unsigned size, uintptr_t __far *segment) {
   return 0;
 }
 
-unsigned _dos_freemem(uintptr_t segment) {
+unsigned _dos_freemem(unsigned segment) {
   if (sim::allocmem_allocations.find(segment) ==
       sim::allocmem_allocations.end()) {
     assert(!"_dos_freemem segment not allocated");
@@ -340,6 +354,10 @@ int _fstrcmp(char const __far *x, char const __far *y) {
 
 size_t _fstrlen(char const __far *s) {
   return strlen(const_cast<char const *>(s));
+}
+
+int _fmemcmp(void const __far *x, void const __far *y, size_t size) {
+  return memcmp(const_cast<void const *>(x), const_cast<void const *>(y), size);
 }
 
 void _fmemcpy(void __far *dest, void const __far *src, size_t size) {

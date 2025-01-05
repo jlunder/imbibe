@@ -102,7 +102,10 @@
 #include <i86.h>
 
 #if BUILD_MSDOS_WATCOMC
-#define MK_FP_O32(s, o) MK_FP((s) + ((o) >> 4), (o))
+#define MK_FP_O32(s, o) _mk_fp_o32((s), (o))
+static inline void __far * _mk_fp_o32(unsigned s, unsigned long o) {
+  return MK_FP(s + (o >> 4), o & 0xF);
+}
 #else
 #error New platform support needed?
 #endif
@@ -161,9 +164,7 @@ extern void __sync_synchronize();
 #define FP_SEG(p) (reinterpret_cast<uintptr_t>(p) & ~0xFLLU)
 #define FP_OFF(p) (reinterpret_cast<uintptr_t>(p) & 0xFLLU)
 #define MK_FP(s, o)                                                            \
-  ((uintptr_t)(s) == 0xB800                                                    \
-       ? reinterpret_cast<void __far *>(sim::dummy_screen)                     \
-       : reinterpret_cast<void __far *>((uintptr_t)(s) + (uintptr_t)(o)))
+  (reinterpret_cast<void __far *>(sim::map_segment(s) + (uintptr_t)(o)))
 
 #define MK_FP_O32(s, o) MK_FP((s), (o))
 
@@ -176,7 +177,9 @@ extern void __sync_synchronize();
 #define PRs "s"
 
 namespace sim {
-extern uint16_t dummy_screen[4000];
+
+extern uintptr_t map_segment(uintptr_t seg);
+
 }
 
 #define __interrupt
@@ -197,8 +200,8 @@ extern void _dos_setvect(int, void (*)());
 extern void (*_dos_getvect(int))();
 extern void _chain_intr(void (*)());
 
-extern unsigned _dos_allocmem(unsigned size, uintptr_t __far *segment);
-extern unsigned _dos_freemem(uintptr_t segment);
+extern unsigned _dos_allocmem(unsigned size, unsigned __far *segment);
+extern unsigned _dos_freemem(unsigned segment);
 
 extern unsigned _dos_open(char const __far *path, unsigned mode,
                           int __far *handle);
@@ -213,6 +216,7 @@ extern void __far *_fexpand(void __far *p, size_t size);
 extern void _ffree(void __far *p);
 extern int _fstrcmp(char const __far *x, char const __far *y);
 extern size_t _fstrlen(char const __far *s);
+extern int _fmemcmp(void const __far *x, void const __far *y, size_t size);
 extern void _fmemcpy(void __far *dest, void const __far *src, size_t size);
 
 #else

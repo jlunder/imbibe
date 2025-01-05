@@ -39,75 +39,75 @@ namespace tyar {
 static uint8_t const header_magic_v0[12] = {'T',  'Y',  'A',  'R',  '0',  0x1A,
                                             0x00, 0x00, 0xD2, 0x6E, 0xD5, 0xCD};
 
-static uint8_t const archive_header_toc_magic_v0[4] = {'T', 't', 'c', '0'};
-static uint8_t const archive_header_hash_magic_v0[4] = {'T', 'h', 't', '0'};
-
-static uint16_t const hash_type_fletcher16_hopscotch = 'f' + ('h' << 8);
-
-static uint8_t const toc_entry_name_magic_v0[4] = {'T', 'f', 'n', '0'};
-static uint8_t const toc_entry_file_magic_v0[4] = {'T', 'f', 'd', '0'};
-
 // 64 bytes
-struct archive_header {
+struct archive_header_t {
   // 'TYAR0\x1A\x00\x00\xD2\x6E\xD5\xCD'
   uint8_t header_magic[12];
-  uint32_t header_check_value; // 0 for now
-  uint32_t archive_size;
+  // CRC of the whole shebang from +16 to end
+  uint32_t archive_check_value;
 
-  // 'Ttc0'
-  uint8_t toc_magic[4];
+  // CRC of this header starting after this value
+  uint32_t header_check_value;
+
+  uint32_t data_offset;
+  uint32_t data_size;
+
+  // toc_entry_count * 32 == toc_size
+  uint16_t toc_entry_count;
+  // '66'
+  uint8_t pad_0[2];
+  // Relative to the beginning of this header
   uint32_t toc_offset;
+  // Size in bytes of the TOC entries
   uint32_t toc_size;
-  uint32_t toc_check_value; // 0 for now
-  // 'Tht0'
-  uint8_t hash_magic[4];
-  uint32_t hash_offset;
-  uint32_t hash_size;
-  uint32_t hash_check_value; // 0 for now
-};
+  // CRC of full TOC
+  uint32_t toc_check_value;
 
-// 8 bytes
-struct hash_header {
-  // 'fh' for Fletcher-16, hopscotch hashing
-  uint16_t hash_type;
   // Should always be a power of 2
-  uint16_t bin_count;
-  // The neighbor_count is how far we might have to search for any given hash
-  // value. Farther than that, we can give up knowing it's not in the table.
-  // This is a property guaranteed by hopscotch hashing; for reads, it's
-  // otherwise just like a linear open table.
-  uint16_t neighbor_count;
-  uint16_t reserved_0;
+  uint16_t hash_bin_count;
+  // How far we might have to search for any given hash
+  uint16_t hash_neighbor_count;
+  // Relative to this header
+  uint32_t hash_bins_offset;
+  // Size in bytes of the header and entries
+  uint32_t hash_bins_size;
+  // CRC of hash table including header and entries
+  uint32_t hash_bins_check_value;
+
+  uint8_t pad_1[12]; // '666666666666'
 };
 
 // 4 bytes
-struct hash_entry_fletcher16 {
+struct hash_entry_fletcher16_t {
   uint16_t name_hash; // Fletcher-16, 0 seed
   uint16_t toc_index; // 0xFFFF for an unoccupied entry
 };
 
-// 32 bytes
-struct toc_entry {
-  // 'Tfn0'
-  uint8_t name_magic[4];
-  uint32_t name_offset;
-  uint32_t name_size;
-  uint32_t name_check_value;
-  // 'Tfd0'
-  uint8_t file_magic[4];
-  uint32_t file_offset;
-  uint32_t file_size;
-  uint32_t file_check_value;
+// 16 bytes
+struct toc_entry_t {
+  uint16_t name_offset; // From TOC begin
+  uint16_t name_size;   // Includes null terminator, which must be present and 0
+  uint32_t file_offset; // From data area
+  uint32_t file_size;   // Only the file, there may be padding between files
+  uint32_t file_check_value; // CRC of file data without padding
 };
 
 } // namespace tyar
 
 namespace resource_manager {
 
-static __segment archive_data_seg = 0;
+static unsigned archive_data_seg = 0;
 static uint32_t archive_size = 0;
-static tyar::hash_entry_fletcher16 __far *archive_hash;
-static tyar::toc_entry __far *archive_toc;
+static tyar::toc_entry_t __far *archive_toc;
+static uint16_t archive_toc_entry_count;
+static uint32_t archive_toc_offset;
+static tyar::hash_entry_fletcher16_t __far *archive_hash;
+static uint16_t archive_hash_bin_count;
+static uint16_t archive_hash_neighbor_count;
+static uint32_t archive_data_offset;
+static uint32_t archive_data_size;
+
+bool validate_archive();
 
 } // namespace resource_manager
 
@@ -141,10 +141,12 @@ void resource_manager::setup(imstring const &archive_name) {
 #if BUILD_DEBUG
     op = "allocating archive data";
 #endif
+    unsigned page_count = (archive_size + 15) / 16;
     if (archive_size / 16 > UINT16_MAX) {
       err = -1;
     } else {
-      err = _dos_allocmem(archive_size / 16, &archive_data_seg);
+      err = _dos_allocmem(page_count, &archive_data_seg);
+      logf_resource_manager("allocated %u pages into %04X\n", page_count, archive_data_seg);
     }
   }
   if (err == 0) {
@@ -154,9 +156,11 @@ void resource_manager::setup(imstring const &archive_name) {
     uint32_t read_total = 0;
     while ((err == 0) && (read_total < archive_size)) {
       unsigned read_actual = 0;
-      err = _dos_read(handle, MK_FP_O32(archive_data_seg, read_total),
-                      min<uint32_t>(archive_size - read_total, 32768u),
-                      &read_actual);
+      void __far *dest = MK_FP_O32(archive_data_seg, read_total);
+      uint16_t size =
+          (uint16_t)min<uint32_t>(archive_size - read_total, 32768u);
+      logf_resource_manager("reading %u bytes into %" PRpF "\n", size, dest);
+      err = _dos_read(handle, dest, size, &read_actual);
       if (err == 0) {
         read_total += read_actual;
       }
@@ -178,11 +182,76 @@ void resource_manager::setup(imstring const &archive_name) {
     abortf("unable to read archive '%" PRsF "'\n", op, err, path);
 #endif
   }
+  if (err == 0) {
+    if (!validate_archive()) {
+      _dos_freemem(archive_data_seg);
+      archive_data_seg = 0;
+      abortf("archive '%" PRsF "' not valid\n", path);
+    }
+  }
+}
+
+bool resource_manager::validate_archive() {
+  assert(archive_data_seg);
+
+  if (archive_size < sizeof(tyar::archive_header_t)) {
+    assert(!"archive: smaller than TYAR header");
+    return false;
+  }
+
+  tyar::archive_header_t __far *archive_header =
+      reinterpret_cast<tyar::archive_header_t __far *>(
+          MK_FP(archive_data_seg, 0));
+  if (_fmemcmp(archive_header->header_magic, tyar::header_magic_v0,
+               sizeof tyar::header_magic_v0) != 0) {
+    assert(!"archive: bad header magic");
+    return false;
+  }
+  if ((archive_size < archive_header->toc_offset) ||
+      (archive_header->toc_offset - archive_size < archive_header->toc_size)) {
+    assert(!"archive: TOC not within file");
+    return false;
+  }
+  if ((archive_header->toc_size / sizeof(tyar::toc_entry_t) <=
+       archive_header->toc_entry_count)) {
+    assert(!"archive: TOC not big enough for entries");
+    return false;
+  }
+  if ((archive_size < archive_header->hash_bins_offset) ||
+      (archive_header->hash_bins_offset - archive_size <
+       archive_header->hash_bins_size)) {
+    assert(!"archive: hash not within file");
+    return false;
+  }
+  if ((archive_header->hash_bins_size / sizeof(tyar::hash_entry_fletcher16_t) !=
+       archive_header->hash_bin_count)) {
+    assert(!"archive: hash size doesn't match bin count");
+    return false;
+  }
+  if ((archive_size < archive_header->data_offset) ||
+      (archive_header->toc_offset - archive_size < archive_header->toc_size)) {
+    assert(!"archive: data area not within file");
+    return false;
+  }
+
+  archive_toc_entry_count = archive_header->toc_entry_count;
+  archive_toc_offset = archive_header->toc_offset;
+  archive_toc = reinterpret_cast<tyar::toc_entry_t __far *>(
+      MK_FP_O32(archive_data_seg, archive_header->toc_offset));
+  archive_hash_bin_count = archive_header->hash_bin_count;
+  archive_hash_neighbor_count = archive_header->hash_neighbor_count;
+  archive_hash = reinterpret_cast<tyar::hash_entry_fletcher16_t __far *>(
+      MK_FP_O32(archive_data_seg, archive_header->hash_bins_offset));
+  archive_data_offset = archive_header->data_offset;
+  archive_data_size = archive_header->data_size;
+
+  return true;
 }
 
 void resource_manager::teardown() {
   if (archive_data_seg) {
     _dos_freemem(archive_data_seg);
+    archive_data_seg = 0;
     archive_size = 0;
     archive_hash = NULL;
     archive_toc = NULL;
@@ -200,12 +269,34 @@ void resource_manager::teardown_exiting() {
 
 segsize_t resource_manager::fetch_data(imstring const &name,
                                        immutable *out_data) {
-  (void)name;
-  (void)out_data;
-  assert(!"NOT IMPLEMENTED");
-  // logf_resource_manager("resource_manager::fetch_data\n");
-  // assert(name.length() <= RESOURCE_NAME_LEN_MAX);
-  // return find_or_load_data(name, out_data);
+  uint16_t hash = fletcher16_str(name.c_str());
+  // Swap high and low bytes for reasons
+  uint16_t bin_mask = (archive_hash_bin_count - 1);
+  uint16_t h = ((hash << 8) | (hash >> 8));
+  for (uint16_t i = 0; i < archive_hash_neighbor_count; ++i) {
+    uint16_t bin = (h + i) & bin_mask;
+    if ((archive_hash[bin].name_hash == hash) &&
+        (archive_hash[bin].toc_index != 0xFFFF)) {
+      assert(archive_hash[bin].toc_index < archive_toc_entry_count);
+      tyar::toc_entry_t const __far *entry =
+          &archive_toc[archive_hash[bin].toc_index];
+      char const __far *toc_name = reinterpret_cast<char const __far *>(
+          MK_FP_O32(archive_data_seg, archive_toc_offset + entry->name_offset));
+      assert((entry + 1)->name_offset > entry->name_offset);
+      assert((entry + 1)->name_offset - entry->name_offset > entry->name_size);
+      if (_fstrcmp(name.c_str(), toc_name) == 0) {
+        assert(entry->file_offset < archive_data_size);
+        assert(archive_data_size - entry->file_offset > entry->file_size);
+        assert(entry->file_size <= SEGSIZE_INVALID);
+        *out_data =
+            immutable(immutable::prealloc,
+                      MK_FP_O32(archive_data_seg,
+                                archive_data_offset + entry->file_offset));
+        return entry->file_size;
+      }
+    }
+  }
+  return SEGSIZE_INVALID;
 }
 
 #else

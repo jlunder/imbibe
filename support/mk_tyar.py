@@ -350,17 +350,18 @@ def write_tyar(args: Args, output_path: str, files: list[FileData]) -> bool | No
     hash_bins_offset = toc_entries_offset + page_pad_total(toc_size)
     data_offset = hash_bins_offset + page_pad_total(hash_bins_size)
 
-    archive_size_estimate = data_offset + sum((page_pad_total(f.size) for f in files))
-    if archive_size_estimate >= MAX_ARCHIVE_SIZE:
+    archive_size = data_offset + sum((page_pad_total(f.size) for f in files[:-1])) + sum((f.size for f in files[-1:]))
+    if archive_size >= MAX_ARCHIVE_SIZE:
         logger.error(
-            f"Archive will be too big (estimate {archive_size_estimate} bytes)"
+            f"Archive will be too big (estimate {archive_size} bytes)"
         )
         return None
 
     with open(output_path, "w+b") as w:
         w.seek(data_offset)
         toc_entries = write_file_data(args, toc_entries, w)
-        assert archive_size_estimate == page_pad_total(w.tell())
+        data_size = w.tell() - data_offset
+        assert archive_size == page_pad_total(w.tell())
 
         if w.tell() >= MAX_ARCHIVE_SIZE:
             logger.error(
@@ -390,6 +391,9 @@ def write_tyar(args: Args, output_path: str, files: list[FileData]) -> bool | No
         #
         #   header_check_value            :  4 -- CRC of this header from +20 to +60
         #
+        #   data_offset                   :  4 -- Relative to this header
+        #   data_size                     :  4 -- Total space data might occupy
+        #
         #                                    TOC header, 16 bytes
         #   toc_entry_count               :  2 -- toc_entry_count * 32 == toc_entries_size
         #   pad                           :  2 = 0x36 '6'
@@ -404,13 +408,15 @@ def write_tyar(args: Args, output_path: str, files: list[FileData]) -> bool | No
         #   hash_bins_size                :  4 -- Size in bytes of the header and entries
         #   hash_bins_check_value         :  4 -- CRC of hash table including header and entries
         #
-        #   pad                           : 12 = 0x36 '6'
+        #   pad                           :  4 = 0x36 '6'
 
         # Generate the archive signature and headers, with placeholder CRCs
         archive_header_sig = tyar_header_magic_v0 + b"\0" * 4
         archive_header_main = struct.pack(
-            "<LHHLLLHHLLL",
+            "<LLLHHLLLHHLLL",
             0,
+            data_offset,
+            data_size,
             len(toc_entries),
             0x3636,
             toc_entries_offset,
