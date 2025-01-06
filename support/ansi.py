@@ -30,7 +30,6 @@ from enum import IntEnum, auto
 import logging
 import numpy as np
 import re
-from typing import Callable
 
 import __main__
 

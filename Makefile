@@ -37,6 +37,10 @@ IMBIBE_SIM_DEPS = $(patsubst $(SRC_DIR)%.cpp,$(SIM_DEP_DIR)%.d,$(IMBIBE_SOURCES)
 IMBIBE_SDL_GL_OBJS = $(patsubst $(SRC_DIR)%.cpp,$(SDL_GL_OBJ_DIR)%.o,$(IMBIBE_SOURCES))
 IMBIBE_SDL_GL_DEPS = $(patsubst $(SRC_DIR)%.cpp,$(SDL_GL_DEP_DIR)%.d,$(IMBIBE_SOURCES))
 
+MK_CFG_DEPS = support/mk_cfg.py Makefile
+MK_TBM_DEPS = support/mk_tbm.py support/ansi.py support/equivs.py support/rle.py support/sauce.py Makefile
+MK_TYAR_DEPS = support/mk_tyar.py support/crc.py Makefile
+
 IMBIBE_RESOURCES = \
 	$(patsubst data/%.bin,testdata/%.tbm,$(wildcard data/*/*.bin)) \
 	$(patsubst data/%.ans,testdata/%.tbm,$(wildcard data/*/viewer/*.ans)) \
@@ -88,7 +92,7 @@ all: imbibe simbibe glimbibe
 clean:
 	rm -rf build
 
-imbibe.tya: $(IMBIBE_RESOURCES)
+imbibe.tya: $(IMBIBE_RESOURCES) $(MK_TYAR_DEPS)
 	support/mk_tyar.py -o $@ testdata 
 
 simbibe: $(IMBIBE_SIM_OBJS) imbibe.tya
@@ -109,18 +113,18 @@ define MAKE_TBM_FROM =
 	support/mk_tbm.py -o $@ $<
 endef
 
-testdata/%.tbm: data/%.bin support/*.py Makefile
+testdata/%.tbm: data/%.bin $(MK_TBM_DEPS)
 	$(call MAKE_TBM_FROM)
-testdata/%.tbm: data/%.ans support/*.py Makefile
+testdata/%.tbm: data/%.ans $(MK_TBM_DEPS)
 	$(call MAKE_TBM_FROM)
-testdata/%.tbm: data/%.ANS support/*.py Makefile
+testdata/%.tbm: data/%.ANS $(MK_TBM_DEPS)
 	$(call MAKE_TBM_FROM)
-testdata/%.tbm: data/%.txt support/*.py Makefile
+testdata/%.tbm: data/%.txt $(MK_TBM_DEPS)
 	$(call MAKE_TBM_FROM)
-testdata/%.tbm: data/%.TXT support/*.py Makefile
+testdata/%.tbm: data/%.TXT $(MK_TBM_DEPS)
 	$(call MAKE_TBM_FROM)
 
-testdata/%.cfg: data/%.json support/*.py Makefile
+testdata/%.cfg: data/%.json $(MK_CFG_DEPS)
 	mkdir -p $(dir $@)
 	support/mk_cfg.py -v -r data -o $@ $<
 

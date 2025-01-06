@@ -1,4 +1,4 @@
-#!/usr/bin/python3 -O
+#!/usr/bin/python3
 
 __appname__ = "mk_tbm"
 __author__ = "Joseph Lunderville <joe.lunderville@gmail.com>"
@@ -9,16 +9,11 @@ import argparse
 import dataclasses
 import logging
 import os
-from random import Random
 import struct
 import sys
 from typing import BinaryIO, Callable, Iterator
 
-from ansi import *
 import crc
-from equivs import *
-from rle import *
-from sauce import *
 
 logger = logging.getLogger(__appname__)
 
@@ -257,10 +252,12 @@ def make_hopscotch_hash(
     args: Args, toc_order: list[HashEntry]
 ) -> tuple[list[HashEntry], int]:
     # 852 rounds up to 1024, 853 rounds up to 2048 -- a little wasteful
-    bin_count = 1 << round(len(toc_order) * 1.2).bit_length()
+    bin_count = 1 << round(len(toc_order) * 1.8).bit_length()
     assert len(toc_order) < 0xFFFF
     bins: list[HashEntry]
     neighborhood_size: int
+
+    logger.info(f"Hashing {len(toc_order)} items into {bin_count} bins")
 
     def index(pos: int, n: int) -> int:
         return (pos + n) % bin_count
@@ -272,7 +269,7 @@ def make_hopscotch_hash(
     neighborhood_size: int
 
     # start with an optimistic neighborhood size -- this will (likely) expand
-    for neighborhood_size in range(2, bin_count.bit_length()):
+    for neighborhood_size in range(2, bin_count.bit_length() * 2):
         bins = [empty_hash_entry] * bin_count
         for entry in toc_order:
             h = entry.neighborhood
@@ -313,14 +310,18 @@ def make_hopscotch_hash(
             all_hashed = True
             break
 
-    assert all_hashed
+    if not all_hashed:
+        return None
 
-    # assert all(
-    #     (
-    #         (hash, index) in [bins[lookup(hood, n)] for n in range(neighborhood_size)]
-    #         for hood, hash, index in zip(neighborhoods, hashes, range(len(hashes)))
-    #     )
-    # )
+    assert all(
+        (
+            e.toc_index
+            in [lookup(e.neighborhood, n).toc_index for n in range(neighborhood_size)]
+            for e in toc_order
+        )
+    )
+
+    logger.info(f"Hash successful with neighborhood size {neighborhood_size}")
 
     return (bins, neighborhood_size)
 
@@ -350,18 +351,22 @@ def write_tyar(args: Args, output_path: str, files: list[FileData]) -> bool | No
     hash_bins_offset = toc_entries_offset + page_pad_total(toc_size)
     data_offset = hash_bins_offset + page_pad_total(hash_bins_size)
 
-    archive_size = data_offset + sum((page_pad_total(f.size) for f in files[:-1])) + sum((f.size for f in files[-1:]))
+    archive_size = (
+        data_offset
+        + sum((page_pad_total(f.size) for f in toc_entries[:-1]))
+        + sum((f.size for f in toc_entries[-1:]))
+    )
+    logger.info(f"Archive computed size: {archive_size}")
     if archive_size >= MAX_ARCHIVE_SIZE:
-        logger.error(
-            f"Archive will be too big (estimate {archive_size} bytes)"
-        )
+        logger.error(f"Archive will be too big (estimate {archive_size} bytes)")
         return None
 
     with open(output_path, "w+b") as w:
         w.seek(data_offset)
         toc_entries = write_file_data(args, toc_entries, w)
         data_size = w.tell() - data_offset
-        assert archive_size == page_pad_total(w.tell())
+        logger.info(f"Archive actual size: {w.tell()}")
+        assert archive_size == w.tell()
 
         if w.tell() >= MAX_ARCHIVE_SIZE:
             logger.error(
@@ -377,7 +382,7 @@ def write_tyar(args: Args, output_path: str, files: list[FileData]) -> bool | No
         toc_crc = crc_c9d204f5(toc_data)
         w.write(page_pad(len(toc_data)))
         assert w.tell() == hash_bins_offset
-        
+
         hash_bins_data = b"".join((b.hash_entry() for b in hash_bins))
         assert len(hash_bins_data) == hash_bins_size
         w.write(hash_bins_data)
@@ -445,6 +450,32 @@ def write_tyar(args: Args, output_path: str, files: list[FileData]) -> bool | No
         w.write(archive_header_sig[:-4] + struct.pack("<L", archive_crc))
 
         # Everything is buttoned up!
+
+        # logger.info(
+        #     f"Full TOC ({len(toc_entries)}/0x{len(toc_entries):04X} entries):\n"
+        #     + "  || Idx  || Hash || Nbhd || DataOfs  || DataLen  || Name                                     ||\n"
+        #     + "".join(
+        #         (
+        #             f"  |  {h.toc_index:04X} |  {h.hash:04X} |  {h.neighborhood:04X} |  {t.data_offset:08X} |  {t.size:8d} |  {repr(t.name):41}|\n"
+        #             for t, h in zip(toc_entries, hash_entries)
+        #         )
+        #     )
+        # )
+
+        # logger.info(
+        #     f"Full hash (0x{len(hash_bins):04X} bins, neighborhood 0x{hash_neighbor_count:04X}):\n"
+        #     + "  || Idx  || Hash || Nbhd || TocI || Name                                     ||\n"
+        #     + "".join(
+        #         (
+        #             (
+        #                 f"  |  {i:04X} |  {h.hash:04X} |  {h.neighborhood:04X} |  {h.toc_index:04X} |  {repr(toc_entries[h.toc_index].name):41}|\n"
+        #                 if not h.empty
+        #                 else f"  |  {i:04X} |  -    |  -    |  -    |  -                                        |\n"
+        #             )
+        #             for i, h in enumerate(hash_bins)
+        #         )
+        #     )
+        # )
 
         return True
 
