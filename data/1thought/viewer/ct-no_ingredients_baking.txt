@@ -1,0 +1,86 @@
+This is an interesting technological note from my historic low period.  In 
+the first decade of this century I did not experience what could be described 
+as regular gainful employment.  Due to circumstances I was in no imminent 
+risk of winding up unhoused, but my access to the money needed to attend to 
+my necessaries was often rather sporadic.  Consequently my larder was 
+primarily occupied with giant sacks of bulk dry goods from Famous Foods off 
+which I would live for months at a time (a strategy that could backfire 
+catastrophically through the intervention of a single moth or weevil.)
+
+At one point, at the end of my rope, I found myself starving with a cupboard 
+full of ingredients -- but no _food_.  Rather than taking stock of my life, 
+cutting my hair and cold-calling local businesses, I thought that possibly 
+technology might be able to help to assuage the immediate problem of my 
+growling belly.  I had a lot of some ingredients (notably flour, basically a 
+staple of life), but the complicating factor was that virtually anything else 
+you might mix it with in order to concoct any dish beyond wheatpaste for 
+postering was not on the premises and beyond my reach, financially.  (I will 
+never forget the day my roommate carelessly cooked my last onion.  That onion 
+represented most of the flavour I had looked forward to experiencing that 
+week!  I had big plans for that onion!  The Day I Came To Terms With Making 
+Do Without My Onion really must have been my hitting rock bottom.)
+
+So I fired up the Google search engine, firmly in its pre-enshittification 
+"Don't Be Evil" era, and began looking for recipes that included ingredients 
+I had in stock -- and which didn't include recipes I didn't have and couldn't 
+get.  I effected this investigation through its then best-of-class simple 
+search term exclusion system.  In this way I could algorithmically omit 
+results that included the missing ingredient, only to turn up new results 
+featuring other ingredients I also didn't have.
+
+I don't know that the trick would work the same way today.  Around the turn 
+of the century Google was very good about giving you what you asked for and 
+only that, making possible such feats as as the Googlewhack, discovering a 
+virtual hapax legomenon, words or phrases that only occur a single time in 
+the cyber record.  Down the line Google became very cagey about allowing 
+empty search results to be served up to users, and someone in the Search 
+division determined that it would be preferable to give us results to 
+searches similar to ours rather than to allow us to be served up a blank 
+results page.  (You can't sell ads on a blank results page, no one is buying 
+void, especially in this economy!)
+
+From a 2024 perspective, you might expect to run into entirely new frontiers 
+of search problems these days -- the unwanted AI assistant they interpolated 
+between the asker and the answer might be only too happy to hallucinate an 
+inedible, outright toxic, or possibly even fundamentally impossible recipe 
+faced with the challenge of satisfying a user's curiosity and the reluctance 
+to allow me to walk away empty-handed.  (This brings to mind concentration 
+camp artifacts of cookbooks full of recipes dreamed up by starving inmates, 
+their relationship to sustanance so deranged and disrupted through the 
+horrors of ethnonationalism that the dishes described simply don't work as 
+food, ie. a cake whose batter is mixed by combining two cups of flour with a 
+cup of milk and 20 cups of table salt.  Their traumatized brains were being 
+digested by their starving bodies, but now technology is happy to bypass the 
+process of actually starving imprisoned populations and deliver us similar 
+textual output on demand, whether we want it or not.  But I digress.)
+
+Once you search for a recipe including an ingredient you have and excluding 
+an ingredient you don't have, of course what Google would serve you up next 
+would be a different recipe hinging on the use of a different ingredient you 
+also didn't have.  So I'd have to modify my search terms to also exclude the 
+new pivotal but absent ingredient.  It took quite a while, but after 
+explicitly excluding twenty common words from the results, I unbelievably 
+actually yielded a couple of usable, albeit starkly primitive, recipes for 
+flatbreads.
+
+And for reasons that were not clear in that moment (and remain rather 
+nebulous even today), this process struck me as being significant enough to 
+document at that time, and so I am able to share with you my incredible chain 
+of twenty search term inclusions and exclusions I used on that occasion circa 
+2006 to somehow shake lunch out of "I got nothin'":
+
+recipe baking flour sugar -rye -yeast -butter -margarine -shortening -oil 
+-lard -crisco -milk -cream -buttermilk -egg -eggs -apple -kirsch -tofu -soy 
+-mayonnaise -reviews -review 
+
+(if I recall correctly, this journey ultimately yielded a flatbread not 
+entirely dissimilar to the Green Onion Pancakes I long enjoyed at the Sha-Lin 
+Noodle House, which it turns out could be reproduced for pennies.  What was 
+the grease?  I really cannot recall.  What was the flavour?  Probably garlic.)
+
+If you find yourself in this situation, please let me advise you not to 
+follow in my footsteps.  Visit a food bank or soup kitchen and find some 
+help.  I never figured out why I didn't, but had I kept on that path even I 
+would have eventually needed to concede that no amount of stubbornness, 
+regardless of whether it is paired with powerful technology, will allow you 
+to get blood from a stone.

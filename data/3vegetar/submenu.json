@@ -16,8 +16,88 @@
     "option-selected-label-attribute": "hi-white:blue",
     "options": [
         {
-            "title": "About this menu",
-            "resource": "./about.txt"
+            "title": "Lupo's Kitchen: Sex-in-a-pan - by Lupo",
+            "resource": "./viewer/COOK.TXT"
+        },
+        {
+            "title": "*fill your freezer with free bananas banana bread - by Cthulu",
+            "resource": "./viewer/ct-banana_bread.txt"
+        },
+        {
+            "title": "*borscht aka \"a bowl full of farts\" - by Cthulu",
+            "resource": "./viewer/ct-borscht.txt"
+        },
+        {
+            "title": "Cottage Cheese Lemon Pudding - by Cthulu",
+            "resource": "./viewer/ct-cottagecheeselemon.txt"
+        },
+        {
+            "title": "*ultimate savory picnic bread - by Cthulu",
+            "resource": "./viewer/ct-foccacia.txt"
+        },
+        {
+            "title": "Cthulu was in a band once, and also he cooked granola - by Cthulu",
+            "resource": "./viewer/ct-granola.txt"
+        },
+        {
+            "title": "Sour Cream Coffee Cake - by Cthulu",
+            "resource": "./viewer/ct-sour_cream_coffee_cake.txt"
+        },
+        {
+            "title": "Rhubarb Cake - by Cthulu",
+            "resource": "./viewer/ct-rhubarb cake.txt"
+        },
+        {
+            "title": "*Mexican Corn Chowder - by Etana",
+            "resource": "./viewer/ET-CORN.TXT"
+        },
+        {
+            "title": "the eggs of satan - by publius enigma",
+            "resource": "./viewer/PE-EGGS.TXT"
+        },
+        {
+            "title": "benpottsfuel v3.02 - by Quadyl",
+            "resource": "./viewer/QUADFUEL.TXT"
+        },
+        {
+            "title": "Kraft Dinner!! - by The Judge",
+            "resource": "./viewer/tj-kraft_dinner.txt"
+        },
+        {
+            "title": "*fruit. - by Weird",
+            "resource": "./viewer/WD-FRUIT.TXT"
+        },
+        {
+            "title": "eat. - by Weird",
+            "resource": "./viewer/WD-TOAST.TXT"
+        },
+        {
+            "title": "*Really, Really Good.  (Really) - by Zinnia Lit-From-Within",
+            "resource": "./viewer/ZK-BEAN.ANS"
+        },
+        {
+            "title": "*Mouth On Fire! - by Zinnia Lit-From-Within",
+            "resource": "./viewer/ZK-CURRY.TXT"
+        },
+        {
+            "title": "*The magical MISORONI - by Zinnia Lit-From-Within",
+            "resource": "./viewer/ZK-MISOR.TXT"
+        },
+        {
+            "title": "*Baby Jesus' Egalitarian \"Autumn Medley\" Pretend Pizzas - by Zinnia Lit-From-Within",
+            "resource": "./viewer/ZK-PIZZA.TXT"
+        },
+        {
+            "title": "Magic Afternoon Spaghetti - by Zinnia Lit-From-Within and Cthulu",
+            "resource": "./viewer/ZKCT-SPA.TXT"
+        },
+        {
+            "title": "*Gestalt Banana Bread Recipe - by Zinnia Lit-From-Within",
+            "resource": "./viewer/ZR-BANA.TXT"
+        },
+        {
+            "title": "*It Makes You Sleepy: Misomania! - by Zinnia Lit-From-Within",
+            "resource": "./viewer/ZR-MISO.TXT"
         }
     ]
 }

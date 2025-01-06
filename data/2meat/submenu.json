@@ -16,8 +16,32 @@
     "option-selected-label-attribute": "hi-white:blue",
     "options": [
         {
-            "title": "About this menu",
-            "resource": "./about.txt"
+            "title": "bomb prison rice - by eRUPT and spinsane",
+            "resource": "./viewer/erupt-bomb_prison_rice.txt"
+        },
+        {
+            "title": "Spaghetti Sauce - by Etana",
+            "resource": "./viewer/ET-SPAG.TXT"
+        },
+        {
+            "title": "The King of Sandwiches! - by G33Kb00Bs",
+            "resource": "./viewer/G-SANDW.TXT"
+        },
+        {
+            "title": "Soema's Cheesy Fucking Ass Salmon Kraft Dinner - by Soema",
+            "resource": "./viewer/SO-KRAFT.TXT"
+        },
+        {
+            "title": "Okonomi-yaki!!! - by Zinnia Lit-From-Within",
+            "resource": "./viewer/ZK-OKONO.TXT"
+        },
+        {
+            "title": "*Huge Quantities of Meat - by Zinnia Lit-From-Within",
+            "resource": "./viewer/ZK-SOY.TXT"
+        },
+        {
+            "title": "Hairy Wolf Cookies - by Zinnia Lit-From-Within",
+            "resource": "./viewer/ZK-WOLF.TXT"
         }
     ]
 }

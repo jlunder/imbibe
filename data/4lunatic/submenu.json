@@ -16,8 +16,8 @@
     "option-selected-label-attribute": "hi-white:blue",
     "options": [
         {
-            "title": "About this menu",
-            "resource": "./about.txt"
+            "title": "Macaroni Surprise! - by Cthulu",
+            "resource": "./viewer/CT-MACNO.TXT"
         }
     ]
 }

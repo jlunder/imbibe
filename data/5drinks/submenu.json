@@ -16,8 +16,24 @@
     "option-selected-label-attribute": "hi-white:blue",
     "options": [
         {
-            "title": "About this menu",
-            "resource": "./about.txt"
+            "title": "Not Just for New Shoots Anymore! - by Cthulu and Zamfir Worshipper",
+            "resource": "./viewer/CT-SOUR.TXT"
+        },
+        {
+            "title": "*Blue part two - by Quip",
+            "resource": "./viewer/QU-BLU.TXT"
+        },
+        {
+            "title": "*yummy drink ;) - by Yohimbe",
+            "resource": "./viewer/SE-YUM.TXT"
+        },
+        {
+            "title": "my head is going to - by Weird",
+            "resource": "./viewer/WD-COLD.TXT"
+        },
+        {
+            "title": "*recipe for absinthe - by Yohimbe",
+            "resource": "./viewer/YO-ABSIN.TXT"
         }
     ]
 }
