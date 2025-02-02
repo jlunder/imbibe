@@ -29,6 +29,7 @@ public:
 private:
   struct submenu_option {
     imstring title;
+    imstring byline;
     imstring filename;
     imstring resource;
   };
@@ -42,9 +43,12 @@ private:
     tbm option_unselected_background;
     tbm option_selected_background;
     point option_selected_offset;
-    point option_label_offset;
-    attribute_t option_unselected_label_attribute;
-    attribute_t option_selected_label_attribute;
+    point option_title_offset;
+    point option_byline_offset;
+    attribute_t option_unselected_title_attribute;
+    attribute_t option_selected_title_attribute;
+    attribute_t option_unselected_byline_attribute;
+    attribute_t option_selected_byline_attribute;
 
     // computed values
     point menu_header_pos;

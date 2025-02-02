@@ -8,16 +8,28 @@
         0,
         0
     ],
-    "option-label-offset": [
+    "option-title-offset": [
         10,
         1
     ],
-    "option-unselected-label-attribute": "hi-white:black",
-    "option-selected-label-attribute": "hi-white:blue",
+    "option-byline-offset": [
+        70,
+        2
+    ],
+    "option-unselected-title-attribute": "hi-white:black",
+    "option-unselected-byline-attribute": "white:black",
+    "option-selected-title-attribute": "hi-white:blue",
+    "option-selected-byline-attribute": "white:blue",
     "options": [
         {
-            "title": "Macaroni Surprise! - by Cthulu",
+            "title": "Macaroni Surprise!",
+            "byline": "Cthulu",
             "resource": "./viewer/CT-MACNO.TXT"
-        }
-    ]
+        },
+            {
+                "title": "Cruelty and Vermin",
+                "byline": "Adel Faure, Cthulu, littlebitspace, et al",
+                "resource": "./viewer/us-cruelty_and_vermin.txt"
+            }
+        ]
 }

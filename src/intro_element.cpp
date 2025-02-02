@@ -13,7 +13,7 @@ intro_element::intro_element() {
   m_logo_width = logo_h.width;
   m_logo_height = logo_h.height;
   m_logo.set_tbm(logo_tbm);
-  tbm cover_tbm(resource_manager::fetch_tbm(imstring("assets/cover.tbm")));
+  tbm cover_tbm(resource_manager::fetch_tbm(imstring("assets/CT-IMBIBE.tbm")));
   tbm_header const __far &cover_h = cover_tbm.header();
   m_cover_width = cover_h.width;
   m_cover_height = cover_h.height;

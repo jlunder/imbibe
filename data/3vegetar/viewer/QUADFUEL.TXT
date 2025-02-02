@@ -3,10 +3,12 @@ bread
 nutella         {Sylphid: nutella?!  i can't eat that!}
 peanut butter   {Yohimbe: i'm just wondering how he classified nutella as
                 'organic'...}
+
 machines (simple & complex) required :
 knife
 plate
 toaster
+
 process :
 remove plate from cupboard
 remove knife from drawer

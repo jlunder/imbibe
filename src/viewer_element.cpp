@@ -9,10 +9,9 @@
 void viewer_element::layout(coord_t window_width, coord_t window_height) {
   set_frame(0, 0, window_width, window_height);
   m_background = termel::from(' ', color::white, color::black);
-  m_title_background = termel::from(' ', color::white, color::blue);
 
-  m_view_height = frame().height() - 1;
-  m_page_jump = m_view_height - 1;
+  m_view_height = frame().height();
+  m_page_jump = m_view_height - 2;
   m_scroll_height = 0;
   m_scroll_y_target = 0;
   m_scroll_y_target_last = 0;
@@ -92,27 +91,22 @@ void viewer_element::paint(graphics *g) {
   if (m_viewing.valid()) {
     coord_t view_y = m_scroll_y.value();
     g->draw_tbm(0, -view_y, m_viewing);
-    if (-view_y + m_viewing.height() < frame().height()) {
+    if (-view_y + m_viewing.height() < m_view_height) {
       g->draw_rectangle(0, -view_y + m_viewing.height(), frame().width(),
-                        frame().height() - 1, m_background);
+                        m_view_height, m_background);
     }
   } else {
     g->draw_rectangle(frame(), m_background);
   }
-  g->draw_rectangle(0, frame().height() - 1, frame().width(), frame().height(),
-                    m_title_background);
-  g->draw_text(1, frame().height() - 1, termel::attribute(m_title_background),
-               m_title.c_str());
   g->leave_subregion(&s);
 }
 
-void viewer_element::activate(imstring const &title, imstring const &resource) {
+void viewer_element::activate(imstring const &resource) {
   if (m_transition_in_out.done()) {
     assert(!"should be running a transition animation by now");
     m_transition_in_out.reset(0);
   }
 
-  m_title = title;
   m_viewing = resource_manager::fetch_tbm(resource);
 
   if (m_viewing.valid()) {

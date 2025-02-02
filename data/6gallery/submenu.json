@@ -8,83 +8,107 @@
         0,
         0
     ],
-    "option-label-offset": [
+    "option-title-offset": [
         10,
         1
     ],
-    "option-unselected-label-attribute": "hi-white:black",
-    "option-selected-label-attribute": "hi-white:blue",
+    "option-byline-offset": [
+        70,
+        2
+    ],
+    "option-unselected-title-attribute": "hi-white:black",
+    "option-unselected-byline-attribute": "white:black",
+    "option-selected-title-attribute": "hi-white:blue",
+    "option-selected-byline-attribute": "white:blue",
     "options": [
         {
-            "title": "consolejockey - Orange",
+            "title": "Orange",
+            "byline": "consolejockey",
             "resource": "./viewer/CJY-Orange.ans"
         },
         {
-            "title": "Codefenix - Dabbling with ASCII - BK Logo",
+            "title": "Dabbling with ASCII - BK Logo",
+            "byline": "Codefenix",
             "resource": "./viewer/CODEFENIX-BK_LOGO.ANS"
         },
         {
-            "title": "Codefenix - Eyes Off My Fries",
+            "title": "Eyes Off My Fries",
+            "byline": "Codefenix",
             "resource": "./viewer/CODEFENIX-EYES_OFF_MY_FRIES.ANS"
         },
         {
-            "title": "Codefenix - Dabbling with ASCII - Pizza Hut Logo",
+            "title": "Dabbling with ASCII - Pizza Hut Logo",
+            "byline": "Codefenix",
             "resource": "./viewer/CODEFENIX-HUT_LOGO.ANS"
         },
         {
-            "title": "Codefenix - The Magic Of Caffeine",
+            "title": "The Magic Of Caffeine",
+            "byline": "Codefenix",
             "resource": "./viewer/CODEFENIX-MAGIC_OF_CAFFEINE.ANS"
         },
         {
-            "title": "Codefenix - Mountain Dew Logo",
+            "title": "Mountain Dew Logo",
+            "byline": "Codefenix",
             "resource": "./viewer/CODEFENIX-MTDEW_LOGO.ANS"
         },
         {
-            "title": "Codefenix - Dabbling with ASCII - Pepsi Logo",
+            "title": "Dabbling with ASCII - Pepsi Logo",
+            "byline": "Codefenix",
             "resource": "./viewer/CODEFENIX-PEPSI_LOGO.ANS"
         },
         {
-            "title": "Codefenix - Taco Night",
+            "title": "Taco Night",
+            "byline": "Codefenix",
             "resource": "./viewer/CODEFENIX-TACO_NIGHT.ANS"
         },
         {
-            "title": "Codefenix - Wash the Dishes",
+            "title": "Wash the Dishes",
+            "byline": "Codefenix",
             "resource": "./viewer/CODEFENIX-WASH_THE_DISHES.ANS"
         },
         {
-            "title": "Codefenix - Who wants Bologna?",
+            "title": "Who wants Bologna?",
+            "byline": "Codefenix",
             "resource": "./viewer/CODEFENIX-WHO_WANTS_BOLOGNA.ANS"
         },
         {
-            "title": "DosDoC - Fried Green Tomatoes",
+            "title": "Fried Green Tomatoes",
+            "byline": "DosDoC",
             "resource": "./viewer/DOSDOC-FGTOMATOES.ANS"
         },
         {
-            "title": "DosDoC - Food of the Gods 2",
+            "title": "Food of the Gods 2",
+            "byline": "DosDoC",
             "resource": "./viewer/dosdoc-Food__of__the__gods__2.ans"
         },
         {
-            "title": "DosDoC - Nanny Oggs Cookbook",
+            "title": "Nanny Oggs Cookbook",
+            "byline": "DosDoC",
             "resource": "./viewer/dosdoc-nanny__oggs__cookbook.ans"
         },
         {
-            "title": "moth - Broccoli",
+            "title": "Broccoli",
+            "byline": "moth",
             "resource": "./viewer/moth-broccoli.ans"
         },
         {
-            "title": "Nitron - Bols de Fruit et Vin",
+            "title": "Bols de Fruit et Vin",
+            "byline": "Nitron",
             "resource": "./viewer/NI-BDFEV.ANS"
         },
         {
-            "title": "0DD - Dungeon Meshi",
+            "title": "Dungeon Meshi",
+            "byline": "0DD",
             "resource": "./viewer/odd-dungeonMeshiCol.ans"
         },
         {
-            "title": "0DD - GMO",
+            "title": "GMO",
+            "byline": "0DD",
             "resource": "./viewer/odd-gmo.ans"
         },
         {
-            "title": "Zylone - Can of Beans",
+            "title": "Can of Beans",
+            "byline": "Zylone",
             "resource": "./viewer/ZYLONE-CAN_OF_BEANS.ANS"
         }
     ]

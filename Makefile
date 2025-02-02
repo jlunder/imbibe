@@ -43,6 +43,7 @@ MK_TYAR_DEPS = support/mk_tyar.py support/crc.py Makefile
 
 IMBIBE_RESOURCES = \
 	$(patsubst data/%.bin,testdata/%.tbm,$(wildcard data/*/*.bin)) \
+	$(patsubst data/%.ANS,testdata/%.tbm,$(wildcard data/*/*.ANS)) \
 	$(patsubst data/%.ans,testdata/%.tbm,$(wildcard data/*/viewer/*.ans)) \
 	$(patsubst data/%.ANS,testdata/%.tbm,$(wildcard data/*/viewer/*.ANS)) \
 	$(patsubst data/%.txt,testdata/%.tbm,$(wildcard data/*/viewer/*.txt)) \

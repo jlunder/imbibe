@@ -8,31 +8,42 @@
         0,
         0
     ],
-    "option-label-offset": [
+    "option-title-offset": [
         10,
         1
     ],
-    "option-unselected-label-attribute": "hi-white:black",
-    "option-selected-label-attribute": "hi-white:blue",
+    "option-byline-offset": [
+        70,
+        2
+    ],
+    "option-unselected-title-attribute": "hi-white:black",
+    "option-unselected-byline-attribute": "white:black",
+    "option-selected-title-attribute": "hi-white:blue",
+    "option-selected-byline-attribute": "white:blue",
     "options": [
         {
-            "title": "Not Just for New Shoots Anymore! - by Cthulu and Zamfir Worshipper",
+            "title": "Not Just for New Shoots Anymore!",
+            "byline": "Cthulu and Zamfir Worshipper",
             "resource": "./viewer/CT-SOUR.TXT"
         },
         {
-            "title": "*Blue part two - by Quip",
+            "title": "*Blue part two",
+            "byline": "Quip",
             "resource": "./viewer/QU-BLU.TXT"
         },
         {
-            "title": "*yummy drink ;) - by Yohimbe",
+            "title": "*yummy drink ;)",
+            "byline": "Yohimbe",
             "resource": "./viewer/SE-YUM.TXT"
         },
         {
-            "title": "my head is going to - by Weird",
+            "title": "my head is going to",
+            "byline": "Weird",
             "resource": "./viewer/WD-COLD.TXT"
         },
         {
-            "title": "*recipe for absinthe - by Yohimbe",
+            "title": "*recipe for absinthe",
+            "byline": "Yohimbe",
             "resource": "./viewer/YO-ABSIN.TXT"
         }
     ]

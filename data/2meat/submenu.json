@@ -8,40 +8,53 @@
         0,
         0
     ],
-    "option-label-offset": [
+    "option-title-offset": [
         10,
         1
     ],
-    "option-unselected-label-attribute": "hi-white:black",
-    "option-selected-label-attribute": "hi-white:blue",
+    "option-byline-offset": [
+        70,
+        2
+    ],
+    "option-unselected-title-attribute": "hi-white:black",
+    "option-unselected-byline-attribute": "white:black",
+    "option-selected-title-attribute": "hi-white:blue",
+    "option-selected-byline-attribute": "white:blue",
     "options": [
         {
-            "title": "bomb prison rice - by eRUPT and spinsane",
+            "title": "bomb prison rice",
+            "byline": "eRUPT and spinsane",
             "resource": "./viewer/erupt-bomb_prison_rice.txt"
         },
         {
-            "title": "Spaghetti Sauce - by Etana",
-            "resource": "./viewer/ET-SPAG.TXT"
+            "title": "Hairy Wolf Cookies",
+            "byline": "Zinnia Lit-From-Within",
+            "resource": "./viewer/ZK-WOLF.TXT"
         },
         {
-            "title": "The King of Sandwiches! - by G33Kb00Bs",
-            "resource": "./viewer/G-SANDW.TXT"
-        },
-        {
-            "title": "Soema's Cheesy Fucking Ass Salmon Kraft Dinner - by Soema",
-            "resource": "./viewer/SO-KRAFT.TXT"
-        },
-        {
-            "title": "Okonomi-yaki!!! - by Zinnia Lit-From-Within",
-            "resource": "./viewer/ZK-OKONO.TXT"
-        },
-        {
-            "title": "*Huge Quantities of Meat - by Zinnia Lit-From-Within",
+            "title": "*Huge Quantities of Meat",
+            "byline": "Zinnia Lit-From-Within",
             "resource": "./viewer/ZK-SOY.TXT"
         },
         {
-            "title": "Hairy Wolf Cookies - by Zinnia Lit-From-Within",
-            "resource": "./viewer/ZK-WOLF.TXT"
+            "title": "Okonomi-yaki!!!",
+            "byline": "Zinnia Lit-From-Within",
+            "resource": "./viewer/ZK-OKONO.TXT"
+        },
+        {
+            "title": "Soema's Cheesy Fucking Ass Salmon Kraft Dinner",
+            "byline": "Soema",
+            "resource": "./viewer/SO-KRAFT.TXT"
+        },
+        {
+            "title": "Spaghetti Sauce",
+            "byline": "Etana",
+            "resource": "./viewer/ET-SPAG.TXT"
+        },
+        {
+            "title": "The King of Sandwiches!",
+            "byline": "G33Kb00Bs",
+            "resource": "./viewer/G-SANDW.TXT"
         }
     ]
 }

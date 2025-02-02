@@ -8,96 +8,123 @@
         0,
         0
     ],
-    "option-label-offset": [
+    "option-title-offset": [
         10,
         1
     ],
-    "option-unselected-label-attribute": "hi-white:black",
-    "option-selected-label-attribute": "hi-white:blue",
+    "option-byline-offset": [
+        70,
+        2
+    ],
+    "option-unselected-title-attribute": "hi-white:black",
+    "option-unselected-byline-attribute": "white:black",
+    "option-selected-title-attribute": "hi-white:blue",
+    "option-selected-byline-attribute": "white:blue",
     "options": [
         {
-            "title": "All about Poutine - by Cthulu, Radman, and The Night Angel",
-            "resource": "./viewer/_ANSIPOU.asc"
-        },
-        {
-            "title": "Ask Chef Agnostique! - by Agnostic",
-            "resource": "./viewer/AG-CAKE.TXT"
-        },
-        {
-            "title": "An Open Letter:  from Cheese to Slugs - by Agnostic and Yohimbe",
-            "resource": "./viewer/AG-CHEES.TXT"
-        },
-        {
-            "title": "Gursha - by Cthulu",
-            "resource": "./viewer/ct-gursha.txt"
-        },
-        {
-            "title": "Cooking with Google, 2006 - by Cthulu",
-            "resource": "./viewer/ct-no_ingredients_baking.txt"
-        },
-        {
-            "title": "The Guide to Hacker Eating Habits - by The Laughing Fool",
-            "resource": "./viewer/EAT.TXT"
-        },
-        {
-            "title": "\"7-11 Rules!\" OR: The difference between plastic and food. - by G33kb00Bs and Silver Angel",
+            "title": "\"7-11 Rules!\" OR: The difference between plastic and food.",
+            "byline": "G33kb00Bs and Silver Angel",
             "resource": "./viewer/G-BURGER.TXT"
         },
         {
-            "title": "An Astute Observation - by Miataman",
+            "title": "All about Poutine",
+            "byline": "Cthulu, Radman, and The Night Angel",
+            "resource": "./viewer/_ANSIPOU.ans"
+        },
+        {
+            "title": "An Astute Observation",
+            "byline": "Miataman",
             "resource": "./viewer/MI-WAKEU.TXT"
         },
         {
-            "title": "And Now For A Word From Our Sponsor Regarding Garlic Toast - by Quip",
+            "title": "An Open Letter: from Cheese to Slugs",
+            "byline": "Agnostic and Yohimbe",
+            "resource": "./viewer/AG-CHEES.ans"
+        },
+        {
+            "title": "And Now For A Word From Our Sponsor Regarding Garlic Toast",
+            "byline": "Quip",
             "resource": "./viewer/QU-TOAST.TXT"
         },
         {
-            "title": "Anemia in the Family - by Zinnia Lit-From-Within",
+            "title": "Anemia in the Family",
+            "byline": "Zinnia Lit-From-Within",
             "resource": "./viewer/ZJ-BLOOD.TXT"
         },
         {
-            "title": "Utensil Discussion - by Zinnia Lit-From-Within and Sylphid",
-            "resource": "./viewer/ZK-COOK.TXT"
+            "title": "Ask Chef Agnostique!",
+            "byline": "Agnostic",
+            "resource": "./viewer/AG-CAKE.ans"
         },
         {
-            "title": "Fantasies of a Militant Revolutionary Dietician - by Zinnia Lit-From-Within",
+            "title": "Cooking with Google, 2006",
+            "byline": "Cthulu",
+            "resource": "./viewer/ct-no_ingredients_baking.txt"
+        },
+        {
+            "title": "Fantasies of a Militant Revolutionary Dietician",
+            "byline": "Zinnia Kray",
             "resource": "./viewer/ZK-DIET.TXT"
         },
         {
-            "title": "Side-Effects of Tim Horton's Donuts - by Zinnia Lit-From-Within",
-            "resource": "./viewer/ZK-DONUT.TXT"
-        },
-        {
-            "title": "Kimchee + Kava kava = BAD - by Zinnia Lit-From-Within",
-            "resource": "./viewer/ZK-KIMCH.TXT"
-        },
-        {
-            "title": "Lactose Intolerance - by Zinnia Lit-From-Within, Etana and Otnoo Ishphoo",
-            "resource": "./viewer/ZK-LACT.TXT"
-        },
-        {
-            "title": "Food Mood - by Zinnia Lit-From-Within",
+            "title": "Food Mood",
+            "byline": "Zinnia Friday",
             "resource": "./viewer/ZK-MOOD.TXT"
         },
         {
-            "title": "STUPID THINGS TO POISON YOUR BODY WITH (incomplete list) - by Zinnia Lit-From-Within, Happyfish and Publius Enigma",
-            "resource": "./viewer/ZK-POISO.ANS"
-        },
-        {
-            "title": "The Starving Student: a critique of my current diet - by Zinnia Lit-From-Within",
-            "resource": "./viewer/ZK-STARV.TXT"
-        },
-        {
-            "title": "Well, Now I Know - by Zinnia Lit-From-Within and Agnostic",
-            "resource": "./viewer/ZR-BEAN.TXT"
-        },
-        {
-            "title": "Guinea Burgers - by Zinnia Lit-From-Within",
+            "title": "Guinea Burgers",
+            "byline": "Zinnia Rock",
             "resource": "./viewer/ZR-DREAM.TXT"
         },
         {
-            "title": "Reviews of Restaurants At Which I Have Never Actually Eaten! by Zamfir Worshipper",
+            "title": "Gursha",
+            "byline": "Cthulu",
+            "resource": "./viewer/ct-gursha.txt"
+        },
+        {
+            "title": "Kimchee + Kava kava = BAD",
+            "byline": "Zinnia Kray",
+            "resource": "./viewer/ZK-KIMCH.TXT"
+        },
+        {
+            "title": "Lactose Intolerance",
+            "byline": "Zinnia Kray, Etana and Otnoo Ishphoo",
+            "resource": "./viewer/ZK-LACT.TXT"
+        },
+        {
+            "title": "Reviews of Restaurants At Which I Have Never Actually Eaten!",
+            "byline": "Zamfir Worshipper",
             "resource": "./viewer/ZW_reviews_restaurants_he_hasn_t_eaten_at.txt"
+        },
+        {
+            "title": "Side-Effects of Tim Horton's Donuts",
+            "byline": "Zinnia Lit-From-Within",
+            "resource": "./viewer/ZK-DONUT.TXT"
+        },
+        {
+            "title": "STUPID THINGS TO POISON YOUR BODY WITH (incomplete list)",
+            "byline": "Zinnia Lit-From-Within, Happyfish and Publius Enigma",
+            "resource": "./viewer/ZK-POISO.ANS"
+        },
+        {
+            "title": "The Guide to Hacker Eating Habits",
+            "byline": "The Laughing Fool",
+            "resource": "./viewer/EAT.TXT"
+        },
+        {
+            "title": "The Starving Student: a critique of my current diet",
+            "byline": "Zinnia Kray",
+            "resource": "./viewer/ZK-STARV.TXT"
+        },
+        {
+            "title": "Utensil Discussion",
+            "byline": "Zinnia Lit-From-Within and Sylphid",
+            "resource": "./viewer/ZK-COOK.TXT"
+        },
+        {
+            "title": "Well, Now I Know",
+            "byline": "Zinnia Kray and Agnostic",
+            "resource": "./viewer/ZR-BEAN.TXT"
         }
     ]
 }

@@ -86,6 +86,7 @@ class MenuConfig:
 @dataclasses.dataclass
 class SubmenuConfigOption:
     title: str
+    byline: str
     filename: str
     resource: str
 
@@ -105,9 +106,12 @@ class SubmenuConfig:
     option_unselected_background: str
     option_selected_background: str
     option_selected_offset: tuple[int, int]
-    option_label_offset: tuple[int, int]
-    option_unselected_label_attribute: int
-    option_selected_label_attribute: int
+    option_title_offset: tuple[int, int]
+    option_byline_offset: tuple[int, int]
+    option_unselected_title_attribute: int
+    option_selected_title_attribute: int
+    option_unselected_byline_attribute: int
+    option_selected_byline_attribute: int
     options: list[SubmenuConfigOption]
 
     def normalize_paths(self, args: Args, input_path: str):
@@ -219,6 +223,7 @@ def parse_submenu_config_options(opts_data: list[dict]) -> list[SubmenuConfigOpt
     return [
         SubmenuConfigOption(
             title=d["title"],
+            byline=d["byline"],
             filename=os.path.basename(d["resource"]),
             resource=d["resource"],
         )
@@ -252,12 +257,19 @@ def read_json_config(args: Args, input_path: str):
                 option_unselected_background=data["option-unselected-background"],
                 option_selected_background=data["option-selected-background"],
                 option_selected_offset=tuple(data["option-selected-offset"]),
-                option_label_offset=tuple(data["option-label-offset"]),
-                option_unselected_label_attribute=parse_attribute(
-                    data["option-unselected-label-attribute"]
+                option_title_offset=tuple(data["option-title-offset"]),
+                option_byline_offset=tuple(data["option-byline-offset"]),
+                option_unselected_title_attribute=parse_attribute(
+                    data["option-unselected-title-attribute"]
                 ),
-                option_selected_label_attribute=parse_attribute(
-                    data["option-selected-label-attribute"]
+                option_unselected_byline_attribute=parse_attribute(
+                    data["option-unselected-byline-attribute"]
+                ),
+                option_selected_title_attribute=parse_attribute(
+                    data["option-selected-title-attribute"]
+                ),
+                option_selected_byline_attribute=parse_attribute(
+                    data["option-selected-byline-attribute"]
                 ),
                 options=parse_submenu_config_options(data["options"]),
             ).normalize_paths(args, input_path)
@@ -317,16 +329,20 @@ def write_submenu_cfg(args: Args, output_path: str, cfg: SubmenuConfig) -> bool 
             + struct.pack(
                 "<hh", cfg.option_selected_offset[0], cfg.option_selected_offset[1]
             )
-            + struct.pack("<hh", cfg.option_label_offset[0], cfg.option_label_offset[1])
+            + struct.pack("<hh", cfg.option_title_offset[0], cfg.option_title_offset[1])
+            + struct.pack("<hh", cfg.option_byline_offset[0], cfg.option_byline_offset[1])
             + struct.pack(
-                "<BB",
-                cfg.option_unselected_label_attribute,
-                cfg.option_selected_label_attribute,
+                "<BBBB",
+                cfg.option_unselected_title_attribute,
+                cfg.option_selected_title_attribute,
+                cfg.option_unselected_byline_attribute,
+                cfg.option_selected_byline_attribute,
             )
             + struct.pack("<H", len(cfg.options))
             + b"".join(
                 [
                     (o.title.encode() + b"\0")
+                    + (o.byline.encode() + b"\0")
                     + (o.filename.encode() + b"\0")
                     + (o.resource.encode() + b"\0")
                     for o in cfg.options

@@ -8,95 +8,122 @@
         0,
         0
     ],
-    "option-label-offset": [
+    "option-title-offset": [
         10,
         1
     ],
-    "option-unselected-label-attribute": "hi-white:black",
-    "option-selected-label-attribute": "hi-white:blue",
+    "option-byline-offset": [
+        70,
+        2
+    ],
+    "option-unselected-title-attribute": "hi-white:black",
+    "option-unselected-byline-attribute": "white:black",
+    "option-selected-title-attribute": "hi-white:blue",
+    "option-selected-byline-attribute": "white:blue",
     "options": [
         {
-            "title": "Lupo's Kitchen: Sex-in-a-pan - by Lupo",
-            "resource": "./viewer/COOK.TXT"
-        },
-        {
-            "title": "*fill your freezer with free bananas banana bread - by Cthulu",
-            "resource": "./viewer/ct-banana_bread.txt"
-        },
-        {
-            "title": "*borscht aka \"a bowl full of farts\" - by Cthulu",
+            "title": "*borscht aka \"a bowl full of farts\"",
+            "byline": "Cthulu",
             "resource": "./viewer/ct-borscht.txt"
         },
         {
-            "title": "Cottage Cheese Lemon Pudding - by Cthulu",
+            "title": "Lupo's Kitchen: Sex-in-a-pan",
+            "byline": "Lupo",
+            "resource": "./viewer/COOK.TXT"
+        },
+        {
+            "title": "*fill your freezer with free bananas banana bread",
+            "byline": "Cthulu",
+            "resource": "./viewer/ct-banana_bread.txt"
+        },
+        {
+            "title": "Cottage Cheese Lemon Pudding",
+            "byline": "Cthulu",
             "resource": "./viewer/ct-cottagecheeselemon.txt"
         },
         {
-            "title": "*ultimate savory picnic bread - by Cthulu",
-            "resource": "./viewer/ct-foccacia.txt"
+            "title": "*ultimate savory picnic bread",
+            "byline": "Cthulu",
+            "resource": "./viewer/ct-focaccia.txt"
         },
         {
-            "title": "Cthulu was in a band once, and also he cooked granola - by Cthulu",
-            "resource": "./viewer/ct-granola.txt"
+            "title": "Cthulu was in a band once, and also he cooked granola",
+            "byline": "Cthulu",
+            "resource": "./viewer/ct-granola2.txt"
         },
         {
-            "title": "Sour Cream Coffee Cake - by Cthulu",
+            "title": "Sour Cream Coffee Cake",
+            "byline": "Cthulu",
             "resource": "./viewer/ct-sour_cream_coffee_cake.txt"
         },
         {
-            "title": "Rhubarb Cake - by Cthulu",
-            "resource": "./viewer/ct-rhubarb cake.txt"
+            "title": "Rhubarb Cake",
+            "byline": "Cthulu",
+            "resource": "./viewer/ct-rhubarb_cake.txt"
         },
         {
-            "title": "*Mexican Corn Chowder - by Etana",
+            "title": "*Mexican Corn Chowder",
+            "byline": "Etana",
             "resource": "./viewer/ET-CORN.TXT"
         },
         {
-            "title": "the eggs of satan - by publius enigma",
+            "title": "the eggs of satan",
+            "byline": "publius enigma",
             "resource": "./viewer/PE-EGGS.TXT"
         },
         {
-            "title": "benpottsfuel v3.02 - by Quadyl",
+            "title": "benpottsfuel v3.02",
+            "byline": "Quadyl",
             "resource": "./viewer/QUADFUEL.TXT"
         },
         {
-            "title": "Kraft Dinner!! - by The Judge",
+            "title": "Kraft Dinner!!",
+            "byline": "The Judge",
             "resource": "./viewer/tj-kraft_dinner.txt"
         },
         {
-            "title": "*fruit. - by Weird",
+            "title": "*fruit.",
+            "byline": "Weird",
             "resource": "./viewer/WD-FRUIT.TXT"
         },
         {
-            "title": "eat. - by Weird",
+            "title": "eat.",
+            "byline": "Weird",
             "resource": "./viewer/WD-TOAST.TXT"
         },
         {
-            "title": "*Really, Really Good.  (Really) - by Zinnia Lit-From-Within",
+            "title": "*Really, Really Good.  (Really)",
+            "byline": "Zinnia Lit-From-Within",
             "resource": "./viewer/ZK-BEAN.ANS"
         },
         {
-            "title": "*Mouth On Fire! - by Zinnia Lit-From-Within",
+            "title": "*Mouth On Fire!",
+            "byline": "Zinnia Lit-From-Within",
             "resource": "./viewer/ZK-CURRY.TXT"
         },
         {
-            "title": "*The magical MISORONI - by Zinnia Lit-From-Within",
+            "title": "*The magical MISORONI",
+            "byline": "Zinnia Lit-From-Within",
             "resource": "./viewer/ZK-MISOR.TXT"
         },
         {
-            "title": "*Baby Jesus' Egalitarian \"Autumn Medley\" Pretend Pizzas - by Zinnia Lit-From-Within",
+            "title": "*Baby Jesus' Egalitarian \"Autumn Medley\" Pretend Pizzas",
+            "byline": "Zinnia Lit-From-Within",
             "resource": "./viewer/ZK-PIZZA.TXT"
         },
         {
-            "title": "Magic Afternoon Spaghetti - by Zinnia Lit-From-Within and Cthulu",
+            "title": "Magic Afternoon Spaghetti",
+            "byline": "Zinnia Lit-From-Within and Cthulu",
             "resource": "./viewer/ZKCT-SPA.TXT"
         },
         {
-            "title": "*Gestalt Banana Bread Recipe - by Zinnia Lit-From-Within",
+            "title": "*Gestalt Banana Bread Recipe",
+            "byline": "Zinnia Lit-From-Within",
             "resource": "./viewer/ZR-BANA.TXT"
         },
         {
-            "title": "*It Makes You Sleepy: Misomania! - by Zinnia Lit-From-Within",
+            "title": "*It Makes You Sleepy: Misomania!",
+            "byline": "Zinnia Lit-From-Within",
             "resource": "./viewer/ZR-MISO.TXT"
         }
     ]

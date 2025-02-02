@@ -8,9 +8,9 @@ Eating is generally viewed by most hackers as wasted time. For example,
 10 seconds taken to eat a bite of Cola-Gummi can mean the difference between
 Morris/Torvalds level concentration (big-endian concentration) and
 distraction.  Time taken for such ridiculous things as sleep, going to the
-washroom, or food are considered goofing off to the majority of hard headed
-coders out there, and circut frying hardware weenies. Therefore, the hacker
-diet is most compact, and time efficient (except when it is not, which is
+washroom, or food are considered goofing off to the majority of hard-headed
+coders out there and circuit-frying hardware weenies. Therefore, the hacker
+diet is most compact and time efficient (except when it is not, which is
 expected.) Of course, these fine principles of nutrition fade in the face of
 personal taste, and weakness and distraction. But they help for those long
 nights when you simply must finish the Goddamn Code and there are gremlins on
@@ -28,8 +28,8 @@ Gluttony: Eating as much as possible in large bursts, usually 1 meal a day.
         These schools of thought are variable of course. When a hacker is on
 daylight hours (not coding, hacking) and on social occasions, these
 conventions break down. It is also interesting to note that you can identify
-a hacker by diet. Anybody who constantly drinks water/coca cola and eats
-Boost fuel replacement bars in probably a hack.      
+a hacker by diet. Anybody who constantly drinks water/Coca-Cola and eats
+Boost fuel replacement bars is probably a hack.      
 
 Four Major Food Groups Groups
             
@@ -53,7 +53,7 @@ following systems in the body:
       Sombulatic Repression Loop aka Asimbulatic Loop (Sleep repression part
         of a person's metabology.)
       Various Glandular systems for low-level body hacking (For stimulation
-        of the appropriate hormones, fine tuning performance.)
+        of the appropriate hormones, fine-tuning performance.)
 
             Exceptions to this general rule are substances that may be a
 ritualistic part of hacking. For example, substances like Elacca and mustard
@@ -109,7 +109,7 @@ goes.)
 
       A List of Common Caffeine Sources
 
-      Coke (Coca Cola)
+      Coke (Coca-Cola)
       Coffee
       Bukkett Coffee (Dangerous, from Div Bukkett bucket@sultry.ai.unc.edu)
       Tea (Russian or Indian)
@@ -158,7 +158,7 @@ glass house?  That was there to make sure the admins didn't get colds.
       Bagels (REAL ones from Benny's Bagels on 10th)
       Potato(e)s (None of those organix shitty ones from Capers... REAL
         irradiated ones)
-      All Bran (taken dry, or with distilled water)
+      All-Bran (taken dry, or with distilled water)
       Jolt Cola (Applies in all categories)
       Idahoan potatoes
       Sai-min/Gai-Jin noodles
@@ -179,8 +179,8 @@ preserves your ulcer well.
       The cheapest are the best.
 
       It is best to buy your petrochemicals from a reputable manufacturer.
-It is a rumour at the USGS (United STates Geological Survey) that Saudi
-Arabian derived foam bananas are better than the American variety. Many
+It is a rumour at the USGS (United States Geological Survey) that Saudi
+Arabian-derived foam bananas are better than the American variety. Many
 patriotic Canadians died to bring us this information. Use it well. Do not
 buy from Texaco.
 
@@ -196,6 +196,7 @@ buy from Texaco.
       Green hair candy
       King Kombo jelly
       Jello jigglers
+      Jolt Cola (Applies in all categories)
       Creamo fake cream
       Packaged gravy (yessir, its a petrochemical! Mm mmm good.)
       Chicken boullion cubes
@@ -214,7 +215,7 @@ him/herself in the matter of choice. All sugar is good, be it extruded
       Quality is generally better than quantity. (eg. One Trouffalt de Four
 at Quiver's of Paris or 432 Mars Bars world wide? There is no question.)
 
-      Avoid the dreaded organic sugar and honey sweetened goods. They merely
+      Avoid the dreaded organic sugar and honey-sweetened goods. They merely
 pretend to be something that they are not.
 
       Jolt Cola is an excellent source of sugar!
@@ -225,13 +226,14 @@ on absolute diversity. FIND OUT WHICH YOU ARE!
       The Exceptions to the Groups (Because hacking involves exceptions)
 
             Make any exceptions you like. If you are a bisexual gerbil from
-Rumania, and you enjoy fruit sweetened organic carrots, go right ahead. Eat
+Romania, and you enjoy fruit-sweetened organic carrots, go right ahead. Eat
 them.  See if I care. You are only as good as the number of exceptions you
 have to this list. As a matter of fact, I am hoping to gauge the health of
 the hack community by reading all the hatemail that this Guide gets. Flame
 me, please. Hackdom is better as Spock put it, in Infinite Diversity in
 Infinite Combinations.
 
-      Good Dietary Habits
+      Good Dietary Habits:
+	  
             Eat. If you die, it means that you have either eaten too much or
 too little.

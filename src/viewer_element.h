@@ -19,17 +19,15 @@ public:
   virtual bool opaque() const;
   virtual void paint(graphics *g);
 
-  void activate(imstring const &title, imstring const &resource);
+  void activate(imstring const &resource);
   void deactivate();
 
   void enter_from_menu_or_submenu();
   void leave_to_menu_or_submenu();
 
 private:
-  imstring m_title;
   tbm m_viewing;
   termel_t m_background;
-  termel_t m_title_background;
 
   coord_t m_page_jump;
   coord_t m_scroll_height;

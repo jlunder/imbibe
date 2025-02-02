@@ -8,32 +8,48 @@
         0,
         0
     ],
-    "option-label-offset": [
+    "option-title-offset": [
         10,
         1
     ],
-    "option-unselected-label-attribute": "hi-white:black",
-    "option-selected-label-attribute": "hi-white:blue",
+    "option-byline-offset": [
+        70,
+        2
+    ],
+    "option-unselected-title-attribute": "hi-white:black",
+    "option-unselected-byline-attribute": "white:black",
+    "option-selected-title-attribute": "hi-white:blue",
+    "option-selected-byline-attribute": "white:blue",
     "options": [
         {
+            "title": "Imbibe 2025! Coming to you hot and fresh!",
+            "byline": "Cthulu",
+            "resource": "/assets/CT-IMBIBE.ANS"
+        },
+        {
             "title": "From the editor: what it was, then",
-            "resource": "./viewer/ABOUT.TXT"
+            "byline": "Cthulu",
+            "resource": "./viewer/ABOUT.ans"
         },
         {
             "title": "From the editor: what it is, now",
-            "resource": "./viewer/ABOUT3.txt"
+            "byline": "Cthulu",
+            "resource": "./viewer/ABOUT3.ans"
         },
         {
             "title": "From the coder: deflections, complaints, bluster",
-            "resource": "./viewer/ABOUT-HJ.TXT"
+            "byline": "hax0R j003",
+            "resource": "./viewer/ABOUT-HJ.ans"
         },
         {
             "title": "About the recipes",
-            "resource": "./viewer/RECIPES.TXT"
+            "byline": "",
+            "resource": "./viewer/RECIPES.ans"
         },
         {
             "title": "Contributors",
-            "resource": "./viewer/-CONTRIB.TXT"
+            "byline": "",
+            "resource": "./viewer/CONTRIB.ans"
         }
     ]
 }
