@@ -133,7 +133,8 @@ extern void failsafe_textmode();
 extern unsigned _dos_lseek(int handle, long offset, int whence,
                            unsigned long __far *where);
 
-#define __packed__
+#define wcc_packed _Packed
+#define gcc_packed
 
 #define PRpF "Fp"
 #define PRpN "Np"
@@ -152,8 +153,8 @@ extern void __sync_synchronize();
 #define __far volatile
 // #define __far
 
-#define _Packed
-#define __packed__ __attribute__((packed))
+#define wcc_packed
+#define gcc_packed __attribute__((__packed__))
 
 #define __based(o)
 #define __segment uintptr_t

@@ -11,7 +11,10 @@
 #endif
 
 #include <atomic>
-#include <thread>
+#include <chrono>
+
+#include <pthread.h>
+#include <unistd.h>
 
 #include "application.h"
 #include "keyboard.h"
@@ -29,12 +32,12 @@ extern void advance_time_to(uint32_t to_ms);
 
 std::atomic<uint32_t> drawn_to_buf_seq = 0;
 std::atomic<bool> quitting = false;
-void timer_thread_main();
+void *timer_thread_main(void *);
 
 } // namespace sim
 
 void sim::step_idle() {
-  std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  usleep(5000);
 }
 
 void sim::step_poll() {}
@@ -46,14 +49,17 @@ void sim::step_animate(uint32_t anim_ms) {
 
 void sim::step_frame() { ++sim::drawn_to_buf_seq; }
 
-void sim::timer_thread_main() {
+void *sim::timer_thread_main(void *) {
   auto epoch = std::chrono::high_resolution_clock::now();
   auto last = epoch;
   int32_t target_millis = 1;
 
   while (!quitting) {
     auto target = epoch + std::chrono::milliseconds(target_millis);
-    std::this_thread::sleep_until(target);
+    int32_t projected = (target - std::chrono::high_resolution_clock::now()) / std::chrono::milliseconds(1);
+    if (projected > 0) {
+      usleep(projected * 1000);
+    }
     auto now = std::chrono::high_resolution_clock::now();
     int32_t millis_passed = (now - epoch) / std::chrono::milliseconds(1);
     if (millis_passed >= target_millis) {
@@ -63,6 +69,8 @@ void sim::timer_thread_main() {
       ++target_millis;
     }
   }
+
+  return NULL;
 }
 
 bool keyboard::key_event_available() { return sim::last_key != 0; }
@@ -321,6 +329,12 @@ key_code_t encode_sdl_key(SDL_Keymod mods, SDL_Keycode code) {
   return 0;
 }
 
+void *imbibe_thread_main(void *) {
+  imbibe_main();
+  sim::quitting = true;
+  return NULL;
+}
+
 int main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
@@ -329,11 +343,17 @@ int main(int argc, char *argv[]) {
   (void)ibm_font_bits_8x8;
   (void)ibm_font_bits_8x8_thin;
 
-  std::thread timer_thread(sim::timer_thread_main);
-  std::thread main_thread([]() {
-    imbibe_main();
-    sim::quitting = true;
-  });
+  pthread_t timer_thread;
+  pthread_attr_t timer_attr;
+  pthread_attr_init(&timer_attr);
+  pthread_create(&timer_thread, &timer_attr, sim::timer_thread_main, NULL);
+  pthread_attr_destroy(&timer_attr);
+
+  pthread_t imbibe_thread;
+  pthread_attr_t imbibe_attr;
+  pthread_attr_init(&imbibe_attr);
+  pthread_create(&imbibe_thread, &imbibe_attr, imbibe_thread_main, NULL);
+  pthread_attr_destroy(&imbibe_attr);
 
   // During init, enable debug output
   glEnable(GL_DEBUG_OUTPUT);
@@ -583,8 +603,8 @@ int main(int argc, char *argv[]) {
   SDL_DestroyWindow(window);
   SDL_Quit();
 
-  main_thread.join();
-  timer_thread.join();
+  pthread_join(imbibe_thread, NULL);
+  pthread_join(timer_thread, NULL);
 
   return 0;
 }

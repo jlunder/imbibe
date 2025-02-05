@@ -9,7 +9,7 @@
   ((uint32_t)(s)[0] | ((uint32_t)(s)[1] << 8) | ((uint32_t)(s)[2] << 16) |     \
    ((uint32_t)(s)[3] << 24))
 
-_Packed struct __packed__ iff_header {
+wcc_packed struct gcc_packed iff_header {
   union {
     char magic_s[4];
     uint32_t magic_i;

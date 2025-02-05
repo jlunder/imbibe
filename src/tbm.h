@@ -31,7 +31,7 @@ public:
 
 static uint16_t const tbm_skip_tm = 0x0000;
 
-_Packed struct __packed__ tbm_header {
+wcc_packed struct gcc_packed tbm_header {
   uint16_t width;
   uint16_t height;
   uint16_t flags;
