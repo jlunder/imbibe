@@ -36,6 +36,7 @@
 #define BUILD_MSDOS_WATCOMC 0
 #define BUILD_POSIX_SIM 0
 #define BUILD_POSIX_SDL_GL 0
+#define BUILD_POSIX_SDL_WEBGL 0
 
 #else
 
@@ -48,11 +49,19 @@
 
 #define BUILD_POSIX_SIM 0
 #define BUILD_POSIX_SDL_GL 1
+#define BUILD_POSIX_SDL_WEBGL 0
+
+#elif defined(WIMBIBE)
+
+#define BUILD_POSIX_SIM 0
+#define BUILD_POSIX_SDL_GL 1
+#define BUILD_POSIX_SDL_WEBGL 1
 
 #else
 
 #define BUILD_POSIX_SIM 1
 #define BUILD_POSIX_SDL_GL 0
+#define BUILD_POSIX_SDL_WEBGL 0
 
 #endif
 

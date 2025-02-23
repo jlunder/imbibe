@@ -11,9 +11,9 @@
 #endif
 
 #include <atomic>
-#include <chrono>
 
 #include <pthread.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "application.h"
@@ -36,9 +36,7 @@ void *timer_thread_main(void *);
 
 } // namespace sim
 
-void sim::step_idle() {
-  usleep(5000);
-}
+void sim::step_idle() { usleep(5000); }
 
 void sim::step_poll() {}
 
@@ -50,24 +48,37 @@ void sim::step_animate(uint32_t anim_ms) {
 void sim::step_frame() { ++sim::drawn_to_buf_seq; }
 
 void *sim::timer_thread_main(void *) {
-  auto epoch = std::chrono::high_resolution_clock::now();
-  auto last = epoch;
-  int32_t target_millis = 1;
+  static const int64_t increment_us = 5000;
+  static const int64_t max_advance_us = 30000;
+
+  timespec tv;
+
+  clock_gettime(CLOCK_MONOTONIC, &tv);
+  int64_t now_us = tv.tv_nsec / 1000 + tv.tv_sec * 1000000ll;
+  int64_t last_us = now_us;
+  int64_t passed_us = 0;
 
   while (!quitting) {
-    auto target = epoch + std::chrono::milliseconds(target_millis);
-    int32_t projected = (target - std::chrono::high_resolution_clock::now()) / std::chrono::milliseconds(1);
-    if (projected > 0) {
-      usleep(projected * 1000);
+    // Where do we stand? How long has it been since last advance?
+    clock_gettime(CLOCK_MONOTONIC, &tv);
+    now_us = tv.tv_nsec / 1000 + tv.tv_sec * 1000000ll;
+    // Aim for 5ms poll interval
+    int64_t target_delta_us = increment_us - (now_us - last_us);
+
+    // Sleep if we haven't already overshot our target
+    if (target_delta_us > 0) {
+      usleep(target_delta_us < increment_us ? target_delta_us : increment_us);
     }
-    auto now = std::chrono::high_resolution_clock::now();
-    int32_t millis_passed = (now - epoch) / std::chrono::milliseconds(1);
-    if (millis_passed >= target_millis) {
-      advance_time_to(millis_passed);
-      last = now;
-    } else {
-      ++target_millis;
-    }
+
+    // What time is it actually? How long now since last advance?
+    clock_gettime(CLOCK_MONOTONIC, &tv);
+    now_us = tv.tv_nsec / 1000 + tv.tv_sec * 1000000ll;
+    int64_t delta_us = now_us - last_us;
+    last_us = now_us;
+
+    // Cap the advance time, because it will repeatedly call the timer ISR
+    passed_us += delta_us > max_advance_us ? max_advance_us : delta_us;
+    advance_time_to(passed_us / 1000);
   }
 
   return NULL;
@@ -131,13 +142,13 @@ static const char *vertex_shader =
     "out vec4 g_bg_color;\n"
     "uniform int u_cfg_ice_color;\n"
     "uniform int u_blink_control;\n"
-    "uniform sampler1D u_palette_texture;\n"
+    "uniform sampler2D u_palette_texture;\n"
     "void main() {\n"
     "    g_cell = i_cell;\n"
     "    g_char = i_char;\n"
-    "    vec4 fg = texelFetch(u_palette_texture, i_attr & 0xF, 0);\n"
-    "    vec4 bg = texelFetch(u_palette_texture, (i_attr >> 4) & "
-    "(bool(u_cfg_ice_color) ? 0x0F : 0x7), 0);\n"
+    "    vec4 fg = texelFetch(u_palette_texture, ivec2(i_attr & 0xF, 0), 0);\n"
+    "    vec4 bg = texelFetch(u_palette_texture, ivec2((i_attr >> 4) & "
+    "(bool(u_cfg_ice_color) ? 0x0F : 0x7), 0), 0);\n"
     "    g_fg_color = mix(bg, fg, float(bool(u_blink_control) && "
     "!bool(u_cfg_ice_color)));\n"
     "    g_bg_color = bg;\n"
@@ -212,6 +223,7 @@ typedef enum t_attrib_id {
   attrib_attr,
 } t_attrib_id;
 
+#if !BUILD_POSIX_SDL_WEBGL
 void GLAPIENTRY log_gl_callback(GLenum source, GLenum type, GLuint id,
                                 GLenum severity, GLsizei length,
                                 const GLchar *message, const void *userParam) {
@@ -223,6 +235,7 @@ void GLAPIENTRY log_gl_callback(GLenum source, GLenum type, GLuint id,
            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type,
            severity, message);
 }
+#endif
 
 GLuint compile_shader(GLenum shader_type, GLchar const *shader_source) {
   char const *shader_type_name = "<unknown>";
@@ -343,21 +356,11 @@ int main(int argc, char *argv[]) {
   (void)ibm_font_bits_8x8;
   (void)ibm_font_bits_8x8_thin;
 
-  pthread_t timer_thread;
-  pthread_attr_t timer_attr;
-  pthread_attr_init(&timer_attr);
-  pthread_create(&timer_thread, &timer_attr, sim::timer_thread_main, NULL);
-  pthread_attr_destroy(&timer_attr);
-
-  pthread_t imbibe_thread;
-  pthread_attr_t imbibe_attr;
-  pthread_attr_init(&imbibe_attr);
-  pthread_create(&imbibe_thread, &imbibe_attr, imbibe_thread_main, NULL);
-  pthread_attr_destroy(&imbibe_attr);
-
+#if !BUILD_POSIX_SDL_WEBGL
   // During init, enable debug output
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(log_gl_callback, 0);
+#endif
 
   SDL_Init(SDL_INIT_VIDEO);
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -514,17 +517,17 @@ int main(int argc, char *argv[]) {
 
   GLuint palette_texture;
   glGenTextures(1, &palette_texture);
-  glBindTexture(GL_TEXTURE_1D, palette_texture);
+  glBindTexture(GL_TEXTURE_2D, palette_texture);
   GLubyte palette_data[16][3] = {
       {0, 0, 0},     {0, 0, 170},    {0, 170, 0},    {0, 170, 170},
       {170, 0, 0},   {170, 0, 170},  {170, 85, 0},   {170, 170, 170},
       {85, 85, 85},  {85, 85, 255},  {85, 255, 85},  {85, 255, 255},
       {255, 85, 85}, {255, 85, 255}, {255, 255, 85}, {255, 255, 255},
   };
-  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 16, 0, GL_RGB, GL_UNSIGNED_BYTE,
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 16, 1, 0, GL_RGB, GL_UNSIGNED_BYTE,
                palette_data);
 
   GLuint font_texture;
@@ -556,10 +559,22 @@ int main(int argc, char *argv[]) {
                GL_UNSIGNED_BYTE, &font_texture_data);
 
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_1D, palette_texture);
+  glBindTexture(GL_TEXTURE_2D, palette_texture);
 
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D_ARRAY, font_texture);
+
+  pthread_t timer_thread;
+  pthread_attr_t timer_attr;
+  pthread_attr_init(&timer_attr);
+  pthread_create(&timer_thread, &timer_attr, sim::timer_thread_main, NULL);
+  pthread_attr_destroy(&timer_attr);
+
+  pthread_t imbibe_thread;
+  pthread_attr_t imbibe_attr;
+  pthread_attr_init(&imbibe_attr);
+  pthread_create(&imbibe_thread, &imbibe_attr, imbibe_thread_main, NULL);
+  pthread_attr_destroy(&imbibe_attr);
 
   uint32_t output_rendered_seq = 0;
   while (!sim::quitting) {

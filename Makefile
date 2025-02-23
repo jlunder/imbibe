@@ -88,7 +88,7 @@ $(SDL_GL_DEP_DIR)%.d: $(SDL_GL_OBJ_DIR)%.o
 include $(wildcard $(SIM_DEP_DIR)*.d)
 include $(wildcard $(SDL_GL_DEP_DIR)*.d)
 
-all: imbibe simbibe glimbibe
+all: imbibe simbibe glimbibe wimbibe
 
 clean:
 	rm -rf build
@@ -101,6 +101,11 @@ simbibe: $(IMBIBE_SIM_OBJS) imbibe.tya
 
 glimbibe: $(IMBIBE_SDL_GL_OBJS) imbibe.tya
 	g++  $(IMBIBE_SDL_GL_OBJS) -g $(shell pkg-config --libs sdl2) -lGL -o $@
+
+wimbibe: $(IMBIBE_SOURCES) imbibe.tya
+	em++ src/*.cpp -std=gnu++17 -DWIMBIBE -sUSE_SDL=2 -sMAX_WEBGL_VERSION=2 \
+	  -sSTACK_SIZE=1048576  -sUSE_PTHREADS=1 -sPTHREAD_POOL_SIZE=4 \
+	  -o wimbibe.html --preload-file imbibe.tya
 
 imbibe: $(OBJ_DIR)imbibe.exe $(IMBIBE_SDL_GL_OBJS) imbibe.tya
 	cd workspace && \
