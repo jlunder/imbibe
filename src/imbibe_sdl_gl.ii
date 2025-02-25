@@ -97,9 +97,22 @@ key_code_t keyboard::read_key_event() {
 #define GL_GLEXT_PROTOTYPES
 
 #include <SDL.h>
+// #undef BUILD_POSIX_SDL_WEBGL
+// #define BUILD_POSIX_SDL_WEBGL 1
+#if BUILD_POSIX_SDL_WEBGL
+#include <SDL_opengles2.h>
+#else
 #include <SDL_opengl.h>
+#endif
 
 #include "ibm_font.h"
+
+static const int width_chars = 80;
+static const int char_cell_width_px = 8;
+static const int width_px = width_chars * char_cell_width_px;
+static const int height_chars = 25;
+static const int char_cell_height_px = 14;
+static const int height_px = height_chars * char_cell_height_px;
 
 typedef float t_mat4x4[16];
 
@@ -131,99 +144,77 @@ static inline void mat4x4_ortho(t_mat4x4 out, float left, float right,
 #undef T
 }
 
+// clang-format off
+
 static const char *vertex_shader =
-    "#version 150 core\n"
-    "in vec2 i_cell;\n"
-    "in int i_char;\n"
-    "in int i_attr;\n"
-    "out vec2 g_cell;\n"
-    "out int g_char;\n"
-    "out vec4 g_fg_color;\n"
-    "out vec4 g_bg_color;\n"
+    "#version 110\n"
+    "attribute vec4 i_position;\n"
+    "attribute float i_char;\n"
+    "attribute float i_fg;\n"
+    "attribute float i_bg;\n"
+    "attribute float i_blink;\n"
+    "attribute vec2 i_font_pixel;\n"
+    "varying vec4 v_fg_color;\n"
+    "varying vec4 v_bg_color;\n"
+    "varying vec2 v_font_texel;\n"
     "uniform int u_cfg_ice_color;\n"
     "uniform int u_blink_control;\n"
     "uniform sampler2D u_palette_texture;\n"
-    "void main() {\n"
-    "    g_cell = i_cell;\n"
-    "    g_char = i_char;\n"
-    "    vec4 fg = texelFetch(u_palette_texture, ivec2(i_attr & 0xF, 0), 0);\n"
-    "    vec4 bg = texelFetch(u_palette_texture, ivec2((i_attr >> 4) & "
-    "(bool(u_cfg_ice_color) ? 0x0F : 0x7), 0), 0);\n"
-    "    g_fg_color = mix(bg, fg, float(bool(u_blink_control) && "
-    "!bool(u_cfg_ice_color)));\n"
-    "    g_bg_color = bg;\n"
-    "}\n";
-
-static const char *geometry_shader =
-    "#version 150 core\n"
-    "layout(points) in;\n"
-    "layout(triangle_strip, max_vertices = 4) out;\n"
-    "in vec2 g_cell[];\n"
-    "in int g_char[];\n"
-    "in vec4 g_fg_color[];\n"
-    "in vec4 g_bg_color[];\n"
-    "out vec4 v_fg_color;\n"
-    "out vec4 v_bg_color;\n"
-    "out vec3 v_font_pixel_char;\n"
     "uniform vec2 u_cell_size;\n"
     "uniform mat4 u_projection_matrix;\n"
     "void main() {\n"
-    "    v_fg_color = g_fg_color[0];\n"
-    "    v_bg_color = g_bg_color[0];\n"
-    "    v_font_pixel_char = vec3(0, 0, g_char[0]);\n"
-    "    gl_Position = u_projection_matrix * vec4(g_cell[0] * u_cell_size + "
-    "v_font_pixel_char.xy, 0, 1.0);\n"
-    "    EmitVertex();\n"
-    "    v_fg_color = g_fg_color[0];\n"
-    "    v_bg_color = g_bg_color[0];\n"
-    "    v_font_pixel_char = vec3(u_cell_size.x, 0, g_char[0]);\n"
-    "    gl_Position = u_projection_matrix * vec4(g_cell[0] * u_cell_size + "
-    "v_font_pixel_char.xy, 0, 1.0);\n"
-    "    EmitVertex();\n"
-    "    v_fg_color = g_fg_color[0];\n"
-    "    v_bg_color = g_bg_color[0];\n"
-    "    v_font_pixel_char = vec3(0, u_cell_size.y, g_char[0]);\n"
-    "    gl_Position = u_projection_matrix * vec4(g_cell[0] * u_cell_size + "
-    "v_font_pixel_char.xy, 0, 1.0);\n"
-    "    EmitVertex();\n"
-    "    v_fg_color = g_fg_color[0];\n"
-    "    v_bg_color = g_bg_color[0];\n"
-    "    v_font_pixel_char = vec3(u_cell_size.xy, g_char[0]);\n"
-    "    gl_Position = u_projection_matrix * vec4(g_cell[0] * u_cell_size + "
-    "v_font_pixel_char.xy, 0, 1.0);\n"
-    "    EmitVertex();\n"
-    "    EndPrimitive();\n"
+    "    vec4 fg = texture2D(u_palette_texture, vec2((i_fg + 0.5) / 16.0, 0.5));\n"
+    "    vec4 bg = texture2D(u_palette_texture, vec2((i_bg + 0.5) / 16.0, 0.5));\n"
+    "    v_fg_color = mix(bg, fg, float(bool(u_blink_control) && !bool(u_cfg_ice_color)));\n"
+    "    v_bg_color = bg;\n"
+    "    v_font_texel = (i_font_pixel / 256.0) + (vec2(mod(float(i_char), 16.0), floor(float(i_char) / 16.0))) / 16.0;\n"
+    "    gl_Position = u_projection_matrix * i_position;\n"
     "}\n";
 
 static const char *fragment_shader =
-    "#version 150 core\n"
-    "in vec4 v_fg_color;\n"
-    "in vec4 v_bg_color;\n"
-    "in vec3 v_font_pixel_char;\n"
-    "out vec4 o_color;\n"
-    "uniform vec2 u_cell_size;\n"
-    "uniform sampler2DArray u_font_texture;\n"
+    "#version 110\n"
+    "varying vec4 v_fg_color;\n"
+    "varying vec4 v_bg_color;\n"
+    "varying vec2 v_font_texel;\n"
+    "uniform sampler2D u_font_texture;\n"
     "void main() {\n"
-    "    float font = texelFetch(u_font_texture, ivec3(v_font_pixel_char), "
-    "0).x;\n"
-    "    o_color = mix(v_bg_color, v_fg_color, font);\n"
-
-    // "    float grid = 1 - clamp(floor(v_font_pixel_char.x) * "
-    // "floor(v_font_pixel_char.y), 0, 1);\n"
-    // "    float temp = clamp(v_font_pixel_char.z - "
-    // "(floor(v_font_pixel_char.y) * u_cell_size.x + "
-    // "floor(v_font_pixel_char.x)), "
-    // "0, 1);\n"
+    "    float font = texture2D(u_font_texture, v_font_texel).r;\n"
+    "    gl_FragColor = mix(v_bg_color, v_fg_color, font);"
+    // "    gl_FragColor = 0.5 * vec4(v_font_texel, v_font_texel.r, 1) + 0.5 * vec4(font, font, font, 1);"
+    // "    float grid = 1 - clamp(floor(v_font_pixel_char.x) * floor(v_font_pixel_char.y), 0, 1);\n"
+    // "    float temp = clamp(v_font_pixel_char.z - (floor(v_font_pixel_char.y) * u_cell_size.x + floor(v_font_pixel_char.x)), 0, 1);\n"
     // "    o_color = mix(o_color, vec4(grid, font, temp, 1), 0.25);\n"
     "}\n";
 
+// clang-format on
+
 typedef enum t_attrib_id {
-  attrib_cell,
+  attrib_none = 0,
+
+  attrib_position,
+  attrib_font_pixel,
+
   attrib_char,
-  attrib_attr,
+  attrib_fg,
+  attrib_bg,
+  attrib_blink,
 } t_attrib_id;
 
-#if !BUILD_POSIX_SDL_WEBGL
+struct rasterize_structure_t {
+  GLushort i_position[2];
+  GLubyte i_font_pixel[2];
+};
+
+rasterize_structure_t g_rasterize_structure_data[height_chars][width_chars][6];
+
+struct rasterize_contents_t {
+  GLubyte i_char;
+  GLubyte i_fg;
+  GLubyte i_bg;
+  GLubyte i_blink;
+};
+
+#if BUILD_DEBUG && !BUILD_POSIX_SDL_WEBGL
 void GLAPIENTRY log_gl_callback(GLenum source, GLenum type, GLuint id,
                                 GLenum severity, GLsizei length,
                                 const GLchar *message, const void *userParam) {
@@ -231,9 +222,9 @@ void GLAPIENTRY log_gl_callback(GLenum source, GLenum type, GLuint id,
   (void)id;
   (void)length;
   (void)userParam;
-  logf_any("GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-           (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type,
-           severity, message);
+  enable_logf("GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+              (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type,
+              severity, message);
 }
 #endif
 
@@ -242,8 +233,6 @@ GLuint compile_shader(GLenum shader_type, GLchar const *shader_source) {
 
   if (shader_type == GL_VERTEX_SHADER) {
     shader_type_name = "vertex";
-  } else if (shader_type == GL_GEOMETRY_SHADER) {
-    shader_type_name = "geometry";
   } else if (shader_type == GL_FRAGMENT_SHADER) {
     shader_type_name = "fragment";
   }
@@ -356,7 +345,7 @@ int main(int argc, char *argv[]) {
   (void)ibm_font_bits_8x8;
   (void)ibm_font_bits_8x8_thin;
 
-#if !BUILD_POSIX_SDL_WEBGL
+#if BUILD_DEBUG && !BUILD_POSIX_SDL_WEBGL
   // During init, enable debug output
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(log_gl_callback, 0);
@@ -370,16 +359,11 @@ int main(int argc, char *argv[]) {
   SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
   SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+#ifndef __EMSCRIPTEN__
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#endif
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
-  static const int width_chars = 80;
-  static const int char_cell_width_px = 8;
-  static const int width_px = width_chars * char_cell_width_px;
-  static const int height_chars = 25;
-  static const int char_cell_height_px = 14;
-  static const int height_px = height_chars * char_cell_height_px;
 
   static const int window_width = width_px * 2;
   static const int window_height = window_width * 3 / 4;
@@ -390,21 +374,23 @@ int main(int argc, char *argv[]) {
   SDL_GLContext context = SDL_GL_CreateContext(window);
 
   GLuint vs = compile_shader(GL_VERTEX_SHADER, vertex_shader);
-  GLuint gs = compile_shader(GL_GEOMETRY_SHADER, geometry_shader);
   GLuint fs = compile_shader(GL_FRAGMENT_SHADER, fragment_shader);
 
-  if (vs == 0 || gs == 0 || fs == 0) {
+  if (vs == 0 || fs == 0) {
     return 0;
   }
 
   GLuint program = glCreateProgram();
   glAttachShader(program, vs);
-  glAttachShader(program, gs);
   glAttachShader(program, fs);
 
-  glBindAttribLocation(program, attrib_cell, "i_cell");
+  glBindAttribLocation(program, attrib_position, "i_position");
+  glBindAttribLocation(program, attrib_font_pixel, "i_font_pixel");
+
   glBindAttribLocation(program, attrib_char, "i_char");
-  glBindAttribLocation(program, attrib_attr, "i_attr");
+  glBindAttribLocation(program, attrib_fg, "i_fg");
+  glBindAttribLocation(program, attrib_bg, "i_bg");
+  glBindAttribLocation(program, attrib_blink, "i_blink");
 
   glLinkProgram(program);
 
@@ -428,34 +414,58 @@ int main(int argc, char *argv[]) {
   glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
   glViewport(0, 0, window_width, window_height);
 
-  GLuint rasterize_vao;
-  glGenVertexArrays(1, &rasterize_vao);
-  glBindVertexArray(rasterize_vao);
+  for (size_t i = 0; i < height_chars; ++i) {
+    for (size_t j = 0; j < width_chars; ++j) {
+      g_rasterize_structure_data[i][j][0].i_font_pixel[0] = 0;
+      g_rasterize_structure_data[i][j][0].i_font_pixel[1] = 0;
+      g_rasterize_structure_data[i][j][1].i_font_pixel[0] = char_cell_width_px;
+      g_rasterize_structure_data[i][j][1].i_font_pixel[1] = 0;
+      g_rasterize_structure_data[i][j][2].i_font_pixel[0] = 0;
+      g_rasterize_structure_data[i][j][2].i_font_pixel[1] = char_cell_height_px;
+      g_rasterize_structure_data[i][j][3].i_font_pixel[0] = char_cell_width_px;
+      g_rasterize_structure_data[i][j][3].i_font_pixel[1] = 0;
+      g_rasterize_structure_data[i][j][4].i_font_pixel[0] = char_cell_width_px;
+      g_rasterize_structure_data[i][j][4].i_font_pixel[1] = char_cell_height_px;
+      g_rasterize_structure_data[i][j][5].i_font_pixel[0] = 0;
+      g_rasterize_structure_data[i][j][5].i_font_pixel[1] = char_cell_height_px;
+
+      for (size_t k = 0; k < 6; ++k) {
+        g_rasterize_structure_data[i][j][k].i_position[0] =
+            j * char_cell_width_px +
+            g_rasterize_structure_data[i][j][k].i_font_pixel[0];
+        g_rasterize_structure_data[i][j][k].i_position[1] =
+            i * char_cell_height_px +
+            g_rasterize_structure_data[i][j][k].i_font_pixel[1];
+      }
+    }
+  }
+
+  // Note: if upgrading to OpenGL ES3 or OpenGL 3+ generally, it is mandatory to
+  // set up a VAO as there is no longer a default object (supposedly post 3.3).
+  // Uncommenting the following code is enough to satisfy the system.
+  // GLuint rasterize_vao;
+  // glGenVertexArrays(1, &rasterize_vao);
+  // glBindVertexArray(rasterize_vao);
+
+  glEnableVertexAttribArray(attrib_position);
+  glEnableVertexAttribArray(attrib_font_pixel);
+
+  glEnableVertexAttribArray(attrib_char);
+  glEnableVertexAttribArray(attrib_fg);
+  glEnableVertexAttribArray(attrib_bg);
+  glEnableVertexAttribArray(attrib_blink);
 
   GLuint rasterize_structure_vbo;
   glGenBuffers(1, &rasterize_structure_vbo);
   glBindBuffer(GL_ARRAY_BUFFER, rasterize_structure_vbo);
 
-  struct rasterize_structure_t {
-    GLfloat i_cell[2];
-  };
-
-  glEnableVertexAttribArray(attrib_cell);
-
-  glVertexAttribPointer(attrib_cell, 2, GL_FLOAT, GL_FALSE,
+  glVertexAttribPointer(attrib_position, 2, GL_UNSIGNED_SHORT, GL_FALSE,
                         sizeof(rasterize_structure_t),
-                        (void *)(offsetof(rasterize_structure_t, i_cell)));
+                        (void *)(offsetof(rasterize_structure_t, i_position)));
 
-  rasterize_structure_t
-      g_rasterize_structure_data[width_chars * height_chars * 6];
-
-  for (size_t i = 0; i < height_chars; ++i) {
-    for (size_t j = 0; j < width_chars; ++j) {
-      size_t n = i * width_chars + j;
-      g_rasterize_structure_data[n].i_cell[0] = j;
-      g_rasterize_structure_data[n].i_cell[1] = i;
-    }
-  }
+  glVertexAttribPointer(attrib_font_pixel, 2, GL_UNSIGNED_BYTE, GL_FALSE,
+                        sizeof(rasterize_structure_t),
+                        (void *)offsetof(rasterize_structure_t, i_font_pixel));
 
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_rasterize_structure_data),
                g_rasterize_structure_data, GL_STATIC_DRAW);
@@ -464,21 +474,21 @@ int main(int argc, char *argv[]) {
   glGenBuffers(1, &rasterize_contents_vbo);
   glBindBuffer(GL_ARRAY_BUFFER, rasterize_contents_vbo);
 
-  struct rasterize_contents_t {
-    GLubyte i_char;
-    GLubyte i_attr;
-  };
+  glVertexAttribPointer(attrib_char, 1, GL_UNSIGNED_BYTE, GL_FALSE,
+                        sizeof(rasterize_contents_t),
+                        (void *)offsetof(rasterize_contents_t, i_char));
 
-  glEnableVertexAttribArray(attrib_char);
-  glEnableVertexAttribArray(attrib_attr);
+  glVertexAttribPointer(attrib_fg, 1, GL_UNSIGNED_BYTE, GL_FALSE,
+                        sizeof(rasterize_contents_t),
+                        (void *)offsetof(rasterize_contents_t, i_fg));
 
-  glVertexAttribIPointer(attrib_char, 1, GL_UNSIGNED_BYTE,
-                         sizeof(rasterize_contents_t),
-                         (void *)offsetof(rasterize_contents_t, i_char));
+  glVertexAttribPointer(attrib_bg, 1, GL_UNSIGNED_BYTE, GL_FALSE,
+                        sizeof(rasterize_contents_t),
+                        (void *)offsetof(rasterize_contents_t, i_bg));
 
-  glVertexAttribIPointer(attrib_attr, 1, GL_UNSIGNED_BYTE,
-                         sizeof(rasterize_contents_t),
-                         (void *)offsetof(rasterize_contents_t, i_attr));
+  glVertexAttribPointer(attrib_blink, 1, GL_UNSIGNED_BYTE, GL_FALSE,
+                        sizeof(rasterize_contents_t),
+                        (void *)offsetof(rasterize_contents_t, i_blink));
 
   glUseProgram(program);
 
@@ -496,7 +506,7 @@ int main(int argc, char *argv[]) {
   glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1,
                      GL_FALSE, projection_matrix);
 
-#if 1
+#if BUILD_DEBUG
   glValidateProgram(program);
 
   glGetProgramiv(program, GL_VALIDATE_STATUS, &status);
@@ -517,6 +527,7 @@ int main(int argc, char *argv[]) {
 
   GLuint palette_texture;
   glGenTextures(1, &palette_texture);
+  glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, palette_texture);
   GLubyte palette_data[16][3] = {
       {0, 0, 0},     {0, 0, 170},    {0, 170, 0},    {0, 170, 170},
@@ -525,6 +536,7 @@ int main(int argc, char *argv[]) {
       {255, 85, 85}, {255, 85, 255}, {255, 255, 85}, {255, 255, 255},
   };
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 16, 1, 0, GL_RGB, GL_UNSIGNED_BYTE,
@@ -532,37 +544,29 @@ int main(int argc, char *argv[]) {
 
   GLuint font_texture;
   glGenTextures(1, &font_texture);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, font_texture);
-  GLubyte font_texture_data[256][16][16][3];
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, font_texture);
+  GLubyte font_texture_data[16][16][16][16][3];
   for (size_t i = 0; i < 256; ++i) {
     for (size_t j = 0; j < 16; ++j) {
-      for (size_t k = 0; k < 8; ++k) {
-        GLubyte val = ibm_font_bits_8x16[i][j] & (1 << (7 - k)) ? 255 : 0;
-        font_texture_data[i][j][k][0] = val;
-        font_texture_data[i][j][k][1] = val;
-        font_texture_data[i][j][k][2] = val;
-      }
-      for (size_t k = 8; k < 16; ++k) {
-        GLubyte val =
-            ((i >= 0xC0) && (i <= 0xDF)) ? font_texture_data[i][j][7][0] : 0;
-        font_texture_data[i][j][k][0] = val;
-        font_texture_data[i][j][k][1] = val;
-        font_texture_data[i][j][k][2] = val;
+      uint8_t b = ibm_font_bits_8x16[i][j];
+      bool box_range = (i >= 0xC0) && (i <= 0xDF);
+      auto bit = [b](uint8_t n) { return (b & (0x80 >> n)) != 0 ? 255 : 0; };
+      auto &bytes = font_texture_data[i / 16][j][i % 16];
+      for (size_t k = 0; k < 16; ++k) {
+        GLubyte val = k < 8 ? bit(k) : (k == 8 && box_range ? bit(7) : 0);
+        for (size_t l = 0; l < 3; ++l) {
+          bytes[k][l] = val;
+        }
       }
     }
   }
-  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, 16, 16, 256, 0, GL_RGB,
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 16 * 16, 16 * 16, 0, GL_RGB,
                GL_UNSIGNED_BYTE, &font_texture_data);
-
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, palette_texture);
-
-  glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, font_texture);
 
   pthread_t timer_thread;
   pthread_attr_t timer_attr;
@@ -576,32 +580,49 @@ int main(int argc, char *argv[]) {
   pthread_create(&imbibe_thread, &imbibe_attr, imbibe_thread_main, NULL);
   pthread_attr_destroy(&imbibe_attr);
 
+  rasterize_contents_t output_buf[height_chars][width_chars][6];
+  glBindBuffer(GL_ARRAY_BUFFER, rasterize_contents_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(output_buf), NULL, GL_DYNAMIC_DRAW);
+
   uint32_t output_rendered_seq = 0;
   while (!sim::quitting) {
     uint32_t drawn_to_buf_seq = sim::drawn_to_buf_seq;
     if (output_rendered_seq != drawn_to_buf_seq) {
       glClear(GL_COLOR_BUFFER_BIT);
 
-      glBindVertexArray(rasterize_vao);
+      for (size_t i = 0; i < height_chars; ++i) {
+        for (size_t j = 0; j < width_chars; ++j) {
+          uint16_t t = sim::dummy_screen[i * width_chars + j];
+          rasterize_contents_t c = {
+              .i_char = (GLubyte)((t & 0xFF) >> 0),
+              .i_fg = (GLubyte)((t & 0x0F00) >> 8),
+              .i_bg = (GLubyte)((t & 0x7000) >> 12),
+              .i_blink = (GLubyte)((t & 0x8000) >> 15),
+          };
+          for (size_t k = 0; k < 6; ++k) {
+            output_buf[i][j][k] = c;
+          }
+        }
+      }
+
       glBindBuffer(GL_ARRAY_BUFFER, rasterize_contents_vbo);
+      glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_buf), output_buf);
 
-      glBufferData(GL_ARRAY_BUFFER, sizeof(sim::dummy_screen),
-                   sim::dummy_screen, GL_DYNAMIC_DRAW);
-
-      glDrawArrays(GL_POINTS, 0, width_chars * height_chars);
+      glDrawArrays(GL_TRIANGLES, 0, width_chars * height_chars * 6);
 
       SDL_GL_SwapWindow(window);
 
       output_rendered_seq = drawn_to_buf_seq;
     } else {
-      // Try not to suck up all the CPU
+      // Try not to suck up _all_ the CPU...
       SDL_Delay(10);
     }
 
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
-        // This application function alone may be called from an external thread
+        // This application function alone may be called from an external
+        // thread
         application::do_external_abort();
       } else if (event.type == SDL_KEYDOWN) {
         SDL_Keymod mods = SDL_GetModState();
