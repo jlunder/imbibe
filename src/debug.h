@@ -8,12 +8,13 @@
   } while (false)
 
 #if !BUILD_DEBUG && BUILD_MSDOS
-#define logf_any(...) disable_logf()
+#define enable_logf(...) disable_logf()
 #else
-#define logf_any(...) cprintf(__VA_ARGS__)
+#define enable_logf(...) cprintf(__VA_ARGS__)
 #endif
 
-#define logf_sim(...) logf_any("SIM: " __VA_ARGS__)
+#define logf_any(...) enable_logf(__VA_ARGS__)
+#define logf_sim(...) enable_logf("SIM: " __VA_ARGS__)
 
 #define abortf(...)                                                            \
   do {                                                                         \

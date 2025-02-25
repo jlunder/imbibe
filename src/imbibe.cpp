@@ -10,7 +10,7 @@
 #include "resource_manager.h"
 #include "timer.h"
 
-#define logf_imbibe(...) disable_logf("IMBIBE: " __VA_ARGS__)
+#define logf_imbibe(...) enable_logf("IMBIBE: " __VA_ARGS__)
 
 #if BUILD_MSDOS
 
@@ -240,20 +240,20 @@ void _dos_setvect(int int_no, void (*int_handler)()) {
   (void)int_no;
   assert(int_no == 8);
   logf_imbibe("setvect 0x%02X, %p (overwrites %p)\n", int_no, int_handler,
-              sim::pit_int_handler);
+              sim::pit_int_handler.load());
   sim::pit_int_handler = int_handler;
 }
 
 void (*_dos_getvect(int int_no))() {
   (void)int_no;
   assert(int_no == 8);
-  logf_imbibe("getvect 0x%02X: %p\n", int_no, sim::pit_int_handler);
+  logf_imbibe("getvect 0x%02X: %p\n", int_no, sim::pit_int_handler.load());
   return sim::pit_int_handler;
 }
 
 void _chain_intr(void (*int_handler)()) {
   assert(int_handler);
-  logf_imbibe("chain_intr %p\n", int_handler);
+  // logf_imbibe("chain_intr %p\n", int_handler);
   int_handler();
 }
 

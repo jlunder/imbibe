@@ -34,7 +34,7 @@ inline void const __far *normalize_segmented(void const __far *p) {
 #else
 #error New platform support needed?
 #endif
-  // logf_any("normalized "PRpF" to "PRpF"\n", p, norm_p);
+  // enable_logf("normalized "PRpF" to "PRpF"\n", p, norm_p);
   assert(FP_SEG(norm_p) - FP_SEG(p) < 0x8000);
   return norm_p;
 }
@@ -54,7 +54,7 @@ inline void const __far *denormalize_segmented(__segment orig_seg,
 #else
 #error New platform support needed?
 #endif
-  // logf_any("denormalized "PRpF" to "PRpF"\n", norm_p, p);
+  // enable_logf("denormalized "PRpF" to "PRpF"\n", norm_p, p);
   assert(FP_SEG(p) == orig_seg);
   assert(FP_SEG(norm_p) - orig_seg < 0x8000);
   return p;

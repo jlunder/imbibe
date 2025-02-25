@@ -6,7 +6,7 @@
 #include "graphics.h"
 #include "unpacker.h"
 
-#define logf_tbm(...) logf_any("TBM: " __VA_ARGS__)
+#define logf_tbm(...) enable_logf("TBM: " __VA_ARGS__)
 
 #if BUILD_DEBUG
 

@@ -9,7 +9,7 @@
 #include "tbm.h"
 #include "unpacker.h"
 
-#define logf_resource_manager(...) logf_any("RESOURCE_MANAGER: " __VA_ARGS__)
+#define logf_resource_manager(...) enable_logf("RESOURCE_MANAGER: " __VA_ARGS__)
 
 namespace tyar {
 
