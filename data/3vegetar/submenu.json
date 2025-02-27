@@ -22,109 +22,109 @@
     "option-selected-byline-attribute": "white:blue",
     "options": [
         {
-            "title": "*borscht aka \"a bowl full of farts\"",
-            "byline": "Cthulu",
-            "resource": "./viewer/ct-borscht.txt"
-        },
-        {
-            "title": "Lupo's Kitchen: Sex-in-a-pan",
-            "byline": "Lupo",
-            "resource": "./viewer/COOK.TXT"
-        },
-        {
-            "title": "*fill your freezer with free bananas banana bread",
-            "byline": "Cthulu",
-            "resource": "./viewer/ct-banana_bread.txt"
-        },
-        {
-            "title": "Cottage Cheese Lemon Pudding",
-            "byline": "Cthulu",
-            "resource": "./viewer/ct-cottagecheeselemon.txt"
-        },
-        {
-            "title": "*ultimate savory picnic bread",
-            "byline": "Cthulu",
-            "resource": "./viewer/ct-focaccia.txt"
-        },
-        {
-            "title": "Cthulu was in a band once, and also he cooked granola",
-            "byline": "Cthulu",
-            "resource": "./viewer/ct-granola2.txt"
-        },
-        {
-            "title": "Sour Cream Coffee Cake",
-            "byline": "Cthulu",
-            "resource": "./viewer/ct-sour_cream_coffee_cake.txt"
-        },
-        {
-            "title": "Rhubarb Cake",
-            "byline": "Cthulu",
-            "resource": "./viewer/ct-rhubarb_cake.txt"
-        },
-        {
-            "title": "*Mexican Corn Chowder",
-            "byline": "Etana",
-            "resource": "./viewer/ET-CORN.TXT"
-        },
-        {
-            "title": "the eggs of satan",
-            "byline": "publius enigma",
-            "resource": "./viewer/PE-EGGS.TXT"
+            "title": "*Baby Jesus' Egalitarian \"Autumn Medley\" Pretend Pizzas",
+            "byline": "Zinnia Kray",
+            "resource": "./viewer/ZK-PIZZA.ans"
         },
         {
             "title": "benpottsfuel v3.02",
             "byline": "Quadyl",
-            "resource": "./viewer/QUADFUEL.TXT"
+            "resource": "./viewer/QUADFUEL.ans"
         },
         {
-            "title": "Kraft Dinner!!",
-            "byline": "The Judge",
-            "resource": "./viewer/tj-kraft_dinner.txt"
+            "title": "*borscht aka \"a bowl full of farts\"",
+            "byline": "Cthulu",
+            "resource": "./viewer/ct-borscht.ans"
         },
         {
-            "title": "*fruit.",
-            "byline": "Weird",
-            "resource": "./viewer/WD-FRUIT.TXT"
+            "title": "Cottage Cheese Lemon Pudding",
+            "byline": "Cthulu",
+            "resource": "./viewer/ct-cottagecheeselemon.ans"
+        },
+        {
+            "title": "Cthulu was in a band once, and also he cooked granola",
+            "byline": "Cthulu",
+            "resource": "./viewer/ct-granola2.ans"
         },
         {
             "title": "eat.",
             "byline": "Weird",
-            "resource": "./viewer/WD-TOAST.TXT"
+            "resource": "./viewer/WD-TOAST.ans"
         },
         {
-            "title": "*Really, Really Good.  (Really)",
-            "byline": "Zinnia Lit-From-Within",
-            "resource": "./viewer/ZK-BEAN.ANS"
+            "title": "*fill your freezer with free bananas banana bread",
+            "byline": "Cthulu",
+            "resource": "./viewer/ct-banana_bread.ans"
         },
         {
-            "title": "*Mouth On Fire!",
-            "byline": "Zinnia Lit-From-Within",
-            "resource": "./viewer/ZK-CURRY.TXT"
-        },
-        {
-            "title": "*The magical MISORONI",
-            "byline": "Zinnia Lit-From-Within",
-            "resource": "./viewer/ZK-MISOR.TXT"
-        },
-        {
-            "title": "*Baby Jesus' Egalitarian \"Autumn Medley\" Pretend Pizzas",
-            "byline": "Zinnia Lit-From-Within",
-            "resource": "./viewer/ZK-PIZZA.TXT"
-        },
-        {
-            "title": "Magic Afternoon Spaghetti",
-            "byline": "Zinnia Lit-From-Within and Cthulu",
-            "resource": "./viewer/ZKCT-SPA.TXT"
+            "title": "*fruit.",
+            "byline": "Weird",
+            "resource": "./viewer/WD-FRUIT.ans"
         },
         {
             "title": "*Gestalt Banana Bread Recipe",
-            "byline": "Zinnia Lit-From-Within",
-            "resource": "./viewer/ZR-BANA.TXT"
+            "byline": "Zinnia Rock",
+            "resource": "./viewer/ZR-BANA.ans"
         },
         {
             "title": "*It Makes You Sleepy: Misomania!",
-            "byline": "Zinnia Lit-From-Within",
-            "resource": "./viewer/ZR-MISO.TXT"
+            "byline": "Zinnia Rock",
+            "resource": "./viewer/ZR-MISO.ans"
+        },
+        {
+            "title": "Kraft Dinner!!",
+            "byline": "The Judge",
+            "resource": "./viewer/tj-kraft_dinner.ans"
+        },
+        {
+            "title": "Lupo's Kitchen: Sex-in-a-pan",
+            "byline": "Lupo",
+            "resource": "./viewer/COOK.ans"
+        },
+        {
+            "title": "Magic Afternoon Spaghetti",
+            "byline": "Zinnia Kray and Cthulu",
+            "resource": "./viewer/ZKCT-SPA.ans"
+        },
+        {
+            "title": "*Mexican Corn Chowder",
+            "byline": "Etana",
+            "resource": "./viewer/ET-CORN.ans"
+        },
+        {
+            "title": "*Mouth On Fire!",
+            "byline": "Zinnia Kray",
+            "resource": "./viewer/ZK-CURRY.ans"
+        },
+        {
+            "title": "*Really, Really Good.  (Really)",
+            "byline": "Zinnia Kray",
+            "resource": "./viewer/ZK-BEAN.ans"
+        },
+        {
+            "title": "Sour Cream Coffee Cake",
+            "byline": "Cthulu",
+            "resource": "./viewer/ct-sour_cream_coffee_cake.ans"
+        },
+        {
+            "title": "Rhubarb Cake",
+            "byline": "Cthulu",
+            "resource": "./viewer/ct-rhubarb_cake.ans"
+        },
+        {
+            "title": "the eggs of satan",
+            "byline": "publius enigma",
+            "resource": "./viewer/PE-EGGS.ans"
+        },
+        {
+            "title": "*The magical MISORONI",
+            "byline": "Zinnia Kray",
+            "resource": "./viewer/ZK-MISOR.ans"
+        },
+        {
+            "title": "*ultimate savory picnic bread",
+            "byline": "Cthulu",
+            "resource": "./viewer/ct-focaccia.ans"
         }
     ]
 }

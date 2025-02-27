@@ -22,9 +22,29 @@
     "option-selected-byline-attribute": "white:blue",
     "options": [
         {
-            "title": "Orange",
-            "byline": "consolejockey",
-            "resource": "./viewer/CJY-Orange.ans"
+            "title": "Anya",
+            "byline": "Happyfish",
+            "resource": "./viewer/HF-ANYA.ANS"
+        },
+        {
+            "title": "Bols de Fruit et Vin",
+            "byline": "Nitron",
+            "resource": "./viewer/NI-BDFEV.ANS"
+        },
+        {
+            "title": "Broccoli",
+            "byline": "moth",
+            "resource": "./viewer/MOTH-BROCCOLI.ANS"
+        },
+        {
+            "title": "Can of Beans",
+            "byline": "Zylone",
+            "resource": "./viewer/ZYLONE-CAN_OF_BEANS.ANS"
+        },
+        {
+            "title": "Cheers!",
+            "byline": "Codefenix",
+            "resource": "./viewer/CODEFENIX-MENU5ART.ANS"
         },
         {
             "title": "Dabbling with ASCII - BK Logo",
@@ -32,9 +52,9 @@
             "resource": "./viewer/CODEFENIX-BK_LOGO.ANS"
         },
         {
-            "title": "Eyes Off My Fries",
+            "title": "Dabbling with ASCII - Pepsi Logo",
             "byline": "Codefenix",
-            "resource": "./viewer/CODEFENIX-EYES_OFF_MY_FRIES.ANS"
+            "resource": "./viewer/CODEFENIX-PEPSI_LOGO.ANS"
         },
         {
             "title": "Dabbling with ASCII - Pizza Hut Logo",
@@ -42,9 +62,59 @@
             "resource": "./viewer/CODEFENIX-HUT_LOGO.ANS"
         },
         {
-            "title": "The Magic Of Caffeine",
+            "title": "Dungeon Meshi",
+            "byline": "0DD",
+            "resource": "./viewer/ODD-DUNGEONMESHICOL.ANS"
+        },
+        {
+            "title": "entartisme",
+            "byline": "axb",
+            "resource": "./viewer/AXB-PIE.ANS"
+        },
+        {
+            "title": "Eyes Off My Fries",
             "byline": "Codefenix",
-            "resource": "./viewer/CODEFENIX-MAGIC_OF_CAFFEINE.ANS"
+            "resource": "./viewer/CODEFENIX-EYES_OFF_MY_FRIES.ANS"
+        },
+        {
+            "title": "Food",
+            "byline": "0DD",
+            "resource": "./viewer/ODD-MIST0724-FOOD.ANS"
+        },
+        {
+            "title": "Food of the Gods 2",
+            "byline": "DosDoC",
+            "resource": "./viewer/DOSDOC-FOOD_OF_THE_GODS_2.ANS"
+        },
+        {
+            "title": "Fried Green Tomatoes",
+            "byline": "DosDoC",
+            "resource": "./viewer/DOSDOC-FGTOMATOES.ANS"
+        },
+        {
+            "title": "Fruit bowl",
+            "byline": "LDA",
+            "resource": "./viewer/LDA-MENU6ART.ANS"
+        },
+        {
+            "title": "Gimme a slice with the works",
+            "byline": "Grymmjack",
+            "resource": "./viewer/US-PAPERTHIN.ANS"
+        },
+        {
+            "title": "GMO",
+            "byline": "0DD",
+            "resource": "./viewer/ODD-GMO.ANS"
+        },
+        {
+            "title": "imbibe",
+            "byline": "Codefenix",
+            "resource": "./viewer/CF-MAINMENUART.ANS"
+        },
+        {
+            "title": "Jorge",
+            "byline": "Grymmjack",
+            "resource": "./viewer/GRYMMJACK-JORGE.ans"
         },
         {
             "title": "Mountain Dew Logo",
@@ -52,14 +122,34 @@
             "resource": "./viewer/CODEFENIX-MTDEW_LOGO.ANS"
         },
         {
-            "title": "Dabbling with ASCII - Pepsi Logo",
-            "byline": "Codefenix",
-            "resource": "./viewer/CODEFENIX-PEPSI_LOGO.ANS"
+            "title": "Nanny Oggs Cookbook",
+            "byline": "DosDoC",
+            "resource": "./viewer/DOSDOC-NANNY_OGG_S_COOKBOOK.ANS"
+        },
+        {
+            "title": "Orange",
+            "byline": "consolejockey",
+            "resource": "./viewer/CJY-ORANGE.ANS"
+        },
+        {
+            "title": "Skewered food served in Hot pot",
+            "byline": "Jackey",
+            "resource": "./viewer/JACKEY-FOOD.ANS"
+        },
+        {
+            "title": "Steamed",
+            "byline": "0DD",
+            "resource": "./viewer/ODD-MIST0724-STEAMED.ANS"
         },
         {
             "title": "Taco Night",
             "byline": "Codefenix",
             "resource": "./viewer/CODEFENIX-TACO_NIGHT.ANS"
+        },
+        {
+            "title": "The Magic Of Caffeine",
+            "byline": "Codefenix",
+            "resource": "./viewer/CODEFENIX-MAGIC_OF_CAFFEINE.ANS"
         },
         {
             "title": "Wash the Dishes",
@@ -70,46 +160,6 @@
             "title": "Who wants Bologna?",
             "byline": "Codefenix",
             "resource": "./viewer/CODEFENIX-WHO_WANTS_BOLOGNA.ANS"
-        },
-        {
-            "title": "Fried Green Tomatoes",
-            "byline": "DosDoC",
-            "resource": "./viewer/DOSDOC-FGTOMATOES.ANS"
-        },
-        {
-            "title": "Food of the Gods 2",
-            "byline": "DosDoC",
-            "resource": "./viewer/dosdoc-Food__of__the__gods__2.ans"
-        },
-        {
-            "title": "Nanny Oggs Cookbook",
-            "byline": "DosDoC",
-            "resource": "./viewer/dosdoc-nanny__oggs__cookbook.ans"
-        },
-        {
-            "title": "Broccoli",
-            "byline": "moth",
-            "resource": "./viewer/moth-broccoli.ans"
-        },
-        {
-            "title": "Bols de Fruit et Vin",
-            "byline": "Nitron",
-            "resource": "./viewer/NI-BDFEV.ANS"
-        },
-        {
-            "title": "Dungeon Meshi",
-            "byline": "0DD",
-            "resource": "./viewer/odd-dungeonMeshiCol.ans"
-        },
-        {
-            "title": "GMO",
-            "byline": "0DD",
-            "resource": "./viewer/odd-gmo.ans"
-        },
-        {
-            "title": "Can of Beans",
-            "byline": "Zylone",
-            "resource": "./viewer/ZYLONE-CAN_OF_BEANS.ANS"
         }
     ]
 }

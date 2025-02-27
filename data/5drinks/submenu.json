@@ -22,29 +22,29 @@
     "option-selected-byline-attribute": "white:blue",
     "options": [
         {
-            "title": "Not Just for New Shoots Anymore!",
-            "byline": "Cthulu and Zamfir Worshipper",
-            "resource": "./viewer/CT-SOUR.TXT"
-        },
-        {
             "title": "*Blue part two",
             "byline": "Quip",
-            "resource": "./viewer/QU-BLU.TXT"
-        },
-        {
-            "title": "*yummy drink ;)",
-            "byline": "Yohimbe",
-            "resource": "./viewer/SE-YUM.TXT"
+            "resource": "./viewer/QU-BLU.ans"
         },
         {
             "title": "my head is going to",
             "byline": "Weird",
-            "resource": "./viewer/WD-COLD.TXT"
+            "resource": "./viewer/WD-COLD.ans"
+        },
+        {
+            "title": "Not Just for New Shoots Anymore!",
+            "byline": "Cthulu and Zamfir Worshipper",
+            "resource": "./viewer/CT-SOUR.ans"
         },
         {
             "title": "*recipe for absinthe",
             "byline": "Yohimbe",
-            "resource": "./viewer/YO-ABSIN.TXT"
+            "resource": "./viewer/YO-ABSIN.ans"
+        },
+        {
+            "title": "*yummy drink ;)",
+            "byline": "Yohimbe",
+            "resource": "./viewer/SE-YUM.ans"
         }
     ]
 }

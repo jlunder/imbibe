@@ -22,14 +22,14 @@
     "option-selected-byline-attribute": "white:blue",
     "options": [
         {
+            "title": "Cruelty and Vermin",
+            "byline": "Adel Faure, Cthulu, littlebitspace, et al",
+            "resource": "./viewer/us-cruelty_and_vermin.ans"
+        },
+        {
             "title": "Macaroni Surprise!",
             "byline": "Cthulu",
-            "resource": "./viewer/CT-MACNO.TXT"
-        },
-            {
-                "title": "Cruelty and Vermin",
-                "byline": "Adel Faure, Cthulu, littlebitspace, et al",
-                "resource": "./viewer/us-cruelty_and_vermin.txt"
-            }
-        ]
+            "resource": "./viewer/CT-MACNO.ans"
+        }
+    ]
 }

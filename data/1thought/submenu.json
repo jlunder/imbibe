@@ -24,7 +24,7 @@
         {
             "title": "\"7-11 Rules!\" OR: The difference between plastic and food.",
             "byline": "G33kb00Bs and Silver Angel",
-            "resource": "./viewer/G-BURGER.TXT"
+            "resource": "./viewer/G-BURGER.ans"
         },
         {
             "title": "All about Poutine",
@@ -34,7 +34,7 @@
         {
             "title": "An Astute Observation",
             "byline": "Miataman",
-            "resource": "./viewer/MI-WAKEU.TXT"
+            "resource": "./viewer/MI-WAKEU.ans"
         },
         {
             "title": "An Open Letter: from Cheese to Slugs",
@@ -44,12 +44,12 @@
         {
             "title": "And Now For A Word From Our Sponsor Regarding Garlic Toast",
             "byline": "Quip",
-            "resource": "./viewer/QU-TOAST.TXT"
+            "resource": "./viewer/QU-TOAST.ans"
         },
         {
             "title": "Anemia in the Family",
             "byline": "Zinnia Lit-From-Within",
-            "resource": "./viewer/ZJ-BLOOD.TXT"
+            "resource": "./viewer/ZJ-BLOOD.ans"
         },
         {
             "title": "Ask Chef Agnostique!",
@@ -59,72 +59,72 @@
         {
             "title": "Cooking with Google, 2006",
             "byline": "Cthulu",
-            "resource": "./viewer/ct-no_ingredients_baking.txt"
+            "resource": "./viewer/ct-no_ingredients_baking.ans"
         },
         {
             "title": "Fantasies of a Militant Revolutionary Dietician",
             "byline": "Zinnia Kray",
-            "resource": "./viewer/ZK-DIET.TXT"
+            "resource": "./viewer/ZK-DIET.ans"
         },
         {
             "title": "Food Mood",
             "byline": "Zinnia Friday",
-            "resource": "./viewer/ZK-MOOD.TXT"
+            "resource": "./viewer/ZK-MOOD.ans"
         },
         {
             "title": "Guinea Burgers",
             "byline": "Zinnia Rock",
-            "resource": "./viewer/ZR-DREAM.TXT"
+            "resource": "./viewer/ZR-DREAM.ans"
         },
         {
             "title": "Gursha",
             "byline": "Cthulu",
-            "resource": "./viewer/ct-gursha.txt"
+            "resource": "./viewer/ct-gursha.ans"
         },
         {
             "title": "Kimchee + Kava kava = BAD",
             "byline": "Zinnia Kray",
-            "resource": "./viewer/ZK-KIMCH.TXT"
+            "resource": "./viewer/ZK-KIMCH.ans"
         },
         {
             "title": "Lactose Intolerance",
             "byline": "Zinnia Kray, Etana and Otnoo Ishphoo",
-            "resource": "./viewer/ZK-LACT.TXT"
+            "resource": "./viewer/ZK-LACT.ans"
         },
         {
             "title": "Reviews of Restaurants At Which I Have Never Actually Eaten!",
             "byline": "Zamfir Worshipper",
-            "resource": "./viewer/ZW_reviews_restaurants_he_hasn_t_eaten_at.txt"
+            "resource": "./viewer/ZW_reviews_restaurants_he_hasn_t_eaten_at.ans"
         },
         {
             "title": "Side-Effects of Tim Horton's Donuts",
-            "byline": "Zinnia Lit-From-Within",
-            "resource": "./viewer/ZK-DONUT.TXT"
+            "byline": "Zinnia Kray",
+            "resource": "./viewer/ZK-DONUT.ans"
         },
         {
             "title": "STUPID THINGS TO POISON YOUR BODY WITH (incomplete list)",
-            "byline": "Zinnia Lit-From-Within, Happyfish and Publius Enigma",
-            "resource": "./viewer/ZK-POISO.ANS"
+            "byline": "Zinnia Kray, Happyfish and Publius Enigma",
+            "resource": "./viewer/ZK-POISO.ans"
         },
         {
             "title": "The Guide to Hacker Eating Habits",
             "byline": "The Laughing Fool",
-            "resource": "./viewer/EAT.TXT"
+            "resource": "./viewer/EAT.ans"
         },
         {
             "title": "The Starving Student: a critique of my current diet",
             "byline": "Zinnia Kray",
-            "resource": "./viewer/ZK-STARV.TXT"
+            "resource": "./viewer/ZK-STARV.ans"
         },
         {
             "title": "Utensil Discussion",
             "byline": "Zinnia Lit-From-Within and Sylphid",
-            "resource": "./viewer/ZK-COOK.TXT"
+            "resource": "./viewer/ZK-COOK.ans"
         },
         {
             "title": "Well, Now I Know",
             "byline": "Zinnia Kray and Agnostic",
-            "resource": "./viewer/ZR-BEAN.TXT"
+            "resource": "./viewer/ZR-BEAN.ans"
         }
     ]
 }
