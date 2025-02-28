@@ -332,7 +332,11 @@ key_code_t encode_sdl_key(SDL_Keymod mods, SDL_Keycode code) {
 }
 
 void *imbibe_thread_main(void *) {
+  for (size_t i = 0; i < LENGTHOF(sim::dummy_screen); ++i) {
+    sim::dummy_screen[i] = 0x0700 + ':';
+  }
   imbibe_main();
+  SDL_Delay(1000);
   sim::quitting = true;
   return NULL;
 }

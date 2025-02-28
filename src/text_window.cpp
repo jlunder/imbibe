@@ -123,9 +123,8 @@ inline void aux_text_window::set_cursor_style(uint8_t visible,
 inline void aux_text_window::read_screen_buffer(bitmap *out_b) {
   out_b->assign(aux_text_window::s_screen_width,
                 aux_text_window::s_screen_height, s_screen_save);
-  for (segsize_t i = 0; i < LENGTHOF(s_screen_save); ++i) {
-    s_screen_save[i] = termel::from(' ', color::white, color::black);
-  }
+  _fmemcpy(s_screen_save, aux_text_window::s_screen_buffer,
+           sizeof s_screen_save);
 }
 
 inline void aux_text_window::set_video_mode(uint8_t mode) { assert(mode == 3); }
@@ -159,7 +158,14 @@ void text_window::setup(bool capture_screen) {
   }
 }
 
-void text_window::teardown() { aux_text_window::set_video_mode(3); }
+void text_window::teardown() {
+  // Leave the last screen state behind when exiting -- assumes compatible
+  // display modes!
+  aux_text_window::read_screen_buffer(&m_capture);
+  aux_text_window::set_video_mode(aux_text_window::s_text_mode_color_80_25);
+  present_copy(m_capture.data(), m_capture.width(), m_capture.height(),
+               rect(0, 0, m_capture.width(), m_capture.height()));
+}
 
 void text_window::present() {
   if (m_dirty) {

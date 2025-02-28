@@ -67,7 +67,7 @@ void intro_element::set_capture(bitmap const &n_capture) {
 }
 
 void intro_element::play_intro() {
-  m_logo_fade.reset(0, termviz::fade_steps - 1, 500);
+  m_logo_fade.reset(0, termviz::fade_steps - 1, 2000);
   m_cover_y.reset(frame().height(), -m_cover.frame().height(), 10000, 5000);
   m_active = true;
 }

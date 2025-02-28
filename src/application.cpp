@@ -325,7 +325,19 @@ void application::do_immediate_quit_from_anywhere() {
 }
 
 void application::do_next_from_outro() {
-  // this one is immediate
+  // This one is immediate -- finish the animation and then, because the outro
+  // will deactivate itself etc., force one last animation update and show
+  // everything so the screen is definitely for sure left in the last animation
+  // frame state
+  s_outro_screen->finish_outro();
+  s_win->lock_repaint();
+  s_outro_screen->animate(0);
+  s_outro_screen->show();
+  s_main->show();
+  s_win->unlock_repaint();
+  s_win->present();
+
+  // There's no coming back from here
   s_quitting = true;
 }
 
