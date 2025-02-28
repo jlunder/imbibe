@@ -62,7 +62,7 @@ void menu_element::layout(coord_t window_width, coord_t window_height) {
   set_frame(0, 0, window_width, window_height);
   m_scroll_y.reset(0);
 
-  m_selected_option = 0;
+  m_selected_option = m_options.size();
   m_last_selected_option = m_options.size();
 }
 
@@ -163,4 +163,9 @@ void menu_element::paint(graphics *g) {
   g->leave_subregion(&ss1);
 }
 
-void menu_element::activate() { m_last_selected_option = m_options.size(); }
+void menu_element::activate() {
+  m_last_selected_option = m_options.size();
+  if (m_selected_option >= m_options.size()) {
+    m_selected_option = 0;
+  }
+}

@@ -42,14 +42,16 @@ MK_TBM_DEPS = support/mk_tbm.py support/ansi.py support/equivs.py support/rle.py
 MK_TYAR_DEPS = support/mk_tyar.py support/crc.py Makefile
 
 IMBIBE_RESOURCES = \
-	$(patsubst data/%.bin,testdata/%.tbm,$(wildcard data/*/*.bin)) \
+	$(patsubst data/%.ans,testdata/%.tbm,$(wildcard data/*/*.ans)) \
 	$(patsubst data/%.ANS,testdata/%.tbm,$(wildcard data/*/*.ANS)) \
+	$(patsubst data/%.bin,testdata/%.tbm,$(wildcard data/*/*.bin)) \
 	$(patsubst data/%.ans,testdata/%.tbm,$(wildcard data/*/viewer/*.ans)) \
 	$(patsubst data/%.ANS,testdata/%.tbm,$(wildcard data/*/viewer/*.ANS)) \
+	$(patsubst data/%.asc,testdata/%.tbm,$(wildcard data/*/viewer/*.asc)) \
+	$(patsubst data/%.ASC,testdata/%.tbm,$(wildcard data/*/viewer/*.ASC)) \
+	$(patsubst data/%.bin,testdata/%.tbm,$(wildcard data/*/viewer/*.bin)) \
 	$(patsubst data/%.txt,testdata/%.tbm,$(wildcard data/*/viewer/*.txt)) \
 	$(patsubst data/%.TXT,testdata/%.tbm,$(wildcard data/*/viewer/*.TXT)) \
-	$(patsubst data/%.ans,testdata/%.tbm,$(wildcard data/*/viewer/*.asc)) \
-	$(patsubst data/%.ans,testdata/%.tbm,$(wildcard data/*/viewer/*.ASC)) \
 	$(patsubst data/%.json,testdata/%.cfg,$(wildcard data/*/*.json)) \
 	$(patsubst data/%.json,testdata/%.cfg,$(wildcard data/*.json))
 

@@ -22,16 +22,11 @@ public:
   void set_capture(bitmap const &n_capture);
 
   void play_intro();
-  void skip_transition();
 
 private:
   bitmap_element m_capture_background;
-  tbm_element m_logo;
+  tbm_element m_splash;
   tbm_element m_cover;
-  coord_t m_logo_width;
-  coord_t m_logo_height;
-  coord_t m_cover_width;
-  coord_t m_cover_height;
   linear_tween<uint8_t> m_logo_fade;
   linear_tween<coord_t> m_cover_y;
   bool m_active;

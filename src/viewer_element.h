@@ -37,6 +37,7 @@ private:
 
   linear_tween<coord_t> m_transition_in_out;
   linear_tween<coord_t> m_scroll_y;
+  point m_viewing_offset;
 
   bool m_active;
 };

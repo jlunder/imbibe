@@ -10,13 +10,13 @@ void viewer_element::layout(coord_t window_width, coord_t window_height) {
   set_frame(0, 0, window_width, window_height);
   m_background = termel::from(' ', color::white, color::black);
 
-  m_view_height = frame().height();
-  m_page_jump = m_view_height - 2;
+  m_page_jump = frame().height() - 2;
   m_scroll_height = 0;
   m_scroll_y_target = 0;
   m_scroll_y_target_last = 0;
 
   m_scroll_y.reset(m_scroll_y_target);
+  m_viewing_offset = point(0, 0);
 
   m_transition_in_out.reset(frame().width());
 }
@@ -89,12 +89,18 @@ void viewer_element::paint(graphics *g) {
       point(view_x, 0),
       rect(view_x, 0, view_x + frame().width(), frame().height()), &s);
   if (m_viewing.valid()) {
-    coord_t view_y = m_scroll_y.value();
-    g->draw_tbm(0, -view_y, m_viewing);
-    if (-view_y + m_viewing.height() < m_view_height) {
-      g->draw_rectangle(0, -view_y + m_viewing.height(), frame().width(),
-                        m_view_height, m_background);
-    }
+    coord_t view_top = m_viewing_offset.y - m_scroll_y.value();
+    rect view_rect = rect(m_viewing_offset.x, view_top,
+                          m_viewing_offset.x + m_viewing.width(),
+                          view_top + m_viewing.height());
+    g->draw_tbm(view_rect.x1, view_rect.y1, m_viewing);
+    g->draw_rectangle(0, 0, frame().width(), view_rect.y1, m_background);
+    g->draw_rectangle(0, view_rect.y1, view_rect.x1, view_rect.y2,
+                      m_background);
+    g->draw_rectangle(view_rect.x2, view_rect.y1, frame().width(), view_rect.y2,
+                      m_background);
+    g->draw_rectangle(0, view_rect.y2, frame().width(), frame().height(),
+                      m_background);
   } else {
     g->draw_rectangle(frame(), m_background);
   }
@@ -110,7 +116,17 @@ void viewer_element::activate(imstring const &resource) {
   m_viewing = resource_manager::fetch_tbm(resource);
 
   if (m_viewing.valid()) {
-    m_scroll_height = max<coord_t>(m_viewing.height() - m_view_height, 0);
+    if (m_viewing.height() < frame().height()) {
+      m_scroll_height = 0;
+      m_viewing_offset.y = (frame().height() - m_viewing.height()) / 2;
+    } else {
+      m_scroll_height = m_viewing.height() - frame().height();
+      m_viewing_offset.y = 0;
+    }
+    m_viewing_offset.x = (frame().width() - m_viewing.width()) / 2;
+  } else {
+    m_scroll_height = 0;
+    m_viewing_offset = point(0, 0);
   }
   m_scroll_y_target = 0;
 

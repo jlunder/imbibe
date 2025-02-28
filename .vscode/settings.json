@@ -19,7 +19,9 @@
         "chrono": "cpp",
         "streambuf": "cpp",
         "compare": "cpp",
-        "cstdint": "cpp"
+        "cstdint": "cpp",
+        "optional": "cpp",
+        "format": "cpp"
     },
     "makefile.configureOnOpen": true
 }

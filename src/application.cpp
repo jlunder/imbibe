@@ -193,10 +193,6 @@ void application::run_loop() {
     animate(anim_ms);
     s_main->show();
     s_win->unlock_repaint();
-    // s_win->repaint(rect(10, 4, 20, 8));
-    // s_win->repaint(rect(10, 20, 20, 24));
-    // s_win->repaint(rect(60, 4, 70, 8));
-    // s_win->repaint(rect(60, 20, 70, 20));
     s_win->present();
     sim::step_frame();
 
@@ -500,4 +496,5 @@ void application::deactivate_quit_prompt() {
 void application::activate_outro() {
   assert(s_last_mode == mode_none);
   s_last_mode = mode_outro;
+  s_outro_screen->play_outro();
 }
