@@ -43,12 +43,12 @@
         },
         {
             "title": "About the recipes",
-            "byline": "",
+            "byline": "Cthulu",
             "resource": "./viewer/RECIPES.ans"
         },
         {
             "title": "Contributors",
-            "byline": "",
+            "byline": "Cthulu",
             "resource": "./viewer/CONTRIB.ans"
         }
     ]

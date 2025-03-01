@@ -3,8 +3,8 @@
 If you subscribe to the idea -- as I generally do -- that adulthood doesn't
 really start until around[1;36m age 25[0m, then I was not an adult yet when we embarked
 on this rather roundabout journey, though I was certainly old enough to be
-held responsible. Well, I am definitely an adult now, this [1;36myear of our lord
-2025[0m, and what is adulthood about if not perpetually atoning for your past
+held responsible. Well, I am definitely an adult now, this [1;36myear of our lord[0m
+[1;36m2025[0m, and what is adulthood about if not perpetually atoning for your past
 indiscretions? And maybe producing a new generation of indiscrete mistake-
 makers along the way. I don't think this is a debt we're meant to fully pay
 off.
@@ -28,7 +28,7 @@ neatly, as does this whole emag release.
 In the summer of [1;36m2024[0m, I was regularly accompanying my child to a [31mD&D[37m group
 held at a local public place. By chance, significantly -- though I'm sure
 various social connections kept that chance nontrivial -- [35mthe mighty Cthulu[37m
-was also not infrequently accompanying his child to the same group. As happens
+had on one such occasion also brought his child to the same group. As happens
 when parents are in such situations, we ended up conversing about shared
 interests to stave off the boredom of waiting for someone else's game to
 finish. With what I perceived to be a total lack of expectation, [35mCthulu[37m
@@ -73,8 +73,8 @@ is captured in the articles is really teenage-to-young-adult [1;35mridiculousne
 inside jokes from a social group that's thoroughly atomized now. Maybe the
 result is of [36mhistorical[37m or [33manthropological[37m interest to you; or maybe you're
 one of [1mour children[0m, wanting to know more about mom or dad's barely fathomable
-youth; maybe you're [1;30mof a certain age[0m, and want to [32mwallow in nostalgia [37mfor [1;36ma
-minute[0m; or maybe you're someone else from our life, a student perhaps, curious
+youth; maybe you're [1;30mof a certain age[0m, and want to [32mwallow in nostalgia [37mfor [1;36ma[0m
+[1;36mminute[0m; or maybe you're someone else from our life, a student perhaps, curious
 about our [1;35mless professional[0m [1;36mpast[0m. In that latter case, I'd say 1. that's some
 pretty dedicated sleuthing, and 2. [1mI hope you're not too horrified[0m.
 
@@ -87,8 +87,8 @@ articles, it would seem I wasn't talking about food.
 (I find a timeline that runs for [1;36m2 years[0m then disappears for [1;36m25[0m, amusing. And
 please, try to read this mostly as self-deprecating hamming...)
 
-[1;30m-------------------------------------------------------------------------------
-[0m
+[1;30m-------------------------------------------------------------------------------[0m
+
 [1;36m1998 June[0m:
 
 [35mThe Mighty Cthulu[37m: "hey [1;34mjoe[0m, can I take advantage of your hax0rly skillz to
@@ -112,10 +112,10 @@ The 313370 [1;34mHAx0r Joe[0m: "[35mROWAN[37m YOU [1;31m$%&@![0m I'VE BEEN
 [1;36m1999 March[0m:
 
 [35mThe Mighty Cthulu[37m: "Here are [1mthe articles[0m [1;30m8)[0m"
-[1;30mThe 313370[0m [1;34mhAx0R j03[30m:[0m [1;30m"s0rRy. I w4it3d 8 m0nths, and now I've ins7a113d
-[0m                       [1;30mleenooks like a g00d little hax0r. um, TS 4 n0w, er..
-[0m                       [1;30m<sh33pi5H lo0k>"
-[0m
+[1;30mThe 313370[0m [1;34mhAx0R j03[30m:[0m [1;30m"s0rRy. I w4it3d 8 m0nths, and now I've ins7a113d[0m
+                       [1;30mleenooks like a g00d little hax0r. um, TS 4 n0w, er..[0m
+                       [1;30m<sh33pi5H lo0k>"[0m
+
 [1;36m1999 September[0m:
 
 The 31337 [1;34mhAX0R j00[0m: "y33h4w I bought a 1337 l4PT0P for sch00L! it onLy runz
@@ -160,8 +160,8 @@ greets and dedications are for losers who know other people.
 
  -[1;34mhacker joe[0m
 
-[1;30m-------------------------------------------------------------------------------
-[0m
+[1;30m-------------------------------------------------------------------------------[0m
+
 Aw, that guy. I think if my 1999 self knew what my 2005+ self would get up to,
 he'd have been pretty happy about that future.[1;34m [0mIt wasn't coding emags.
 
@@ -170,21 +170,21 @@ the record in a minute.
 
 [35mCthulu[37m, despairing of my involvement, wrote this post scriptum:
 
-[1;30m-------------------------------------------------------------------------------
-[0m
-[[35mCthulu[37m [1;30mpicks up the trail, September 2022:[0m]
+[1;30m-------------------------------------------------------------------------------[0m
+
+[[35mCthulu[37m [1;30mpicks up the trail, [0;36mSeptember 2022[1;30m:[0m]
 
 Of course, this document is what we might consider an alternate history,
 since upon its final release this magazine distinctly is surely not tapping
 any of the technology [1;34mJoe [0mcooked up for its use, no trace of which must
-remain some 24 years later.  (School just started, and my family is sharing a
-carpooling arrangement with Joe's for getting our kids to class and back, so
+remain some [1;36m24 years[0m later.  (School just started, and my family is sharing a
+carpooling arrangement with[1;34m Joe[0m's for getting our kids to class and back, so
 even though this has all been dormant longer than our lifespan to date back
 when it was a going concern, the slim thread of history continues running
 through our respective projects.)
 
 While wading around knee-deep in this pile of captures, like the[1m Fellowship[0m of
-the Ring reconstructing the fall of [33mKhazad-dï¿½m[37m, trying to determine
+the Ring reconstructing the fall of [33mKhazad-d–m[37m, trying to determine
 conclusively just what the heck went wrong after getting 99% of the way
 there... leaving us collectively languishing in development hell for,
 charitably, a couple of decades -- I think I cracked the code.  Or is it
@@ -193,7 +193,7 @@ language intended for beautifying the dozens of articles reserved for this
 production.  I must have taken one look at it and gone "Manually implement my
 own proprietary replacement for the (national) standard provided by ANSI?
 Yeah, I'll definitely prioritise doing that... when [1;35mpigs[0m fly!"  Without any
-intention to shame or scold Joe for his rough but robust solution to my nutty
+intention to shame or scold [1;34mJoe[0m for his r[1mo[30mu[0mg[1mh[0m but robust solution to my nutty
 problem, here you go, below -- the sample he provided that almost certainly
 halted me in my tracks:
 
@@ -208,26 +208,26 @@ halted me in my tracks:
         \p15,1{there is a 15% probability that this text will be[34m blue[37m}
 
 In retrospect, it's not so impossible to work with, but history has
-demonstrated that I can be pretty thoroughly derailed by even small
+demonstrated that I can be pretty thoroughly derailed by even [1;30msmall[0m
 obstacles.  Now we know!  Now in its place instead of one user-unfriendly
-solution I have wound up working with an entirely different user-unfriendly
-solution of much lesser flexibility, with no tech support.  [1;31mNice work, bozo!
-[0m
-[[35mCthulu[1;30m resumes the trail in mid-2024:[0m]
+solution I have wound up working with an entirely [1mdifferent[0m user-unfriendly
+solution of much lesser flexibility, with no tech support.  [1;31mNice work, bozo![0m
+
+[[35mCthulu[1;30m resumes the trail in[36m [0;36mmid-2024[1;30m:[0m]
 
 OK, well, I have many different projects competing for my attention.  This is
 definitely the most longstanding of them, but sometimes forward progress gets
 blocked for a long time for a good reason -- because overcoming the obstacles
 in your path is genuinely challenging!
 
-I have to roll back a couple of bold proclamations made in 2022: in fact, we
+I have to roll back a couple of bold proclamations made in [1;36m2022[0m: in fact, we
 did wind up putting this together using Joe's quarter-century-old code.  (It's
-like FORTRAN programmers coming out of retirement to save mainframes and the
+like [1mF[0mOR[1mT[0mRAN programmers coming out of retirement to save mainframes and the
 banking industry during [1mY2K[0m, only the stakes are a little lower.)  When I got
-back in touch with Joe, he was like "oh yes, I definitely bit off a bit too
+back in touch with [1;34mJoe[0m, he was like "oh yes, I definitely bit off a bit too
 much with that project, I was trying to make the emag into a multi-threaded
 operating system", so I don't feel too bad about being thrown clear by the
-explosive scope creep at that time.
+[33me[31mx[1mp[33ml[37mo[33ms[31mi[0;31mv[33me[37m scope creep at that time.
 
 The entirely different user-unfriendly solution?  Too user-unfriendly, it
 turns out.  (I had a scheme to hoover out the content from an issue of [1;33mEerie[0m's
@@ -240,8 +240,8 @@ alas.  But as this magazine demonstrates, it's never too late, so keep your
 options open and maybe someday these kids will be commuting to work together
 through the post-apocalyptic hellscape of 2049.
 
-[1;30m-------------------------------------------------------------------------------
-[0m
+[1;30m-------------------------------------------------------------------------------[0m
+
 So, to correct the technical record:
 
 Imbibe, the C++ source code, is currently about 9200 lines and ~250kB that
@@ -274,8 +274,8 @@ that kind of gearhead go find the git repository, I guess! It's public.
 For now.
 
 
-                                                    [1;34mhaX3r 50333333[0m, [1;36m2025
-[0m
+                                                    [1;34mhaX3r 50333333[0m, [1;36m2025[0m
+
 
 [1;30mP.S.[0m
 
@@ -284,7 +284,8 @@ The [1;33mbanana bread[0m:
 Peeled banana, frozen into a container (you can pack them tight by squishing),
 is very convenient -- you can scoop out exactly what you need. Using weights
 instead of a banana count here gives a very consistent loaf. 250g is maybe 2-4
-bananas, depending if they're giant or tiny.
+bananas, depending if they're giant or tiny. As Cthulu notes elsewhere, you
+veganize it by replacing the eggs with more banana (and the butter with oil).
 
         [36mLiquids       [1;37m2[0m  eggs
                     [1m100[0mg [1;33mmelted butter[0m
@@ -294,8 +295,8 @@ bananas, depending if they're giant or tiny.
                       [1m2[0mt [1mbaking powder[0m
                     [1m125[0mg [33mchocolate chips[37m
 
-Mix [36mliquids[37m, and [32msolids[37m [1mWITHOUT[0m the [33mchocolate[37m, each[1m independently[0m. Combine
-[36mliquids[37m and [32msolids [37mand [1mmix well[0m, then [1mstir[0m the [33mchocolate chips[37m in.
+Mix [36mliquids[37m. In another bowl, mix [32msolids[37m [1mWITHOUT[0m the [33mchocolate[37m.
+Combine [36mliquids[37m and [32msolids [37mand [1mmix well[0m, then [1mstir[0m the [33mchocolate chips[37m in.
 
 I recommend stirring the chocolate chips in by hand; if you use a stand mixer
 with the cake beater, they are prone to getting c[1mau[0mg[1mh[0mt between the beater and
@@ -308,10 +309,10 @@ the bowl. When I did it, it sounded like I was d[1me[0ms[1;30mt[0mr[1;30mo
 or ceramic loaf pans give a more consistent result and are less prone to
 burning the bottom, but take longer.
 
-[1mCool 10 [0mminutes before[1m turning out [0mor the bottom is liable to tear;[1m cool
-[0manother [1m10 [0mminutes before you even think about [1mslicing[0m or your slices will
+[1mCool 10 [0mminutes before[1m turning out [0mor the bottom is liable to tear;[1m cool[0m
+another [1m10 [0mminutes before you even think about [1mslicing[0m or your slices will
 tend to fall apart in a very messy and unsatisfying way. Alternatively, eat it
 with a spoon straight out of the baking dish, or tear chunks off with your
 hands.
 
-It's [1myour [33mbanana bread[0m, now. Who am I to judge?SAUCE00                                                                           20250228£B  P =     IBM VGA               
+It's [1myour [33mbanana bread[0m, now. Who am I to judge?SAUCE00                                                                           20250301ÜC  P >     IBM VGA               

@@ -465,7 +465,7 @@ cache_font_c8 = None
 cache_font_c9 = None
 # equiv_precise = Equivalence(np.array(range(1 << 16)))
 # equiv_precise_skip = Equivalence(np.array([32] + list(range(1 << 16))[1:]), 0x0000)
-cache_equiv_w9_noice_allowfg_skip00 = None
+cache_equiv_w9_ice_allowfg_skip00 = None
 
 
 def default_font_c8() -> np.ndarray:
@@ -483,16 +483,16 @@ def default_font_c9() -> np.ndarray:
 
 
 def default_equivalence() -> Equivalence:
-    global cache_equiv_w9_noice_allowfg_skip00
-    if cache_equiv_w9_noice_allowfg_skip00 is None:
-        cache_equiv_w9_noice_allowfg_skip00 = make_font_equivalence(
+    global cache_equiv_w9_ice_allowfg_skip00
+    if cache_equiv_w9_ice_allowfg_skip00 is None:
+        cache_equiv_w9_ice_allowfg_skip00 = make_font_equivalence(
             default_font_c9(),
-            ice_color=False,
+            ice_color=True,
             allow_fg_remap=True,
             skip_val=0x0000,
             alt_val=0x0020,
         )
-    return cache_equiv_w9_noice_allowfg_skip00
+    return cache_equiv_w9_ice_allowfg_skip00
 
 
 # f8x14 = make_font_c8(chars_r14)

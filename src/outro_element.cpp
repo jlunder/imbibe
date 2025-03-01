@@ -58,10 +58,9 @@ void outro_element::animate(anim_time_t delta_ms) {
 }
 
 void outro_element::play_outro() {
-  m_goodbye_y.reset(frame().height(), -m_goodbye.frame().height(), 10000);
+  m_goodbye_y.reset(frame().height(), -m_goodbye.frame().height(),
+                    130 * m_goodbye.frame().height());
   m_active = true;
 }
 
-void outro_element::finish_outro() {
-  m_goodbye_y.finish();
-}
+void outro_element::finish_outro() { m_goodbye_y.finish(); }
