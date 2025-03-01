@@ -1,1 +1,317 @@
-Write some things here!
+[0m[1;30mAh youth.[0m
+
+If you subscribe to the idea -- as I generally do -- that adulthood doesn't
+really start until around[1;36m age 25[0m, then I was not an adult yet when we embarked
+on this rather roundabout journey, though I was certainly old enough to be
+held responsible. Well, I am definitely an adult now, this [1;36myear of our lord
+2025[0m, and what is adulthood about if not perpetually atoning for your past
+indiscretions? And maybe producing a new generation of indiscrete mistake-
+makers along the way. I don't think this is a debt we're meant to fully pay
+off.
+
+This is not my first involvement with this project. I don't know that I was
+the only coder [35mCthulu[37m tapped to work on it, but at the time I did work on it,
+I wrote a short editorial making various excuses for my own slow progress.
+Before I subject you to that litany of procrastination (and [35mCthulu[37m's response
+to the debacle), I should describe the circumstances from my side, wherein I
+came to finally call this project done.
+
+If you keep reading to the end (it's a longish walk), I will also eventually
+provide the banana bread recipe I used to make with my child, which he has
+taken on baking entirely himself, now that he's a hungry teenager. It's based
+on a [1;33mbanana muffin recipe[0m that I learned indirectly from (if I recall
+correctly) [36mEtana[37m's mother, and my first attempt at baking it dates back to
+around the time Imbibe was originally planned. It closes one or two circles
+neatly, as does this whole emag release.
+
+
+In the summer of [1;36m2024[0m, I was regularly accompanying my child to a [31mD&D[37m group
+held at a local public place. By chance, significantly -- though I'm sure
+various social connections kept that chance nontrivial -- [35mthe mighty Cthulu[37m
+was also not infrequently accompanying his child to the same group. As happens
+when parents are in such situations, we ended up conversing about shared
+interests to stave off the boredom of waiting for someone else's game to
+finish. With what I perceived to be a total lack of expectation, [35mCthulu[37m
+mentioned that he had recently re-committed to finishing Imbibe, framing it in
+terms of the satisfaction of finally checking everything off from his pre-
+millennial to-do list.
+
+This piqued my interest; I am firmly at the mid-life stage where dads from my
+youth would start working on classic car projects from their youth, so perhaps
+it was inevitable that I should pick up some sort of retrocoding project. When
+I first lost the plot, my recollection is that I had grown the scope of my
+intent to essentially an embedded microkernel and full TUI windowing system.
+
+[33mAh, youth.[37m
+
+So I always had a [1;30msmall[0m pang of guilt that scope creep and an inability to
+focus on the actual goal of release had in some way resulted in the project
+fizzling.
+
+What irony, then! That in describing his experience of the project's demise,
+[35mCthulu[37m placed the blame on [35mhimself[37m for being overwhelmed by the instructions
+I'd given him for formatting the content! I suppose we both bear some
+responsibility. I have definitely done a bit more work in preparing the
+menus and integrating the articles than I had originally planned, but well, I
+did tools work in games for many years and -- if I'm honest --[1m most artists[0m
+[1mand designers, even the highly motivated and productive ones, were similarly[0m
+[1mreluctant to deal with my janky tools[0m. (If only they knew just how much
+jankier that pipeline could have been! [1mOy![0m)
+
+The reality is I was [1mnever more than 25% of the way through the project[0m as a
+whole, at least not if you count what you see now as the real goal. I did have
+a solid start! It's possible I would have compromised more at the time and
+released a more reasonable product, should [35mCthulu[37m have been more prompt in
+delivering an edited set of articles. We will never know.
+
+In any event, between my own improved experience and the tremendous advances
+in programming languages, I was able to make this current iteration far, far
+less janky. Although [1mit did take somewhat longer[0m than I originally intended --
+it's the [1;36mendest end of February[0m now and I was thinking to get it ready last
+[1;36mOctober[0m -- I daresay I'm almost proud of the result, even though most of what
+is captured in the articles is really teenage-to-young-adult [1;35mridiculousness[0m,
+inside jokes from a social group that's thoroughly atomized now. Maybe the
+result is of [36mhistorical[37m or [33manthropological[37m interest to you; or maybe you're
+one of [1mour children[0m, wanting to know more about mom or dad's barely fathomable
+youth; maybe you're [1;30mof a certain age[0m, and want to [32mwallow in nostalgia [37mfor [1;36ma
+minute[0m; or maybe you're someone else from our life, a student perhaps, curious
+about our [1;35mless professional[0m [1;36mpast[0m. In that latter case, I'd say 1. that's some
+pretty dedicated sleuthing, and 2. [1mI hope you're not too horrified[0m.
+
+Now, as promised, the editorial I wrote when I thought I was on the cusp of
+release. Is there any reason to include it? I don't know, but here it is! It's
+the only contemporaneous writing of mine in the whole emag, because although I
+was active on the message boards [35mCthulu[37m scavenged content from for the
+articles, it would seem I wasn't talking about food.
+
+(I find a timeline that runs for [1;36m2 years[0m then disappears for [1;36m25[0m, amusing. And
+please, try to read this mostly as self-deprecating hamming...)
+
+[1;30m-------------------------------------------------------------------------------
+[0m
+[1;36m1998 June[0m:
+
+[35mThe Mighty Cthulu[37m: "hey [1;34mjoe[0m, can I take advantage of your hax0rly skillz to
+                    produce an 3l33te e-mag called imbibe, all about food?"
+The 313370 [1;34mhAx0R j03[0m: "w0w! that sounds liK3 a r3et el33t ide4! g3t Me soME
+                       aRticlez aNd I'll get hax0ring!"
+
+[1;36m1998 August[0m:
+
+The 31ee70 [1;34mhaXoR J03[0m: "h3y [35mr0wan[37m, wHEre arE th3 artic1es j00 prOMiseD me?"
+
+[1;36m1998 October[0m:
+
+The 3lit3 [1;34mhAx0R j03[0m: "[35mROWAN[37m, th33 ARTICLEZ?"
+
+[1;36m1998 December[0m:
+
+The 313370 [1;34mHAx0r Joe[0m: "[35mROWAN[37m YOU [1;31m$%&@![0m I'VE BEEN ON YOUR ASS ABOUT THOSE
+                       ARTICLES FOR MONTHS NOW! [1mGET ME THOSE ARTICLES![0m"
+
+[1;36m1999 March[0m:
+
+[35mThe Mighty Cthulu[37m: "Here are [1mthe articles[0m [1;30m8)[0m"
+[1;30mThe 313370[0m [1;34mhAx0R j03[30m:[0m [1;30m"s0rRy. I w4it3d 8 m0nths, and now I've ins7a113d
+[0m                       [1;30mleenooks like a g00d little hax0r. um, TS 4 n0w, er..
+[0m                       [1;30m<sh33pi5H lo0k>"
+[0m
+[1;36m1999 September[0m:
+
+The 31337 [1;34mhAX0R j00[0m: "y33h4w I bought a 1337 l4PT0P for sch00L! it onLy runz
+                      LOSED0ZE, which I have to run anyh0w 4 skewl."
+
+[1;36m1999 December 19 (sunday) ~10h[0m:
+
+The 37331 [1;34mhAck3R j03[0m: "I'm bored. I think I'll code imbibe."
+
+
+fortunately, the articles were written (thanks forever to my [33mpack-rat[37m nature)
+onto a CD-R backup of one of my hard drives before [35mThe Mighty Cthulu[37m's hard
+drive got exploded by [31mThe Evil Laughing Linux Hax0r[37m. I was able to get to work
+straight away.
+
+anyway, you can see that this project has been underway for over a year now.
+that means it must be really good, right?
+
+
+[1;30mright?[0m
+
+imbibe e-mag viewer:
+
+the source code for imbibe weighs ~100k, which is ~5000 lines of C++ for me
+(85 or so typewritten pages), making it the largest single project I've ever
+completed. for better or worse, that's not that big on the scale of things.
+still. I'm a little proud.
+
+my development tools (for DOS) are: Watcom C++ 10.6, Tran's PMODE/W, and edit.
+the Watcom remote debugger for Windows is the bomb. edit is the tool of satan.
+
+therefore I am satan. worship me.
+
+imbibe is absurdly overdesigned. I hope to exploit that later by writing lots
+of e-mag viewers with really weird features and graphical easter-eggs: so if
+you have an idea for an e-mag and want a viewer coded, I would be happy to
+oblige. send mail to [1;34mxxxxxxxxxx@xxxxxxx.com[0m. it might take me a week or two to
+respond, but I will respond, so be patient.
+
+
+greets and dedications are for losers who know other people.
+
+ -[1;34mhacker joe[0m
+
+[1;30m-------------------------------------------------------------------------------
+[0m
+Aw, that guy. I think if my 1999 self knew what my 2005+ self would get up to,
+he'd have been pretty happy about that future.[1;34m [0mIt wasn't coding emags.
+
+The technical description is obviously no longer not accurate. I'll correct
+the record in a minute.
+
+[35mCthulu[37m, despairing of my involvement, wrote this post scriptum:
+
+[1;30m-------------------------------------------------------------------------------
+[0m
+[[35mCthulu[37m [1;30mpicks up the trail, September 2022:[0m]
+
+Of course, this document is what we might consider an alternate history,
+since upon its final release this magazine distinctly is surely not tapping
+any of the technology [1;34mJoe [0mcooked up for its use, no trace of which must
+remain some 24 years later.  (School just started, and my family is sharing a
+carpooling arrangement with Joe's for getting our kids to class and back, so
+even though this has all been dormant longer than our lifespan to date back
+when it was a going concern, the slim thread of history continues running
+through our respective projects.)
+
+While wading around knee-deep in this pile of captures, like the[1m Fellowship[0m of
+the Ring reconstructing the fall of [33mKhazad-dï¿½m[37m, trying to determine
+conclusively just what the heck went wrong after getting 99% of the way
+there... leaving us collectively languishing in development hell for,
+charitably, a couple of decades -- I think I cracked the code.  Or is it
+that the code cracked me?  Literally, it's [1;36m1998[0m [1;34mHacker Joe's[0m homebrew markup
+language intended for beautifying the dozens of articles reserved for this
+production.  I must have taken one look at it and gone "Manually implement my
+own proprietary replacement for the (national) standard provided by ANSI?
+Yeah, I'll definitely prioritise doing that... when [1;35mpigs[0m fly!"  Without any
+intention to shame or scold Joe for his rough but robust solution to my nutty
+problem, here you go, below -- the sample he provided that almost certainly
+halted me in my tracks:
+
+        this is an example of some formatted, marked up text.
+        {this is an aside}
+
+        \c15{[1mthis text is bright white[0m}
+        \c15,1{[1;44mthis text is bright white on blue[0m}
+        \c,7{[1;47mthis text has a gray background[0m}
+        \db,15
+        \cb{[1mthis text is bright white (Bold)[0m}
+        \p15,1{there is a 15% probability that this text will be[34m blue[37m}
+
+In retrospect, it's not so impossible to work with, but history has
+demonstrated that I can be pretty thoroughly derailed by even small
+obstacles.  Now we know!  Now in its place instead of one user-unfriendly
+solution I have wound up working with an entirely different user-unfriendly
+solution of much lesser flexibility, with no tech support.  [1;31mNice work, bozo!
+[0m
+[[35mCthulu[1;30m resumes the trail in mid-2024:[0m]
+
+OK, well, I have many different projects competing for my attention.  This is
+definitely the most longstanding of them, but sometimes forward progress gets
+blocked for a long time for a good reason -- because overcoming the obstacles
+in your path is genuinely challenging!
+
+I have to roll back a couple of bold proclamations made in 2022: in fact, we
+did wind up putting this together using Joe's quarter-century-old code.  (It's
+like FORTRAN programmers coming out of retirement to save mainframes and the
+banking industry during [1mY2K[0m, only the stakes are a little lower.)  When I got
+back in touch with Joe, he was like "oh yes, I definitely bit off a bit too
+much with that project, I was trying to make the emag into a multi-threaded
+operating system", so I don't feel too bad about being thrown clear by the
+explosive scope creep at that time.
+
+The entirely different user-unfriendly solution?  Too user-unfriendly, it
+turns out.  (I had a scheme to hoover out the content from an issue of [1;33mEerie[0m's
+ANSI review e-mag [36mUndergrown[37m and replace its assets with ours, a trick I know
+is theoretically possible because [1;31mHappyfish[0m did it once for a [1;33mBlender [0mon the
+topics of [1mNINJA[0m / [1mKUNG FU[0m / [1mSWEATSHOP[0m.)
+
+The carpooling arrangement?  Wasn't the right fit for that moment in time,
+alas.  But as this magazine demonstrates, it's never too late, so keep your
+options open and maybe someday these kids will be commuting to work together
+through the post-apocalyptic hellscape of 2049.
+
+[1;30m-------------------------------------------------------------------------------
+[0m
+So, to correct the technical record:
+
+Imbibe, the C++ source code, is currently about 9200 lines and ~250kB that
+aren't just BS. The repository contains a header with a character font that
+doubles both of those figures, but I didn't really write it and it's not even
+compiled into the DOS .EXE, just the OpenGL version. There's also about 4100
+lines and ~135kB of Python code to deal with building the data files.
+
+A tiny amount of the original code I referenced does persist. At first I
+figured I would finish it according to the original design, but as always with
+these things, I Had Better Ideas The Second Time Round (technically the third
+or fourth I suppose).
+
+This version doesn't use PMODE/W, although that is a delightful bit of kit; at
+this point it felt more interesting to go really retro and aim for a 286 min
+spec which practically speaking meant real mode. I get to use flat address
+spaces ALL the time now! BORING. I'm still using OpenWatcom though, descended
+from good ol' Watcom C++!
+
+It's not super well optimized, and I didn't even try to make the data load
+incrementally, so you'll need a fast 286 -- it felt okay but not amazing at
+16MHz which really is pretty fast for a 286. so I don't actually feel that
+great calling a 286 min spec, but it does run.
+
+(What a [36mwindbag[37m this guy is! [1mGet it over with![0m)
+
+Fine, fine, that's more than enough for you to know. There's some really
+interesting (to me) detail in the way the ANSI is compressed, but if you're
+that kind of gearhead go find the git repository, I guess! It's public.
+For now.
+
+
+                                                    [1;34mhaX3r 50333333[0m, [1;36m2025
+[0m
+
+[1;30mP.S.[0m
+
+The [1;33mbanana bread[0m:
+
+Peeled banana, frozen into a container (you can pack them tight by squishing),
+is very convenient -- you can scoop out exactly what you need. Using weights
+instead of a banana count here gives a very consistent loaf. 250g is maybe 2-4
+bananas, depending if they're giant or tiny.
+
+        [36mLiquids       [1;37m2[0m  eggs
+                    [1m100[0mg [1;33mmelted butter[0m
+                    [1m250[0mg [1;33mbanana mash[0m
+        [32mSolids[37m      [1m150[0mg [33mbrown sugar[37m
+                    [1m200[0mg [1mflour[0m
+                      [1m2[0mt [1mbaking powder[0m
+                    [1m125[0mg [33mchocolate chips[37m
+
+Mix [36mliquids[37m, and [32msolids[37m [1mWITHOUT[0m the [33mchocolate[37m, each[1m independently[0m. Combine
+[36mliquids[37m and [32msolids [37mand [1mmix well[0m, then [1mstir[0m the [33mchocolate chips[37m in.
+
+I recommend stirring the chocolate chips in by hand; if you use a stand mixer
+with the cake beater, they are prone to getting c[1mau[0mg[1mh[0mt between the beater and
+the bowl. When I did it, it sounded like I was d[1me[0ms[1;30mt[0mr[1;30mo[0my[1mi[30mn[0mg the machine.
+
+[1;33mGrease [0mand [1mflour[0m your baking dish for easiest turn-out, or line the dish with
+[1mparchment paper[0m.
+
+[1mBake[0m at [1m350[0mF for [1m45-60 [0mminutes, depending on your baking dish and oven. Glass
+or ceramic loaf pans give a more consistent result and are less prone to
+burning the bottom, but take longer.
+
+[1mCool 10 [0mminutes before[1m turning out [0mor the bottom is liable to tear;[1m cool
+[0manother [1m10 [0mminutes before you even think about [1mslicing[0m or your slices will
+tend to fall apart in a very messy and unsatisfying way. Alternatively, eat it
+with a spoon straight out of the baking dish, or tear chunks off with your
+hands.
+
+It's [1myour [33mbanana bread[0m, now. Who am I to judge?SAUCE00                                                                           20250228£B  P =     IBM VGA               
