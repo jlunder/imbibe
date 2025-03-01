@@ -59,40 +59,49 @@ extern void asm_bios_set_cursor_style(uint8_t start_opts, uint8_t end);
 
 #if BUILD_MSDOS_WATCOMC
 
-#pragma aux asm_bios_get_video_details =                                       \
-    "   mov     ah, 00Fh          "                                            \
-    "   push    bp                "                                            \
-    "   int     10h               "                                            \
-    "   pop     bp                "                                            \
-    "   mov     bl, bh            " modify[ax bx] nomemory value[bx ax]
+// clang-format off
 
-#pragma aux asm_bios_set_video_mode =                                          \
-    "   push    bp                "                                            \
-    "   mov     ah, 000h          "                                            \
-    "   int     10h               "                                            \
-    "   pop     bp                " parm[al] modify[ax] nomemory;
+#pragma aux asm_bios_get_video_details = \
+    "   mov     ah, 00Fh " \
+    "   push    bp       " \
+    "   int     10h      " \
+    "   pop     bp       " \
+    "   mov     bl, bh   " \
+    modify[ax bx] nomemory value[bx ax]
 
-#pragma aux asm_bios_set_video_no_blink =                                      \
-    "   push    bp                "                                            \
-    "   mov     ax, 01003h        "                                            \
-    "   mov     bl, 0             "                                            \
-    "   int     10h               "                                            \
-    "   pop     bp                "                                            \
-    "   mov     ax, 40H           "                                            \
-    "   mov     es, ax            "                                            \
-    "   mov     dx, es:[063h]     " /* get port address of the card */         \
-    "   add     dx, 4             "                                            \
-    "   mov     al, es:[065h]     " /* get current value of Mode Select Register */ \
-    "   and     al, 0dfH          " /* mask value by 1101 1111 (to clear bit 5) */  \
-    "   out     dx, al            " /* disable blink (set for bold background) */   \
-    "   mov     es: [065H],al     " /* save the new setting */                      \
-modify[ax bx] nomemory;
+#pragma aux asm_bios_set_video_mode = \
+    "   push    bp       " \
+    "   mov     ah, 000h " \
+    "   int     10h      " \
+    "   pop     bp       " \
+    parm[al] modify[ax] nomemory;
 
-#pragma aux asm_bios_set_cursor_style =                                        \
-    "   push    bp                "                                            \
-    "   mov     ah, 001h          "                                            \
-    "   int     10h               "                                            \
-    "   pop     bp                " parm[ch][cl] modify[ax] nomemory;
+// CGA compatibility code cribbed from
+// http://www.techhelpmanual.com/140-int_10h_1003h__select_foreground_blink_or_bold_background.html
+#pragma aux asm_bios_set_video_no_blink = \
+    "   push    bp            "                                    \
+    "   mov     ax, 01003h    "                                    \
+    "   mov     bl, 0         "                                    \
+    "   int     10h           "                                    \
+    "   pop     bp            "                                    \
+    "   mov     ax, 40H       "                                    \
+    "   mov     es, ax        "                                    \
+    "   mov     dx, es:[063h] " /* get port address of the card */ \
+    "   add     dx, 4         "                                    \
+    "   mov     al, es:[065h] " /* get current value of MSR     */ \
+    "   and     al, 0DFh      " /* clear bit 5                  */ \
+    "   out     dx, al        "                                    \
+    "   mov     es:[065h], al " /* set the new value            */ \
+    modify[ax bx] nomemory;
+
+#pragma aux asm_bios_set_cursor_style = \
+    "   push    bp       " \
+    "   mov     ah, 001h " \
+    "   int     10h      " \
+    "   pop     bp       " \
+    parm[ch][cl] modify[ax] nomemory;
+
+// clang-format on
 
 #elif BUILD_POSIX
 // TODO?
@@ -173,7 +182,8 @@ void text_window::setup(bool capture_screen) {
   if (capture_screen) {
     aux_text_window::read_screen_buffer(&m_capture);
   }
-  aux_text_window::set_video_mode(aux_text_window::s_text_mode_color_80_25, true);
+  aux_text_window::set_video_mode(aux_text_window::s_text_mode_color_80_25,
+                                  true);
   aux_text_window::set_cursor_style(aux_text_window::cursor_invisible, 0, 7);
   if (capture_screen) {
     // Minimize display gaps
@@ -186,7 +196,8 @@ void text_window::teardown() {
   // Leave the last screen state behind when exiting -- assumes compatible
   // display modes!
   aux_text_window::read_screen_buffer(&m_capture);
-  aux_text_window::set_video_mode(aux_text_window::s_text_mode_color_80_25, false);
+  aux_text_window::set_video_mode(aux_text_window::s_text_mode_color_80_25,
+                                  false);
   present_copy(m_capture.data(), m_capture.width(), m_capture.height(),
                rect(0, 0, m_capture.width(), m_capture.height()));
 }
