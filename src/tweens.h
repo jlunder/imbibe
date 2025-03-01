@@ -29,7 +29,8 @@ protected:
 
   anim_time_t aux_update(anim_time_t delta_time) {
     assert(delta_time > 0);
-    assert(delta_time < INT16_MAX / 2);
+    assert(delta_time < INT16_MAX / 2 ||
+           (m_last_time < 0 && m_last_time + delta_time < INT16_MAX / 2));
 
     anim_time_t cur_time = m_last_time + delta_time;
 
@@ -98,8 +99,8 @@ public:
       aux_reset(n_duration, n_duration);
     } else {
       m_value = value;
-      aux_reset(n_duration,
-                TEasing::compute_time(value, n_from, n_to - n_from, n_duration));
+      aux_reset(n_duration, TEasing::compute_time(value, n_from, n_to - n_from,
+                                                  n_duration));
     }
     m_value = done() ? n_to : n_from;
   }

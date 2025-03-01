@@ -1,11 +1,8 @@
 {
     "logos": [
-        "assets/logo0.bin",
-        "assets/logo1.bin",
-        "assets/logo2.bin",
-        "assets/logo3.bin"
+        "assets/intro.bin"
     ],
     "covers": [
-        "assets/CT-IMBIBE.ans"
+        "6gallery/viewer/CT-IMBIBE.ans"
     ]
 }

@@ -11,7 +11,7 @@ outro_element::outro_element() {
   tbm logo_tbm(resource_manager::fetch_tbm(imstring("assets/postlogo.tbm")));
   m_logo.set_tbm(logo_tbm);
   m_logo.set_frame(0, 0, logo_tbm.width(), logo_tbm.height(), 1);
-  tbm goodbye_tbm(resource_manager::fetch_tbm(imstring("assets/goodbye.tbm")));
+  tbm goodbye_tbm(resource_manager::fetch_tbm(imstring("6gallery/viewer/CODEFENIX-WASH_THE_DISHES.tbm")));
   m_goodbye.set_tbm(goodbye_tbm);
   m_goodbye.set_frame(0, 0, goodbye_tbm.width(), goodbye_tbm.height(), 2);
   m_background.set_brush(termel::from(' ', color::white, color::black));
@@ -59,7 +59,7 @@ void outro_element::animate(anim_time_t delta_ms) {
 
 void outro_element::play_outro() {
   m_goodbye_y.reset(frame().height(), -m_goodbye.frame().height(),
-                    130 * m_goodbye.frame().height());
+                    120 * m_goodbye.frame().height());
   m_active = true;
 }
 

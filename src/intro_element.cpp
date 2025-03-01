@@ -11,7 +11,8 @@ intro_element::intro_element() {
   tbm logo_tbm(resource_manager::fetch_tbm(imstring("assets/intro.tbm")));
   m_splash.set_tbm(logo_tbm);
   m_splash.set_frame(0, 0, logo_tbm.width(), logo_tbm.height(), 1);
-  tbm cover_tbm(resource_manager::fetch_tbm(imstring("assets/CT-IMBIBE.tbm")));
+  tbm cover_tbm(
+      resource_manager::fetch_tbm(imstring("6gallery/viewer/CT-IMBIBE.tbm")));
   m_cover.set_tbm(cover_tbm);
   m_cover.set_frame(0, 0, cover_tbm.width(), cover_tbm.height(), 2);
   m_active = false;
@@ -67,7 +68,8 @@ void intro_element::set_capture(bitmap const &n_capture) {
 }
 
 void intro_element::play_intro() {
-  m_logo_fade.reset(0, termviz::fade_steps - 1, 2000);
-  m_cover_y.reset(frame().height(), -m_cover.frame().height(), 130 * m_cover.frame().height(), 7500);
+  m_logo_fade.reset(0, termviz::fade_steps - 1, 1000);
+  m_cover_y.reset(frame().height(), -m_cover.frame().height(),
+                  120 * m_cover.frame().height(), 6500);
   m_active = true;
 }
